@@ -11,6 +11,7 @@ boundary, same receipt model. It changes nothing about evaluation.
 
 import json
 import os
+import time
 import urllib.request
 
 
@@ -156,7 +157,7 @@ class LLMDriver:
     """
 
     EXPLORATORY = True
-    MAX_RETRIES = 2
+    BACKOFF = (2.0, 5.0, 10.0)  # seconds before retries 1..3
 
     def __init__(self, base_url: str, api_key: str, model: str):
         self._base_url = base_url.rstrip("/")
@@ -164,6 +165,7 @@ class LLMDriver:
         self._model = model
         self._messages: list[dict] = []
         self._pending_tool_call: str | None = None
+        self._sleep = time.sleep
         self._telemetry = {"turns": 0, "malformed_requests": 0,
                            "transport_retries": 0, "latencies": [],
                            "tool_calls_by_name": {}}
@@ -286,13 +288,13 @@ class LLMDriver:
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"
         last_exc: Exception | None = None
-        for attempt in range(self.MAX_RETRIES + 1):
+        for attempt in range(len(self.BACKOFF) + 1):
             if attempt:
                 self._telemetry["transport_retries"] += 1
+                self._sleep(self.BACKOFF[attempt - 1])
             req = urllib.request.Request(f"{self._base_url}/chat/completions",
                                          data=payload, headers=headers)
             try:
-                import time
                 start = time.monotonic()
                 with urllib.request.urlopen(req, timeout=120) as resp:
                     body = resp.read().decode("utf-8")

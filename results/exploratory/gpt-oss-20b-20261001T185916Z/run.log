@@ -1,0 +1,21 @@
+running 5 exploratory run(s) of 12 tasks against gpt-oss:20b @ http://localhost:11434/v1
+output: results/exploratory/gpt-oss-20b-20261001T185916Z
+Traceback (most recent call last):
+  File "/data/git/blackwall/run_llm_experiment.py", line 79, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/data/git/blackwall/run_llm_experiment.py", line 63, in main
+    result = run_llm_experiment(factory, out, label=label, model=model,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/git/blackwall/blackwall/llm_experiment.py", line 68, in run_llm_experiment
+    result = harness.run_task(task.task_id, driver, prompt=task.prompt,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/git/blackwall/blackwall/agent/harness.py", line 88, in run_task
+    move = driver.act(list(observations))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/git/blackwall/blackwall/agent/drivers.py", line 204, in act
+    reply = self._chat(self._messages)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/git/blackwall/blackwall/agent/drivers.py", line 304, in _chat
+    raise RuntimeError(f"LLM endpoint unreachable after retries: {last_exc}")
+RuntimeError: LLM endpoint unreachable after retries: HTTP Error 500: Internal Server Error

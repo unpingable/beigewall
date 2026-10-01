@@ -46,13 +46,23 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
     started = datetime.now(timezone.utc).isoformat()
 
     run_records = []
+    runs_reused: list[int] = []
+    runs_executed: list[int] = []
     for i in range(1, runs + 1):
         run_id = f"{label}-run-{i}"
         run_dir = os.path.join(out_dir, f"run-{i}")
         os.makedirs(run_dir, exist_ok=True)
+        sealed = os.path.join(run_dir, "metrics.json")
+        if os.path.exists(sealed):
+            # sealed run from an earlier invocation: reuse, never rerun
+            with open(sealed) as fh:
+                run_records.append(json.load(fh))
+            runs_reused.append(i)
+            continue
+        runs_executed.append(i)
         receipts_path = os.path.join(run_dir, "receipts.jsonl")
         if os.path.exists(receipts_path):
-            os.unlink(receipts_path)
+            os.unlink(receipts_path)  # partial run: receipts re-created
 
         clock = LogicalClock()
         corpus = build_demo_corpus()
@@ -94,6 +104,9 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
         "label": label, "model": model, "base_url": base_url, "runs": runs,
         "driver": "llm-adapter", "exploratory": True,
         "max_steps": max_steps,
+        "runs_completed": runs_reused + runs_executed,
+        "runs_reused": runs_reused,
+        "runs_executed": runs_executed,
         "started_utc": started, "finished_utc": finished,
         "blackwall_revision": _git_revision(),
         "note": "exploratory real-model telemetry; not part of the normative "
