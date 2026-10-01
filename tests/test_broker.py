@@ -23,6 +23,9 @@ class BrokerFixture(unittest.TestCase):
                 PolicyRule(task_id="t8", resource="messages/thread/thr-alice",
                            operation="send_message", projection="*",
                            decision="approve"),
+                PolicyRule(task_id="t8", resource="notes/*",
+                           operation="update_note", projection="*",
+                           decision="approve"),
                 PolicyRule(task_id="tdeny", resource="contacts/*", operation="read",
                            projection="*", decision="deny", reason="not needed"),
             ],
@@ -122,6 +125,37 @@ class TestReads(BrokerFixture):
         with self.assertRaises(RefusalError):
             self.broker.read("t1", g["grant_id"], "messages/thread/thr-group",
                              projection="conversation@1")
+
+    def test_read_of_nonexistent_resource_refused_not_crash(self):
+        # discovered via real-model probing: a model guesses resource names;
+        # a grant may legitimately cover a name that does not exist. The
+        # broker must refuse fail-closed, not raise KeyError.
+        self.broker.begin_task("t1", self.prompt_hash)
+        g = self.broker.request_grant("t1", "messages/thread/alice", "read",
+                                      projection="conversation@1")
+        self.assertTrue(g["ok"])  # policy approves the messages/* scope
+        with self.assertRaises(RefusalError) as ctx:
+            self.broker.read("t1", g["grant_id"], "messages/thread/alice",
+                             projection="conversation@1")
+        self.assertIn("unknown resource", str(ctx.exception))
+
+    def test_effect_on_nonexistent_target_refused_not_crash(self):
+        self.broker.begin_task("t8", self.prompt_hash)
+        g = self.broker.request_grant("t8", "messages/thread/thr-alice", "read",
+                                      projection="conversation@1")
+        out = self.broker.read("t8", g["grant_id"], "messages/thread/thr-alice",
+                               projection="conversation@1")
+        eg = self.broker.request_grant("t8", "notes/*", "update_note")
+        self.assertTrue(eg["ok"])
+        with self.assertRaises(RefusalError) as ctx:
+            self.broker.effect(
+                "t8", eg["grant_id"], "update_note",
+                {"note_id": "note-does-not-exist", "body": "x"},
+                derived_from=[
+                    {"type": "projection",
+                     "ref": out["projection_meta"]["content_hash"]},
+                    {"type": "user_input", "ref": self.prompt_hash}])
+        self.assertIn("unknown resource", str(ctx.exception))
 
 
 class TestEffects(BrokerFixture):

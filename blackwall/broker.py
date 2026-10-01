@@ -11,7 +11,7 @@ refs must match the task's registered prompt hash.
 
 from .authority import PolicyAuthority
 from .corpus import Corpus
-from .effects import EFFECTS
+from .effects import EFFECTS, EffectError
 from .grants import Budget, Grant, GrantError, validate_use
 from .projections import ProjectionError, run_projection
 from .receipts import Ledger
@@ -94,6 +94,9 @@ class CapabilityBroker:
                     f"{new_objects} > {grant.budget.objects}")
         except (GrantError, ProjectionError) as exc:
             raise self._refuse(task_id, "read", grant_id, resource, str(exc))
+        except KeyError as exc:
+            raise self._refuse(task_id, "read", grant_id, resource,
+                               f"unknown resource: {exc}")
 
         grant.reads_used += 1
         grant.objects_disclosed += result.accounting["objects_disclosed"]
@@ -124,7 +127,11 @@ class CapabilityBroker:
         except GrantError as exc:
             raise self._refuse(task_id, effect_name, grant_id, resource, str(exc))
         handler = EFFECTS[effect_name]
-        summary = handler(self._corpus, params)
+        try:
+            summary = handler(self._corpus, params)
+        except (KeyError, EffectError) as exc:
+            raise self._refuse(task_id, effect_name, grant_id, resource,
+                               f"unknown resource or invalid effect target: {exc}")
         receipt = self._ledger.record("effect", task_id, grant_id=grant_id,
                                       effect={"name": effect_name, "params": params},
                                       derived_from=derived_from,
