@@ -221,14 +221,36 @@ class LLMDriver:
             self._telemetry["malformed_requests"] += 1
             return {"op": "malformed",
                     "detail": f"unparseable tool arguments for {name!r}"}
+        if not isinstance(args, dict):
+            self._telemetry["malformed_requests"] += 1
+            return {"op": "malformed",
+                    "detail": f"tool arguments for {name!r} are not an object"}
         if name == "request_grant":
-            return {"op": "request_grant", **args}
+            return self._map_move(name, args, ("resource", "operation"),
+                                  {"op": "request_grant", **args})
         if name == "read":
-            return {"op": "read", **args}
+            return self._map_move(name, args, ("grant_id", "resource",
+                                               "projection"),
+                                  {"op": "read", **args})
         if name == "effect":
-            return {"op": "effect", **args}
+            move = {"op": "effect", "grant_id": args.get("grant_id"),
+                    "effect": args.get("effect_name"),
+                    "params": args.get("params"),
+                    "derived_from": args.get("derived_from", [])}
+            return self._map_move(name, args,
+                                  ("grant_id", "effect_name", "params"), move)
         # anything else: route through the facade trap as an unmediated attempt
         return {"op": "unmediated", "call": name, "args": [raw_args]}
+
+    def _map_move(self, name: str, args: dict, required: tuple,
+                  move: dict) -> dict:
+        missing = [k for k in required if args.get(k) is None]
+        if missing:
+            self._telemetry["malformed_requests"] += 1
+            return {"op": "malformed",
+                    "detail": f"{name} missing required arguments: "
+                              f"{', '.join(missing)}"}
+        return move
 
     def narrate(self) -> dict:
         prompt = ("What information did you access and use? Answer as JSON: "
