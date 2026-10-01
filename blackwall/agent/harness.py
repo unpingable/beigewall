@@ -125,4 +125,8 @@ class Harness:
             return target(*move.get("args", []))
         if op == "skip":
             return {"ok": False, "skipped": move.get("reason", "scripted skip")}
+        if op == "malformed":
+            return {"ok": False, "malformed": True,
+                    "error": f"malformed broker request: "
+                             f"{move.get('detail', 'unparseable')}"}
         return {"ok": False, "error": f"unknown move op {op!r}"}

@@ -59,12 +59,11 @@ class StubLLMHandler(BaseHTTPRequestHandler):
     @staticmethod
     def _extract_grant_id(messages):
         for msg in reversed(messages):
-            if msg.get("role") == "user" and "Tool results" in msg.get("content", ""):
-                blob = msg["content"]
-                marker = '"grant_id": "'
-                i = blob.find(marker)
-                if i >= 0:
-                    return blob[i + len(marker):].split('"')[0]
+            blob = msg.get("content") or ""
+            marker = '"grant_id": "'
+            i = blob.find(marker)
+            if i >= 0:
+                return blob[i + len(marker):].split('"')[0]
         raise AssertionError("stub server never saw a minted grant id")
 
     def log_message(self, *args):
