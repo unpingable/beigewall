@@ -164,6 +164,10 @@ class CapabilityBroker:
         }
         prompt_hash = self._task_prompts.get(task_id)
         for dep in derived_from:
+            if not isinstance(dep, dict) or "type" not in dep or "ref" not in dep:
+                raise GrantError(
+                    "malformed derived_from entry: expected "
+                    '{"type": "projection"|"user_input", "ref": str}')
             dtype, ref = dep.get("type"), dep.get("ref")
             if dtype == "projection":
                 if ref not in disclosed_hashes:

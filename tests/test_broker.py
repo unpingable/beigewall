@@ -193,6 +193,17 @@ class TestEffects(BrokerFixture):
                                {"thread_id": "thr-alice", "body": "hi"},
                                derived_from=[{"type": "projection", "ref": "0" * 64}])
 
+    def test_malformed_derived_from_entries_refused_not_crash(self):
+        # discovered via real-model run: models sometimes send derived_from
+        # entries as bare strings; must refuse fail-closed, not crash
+        out, eg = self._read_then_send()
+        proj_hash = out["projection_meta"]["content_hash"]
+        with self.assertRaises(RefusalError) as ctx:
+            self.broker.effect("t8", eg["grant_id"], "send_message",
+                               {"thread_id": "thr-alice", "body": "hi"},
+                               derived_from=[f"projection:{proj_hash}"])
+        self.assertIn("malformed derived_from", str(ctx.exception))
+
     def test_effect_happy_path_records_provenance(self):
         out, eg = self._read_then_send()
         proj_hash = out["projection_meta"]["content_hash"]
