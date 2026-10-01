@@ -22,13 +22,18 @@ class PolicyRule:
     ttl_cap: float | None = None
     budget_cap: Budget | None = None
     reason: str = ""
+    exact: bool = False          # match resource literally, not as a pattern
 
 
 def _matches(rule: PolicyRule, *, task_id, resource, operation, projection) -> bool:
     if rule.task_id != "*" and rule.task_id != task_id:
         return False
-    if rule.resource != "*" and not scope_matches(rule.resource, resource):
-        return False
+    if rule.resource != "*":
+        if rule.exact:
+            if rule.resource != resource:
+                return False
+        elif not scope_matches(rule.resource, resource):
+            return False
     if rule.operation != "*" and rule.operation != operation:
         return False
     if rule.projection != "*" and rule.projection != projection:

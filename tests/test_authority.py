@@ -95,6 +95,21 @@ class TestPolicyAuthority(unittest.TestCase):
         self.assertIsNotNone(grant)
         self.assertIsNone(grant.projection)
 
+    def test_exact_rule_matches_only_the_literal_resource(self):
+        a = PolicyAuthority(
+            rules=[
+                PolicyRule(task_id="t2", resource="messages/*", operation="read",
+                           projection="*", decision="deny", reason="too broad",
+                           exact=True),
+                PolicyRule(task_id="*", resource="messages/*", operation="read",
+                           projection="*", decision="approve"),
+            ],
+            clock=lambda: 0.0)
+        wide, _ = req(a, task_id="t2", resource="messages/*")
+        self.assertIsNone(wide)
+        narrow, _ = req(a, task_id="t2", resource="messages/thread/thr-group")
+        self.assertIsNotNone(narrow)
+
 
 if __name__ == "__main__":
     unittest.main()

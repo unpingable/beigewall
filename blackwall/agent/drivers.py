@@ -30,6 +30,7 @@ class ScriptedDriver:
         self._pending_alias: str | None = None
         self._task: dict | None = None
         self._last_read_hash: str | None = None
+        self._read_hashes: list[str] = []
 
     def begin(self, task_view: dict) -> None:
         self._task = task_view
@@ -42,6 +43,7 @@ class ScriptedDriver:
         for obs in observations:
             if obs.get("ok") and "projection_meta" in obs:
                 self._last_read_hash = obs["projection_meta"]["content_hash"]
+                self._read_hashes.append(self._last_read_hash)
         if not self._script:
             return {"op": "final", "answer": "(script exhausted)"}
         move = dict(self._script.pop(0))
@@ -63,9 +65,14 @@ class ScriptedDriver:
 
     def _substitute_ref(self, dep: dict) -> dict:
         dep = dict(dep)
-        if dep.get("ref") == "$last_read":
+        ref = dep.get("ref")
+        if ref == "$last_read":
             dep["ref"] = self._last_read_hash or ("0" * 64)
-        elif dep.get("ref") == "$prompt":
+        elif isinstance(ref, str) and ref.startswith("$read:"):
+            n = int(ref.split(":", 1)[1]) - 1
+            dep["ref"] = (self._read_hashes[n] if 0 <= n < len(self._read_hashes)
+                          else "0" * 64)
+        elif ref == "$prompt":
             dep["ref"] = self._task["prompt_hash"] if self._task else ("0" * 64)
         return dep
 
