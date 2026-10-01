@@ -46,6 +46,13 @@ untrusted side                     trusted side (mediation layer)
   (`derived_from`): projection refs must match content hashes actually
   disclosed to the task; user_input refs must match the registered prompt hash.
   Fabricated provenance is refused.
+- **Receipt-grounded evaluator** (`blackwall/evaluator.py` with `facts.py`,
+  `disclosure.py`, `claims.py`, `contracts.py`): scores a task from the
+  receipt graph alone — authorized disclosure set → answer/effect claims →
+  three separate verdicts (capability, admissibility, usefulness). The
+  agent's narrative and the frozen expected answer are never consulted.
+  Design and threat model: `docs/EVALUATOR.md`; results:
+  `FINDINGS_EVALUATOR.md`.
 - **Agent harness** (`blackwall/agent/`): a simple tool loop. The scripted
   driver is the normative experiment (deterministic; intentionally includes
   correct behavior, overbroad requests, repeated grant requests, inference
@@ -82,9 +89,12 @@ claimed. See "Known limitations".
 ## Usage
 
 ```
-python3 -m unittest discover -s tests     # 134 tests
+python3 -m unittest discover -s tests     # 164 tests
 python3 run_experiment.py                 # writes results/canonical/
 python3 run_experiment.py --out /tmp/x    # byte-identical metrics/receipts
+python3 run_reevaluation.py results/canonical                 # receipt-grounded
+python3 run_reevaluation.py results/exploratory/<label>-<ts>  # re-scoring
+# writes results/reevaluation/<basename>/{evaluation.json,report.md}
 ```
 
 Canonical artifacts: `results/canonical/receipts.jsonl` (authoritative),
@@ -103,6 +113,16 @@ python3 run_llm_experiment.py --runs 5 --label gpt-oss-20b
 Exploratory artifacts and interpretation: `FINDINGS_REALMODEL.md`.
 
 ## Known limitations
+
+- **Evaluation is deterministic claim extraction over a synthetic corpus,
+  not general fact verification.** The receipt-grounded evaluator rejects
+  answers that assert catalog facts, quantities, provenance tokens or
+  effects the receipt graph does not support, and returns UNKNOWN for
+  quoted claims it cannot place; an all-prose fabrication using none of
+  those produces no claims and passes by absence of evidence (counted as
+  `no_claims_extracted`). See `docs/EVALUATOR.md`.
+- **The frozen string checks are a diagnostic, not the measurement.** They
+  passed a fabricated t6 answer and required an undisclosed fact in t1.
 
 - **No OS isolation.** The authority boundary is convention, not mechanism.
   Realizing it needs process isolation or a capability-secure runtime.

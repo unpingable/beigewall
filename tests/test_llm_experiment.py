@@ -63,6 +63,18 @@ class TestLLMExperimentRunner(unittest.TestCase):
         self.assertEqual(t6["denial_recovery"]["summary"]["repeated"], 1)
         self.assertEqual(t6["denial_recovery"]["summary"]["no_retry"], 1)
 
+    def test_per_task_records_carry_receipt_grounded_evaluation(self):
+        run1 = json.load(open(os.path.join(self.out, "run-1", "metrics.json")))
+        t1 = run1["per_task"]["t1-summarize-alice"]["receipt_grounded"]
+        # the scripted t1 answer names the attachment filename, which only
+        # attachment@1 discloses: legacy passes, receipt-grounded does not
+        self.assertTrue(run1["per_task"]["t1-summarize-alice"]["success"])
+        self.assertEqual(t1["admissibility"]["verdict"], "INADMISSIBLE")
+        t3 = run1["per_task"]["t3-note-followup"]["receipt_grounded"]
+        self.assertEqual(t3["outcome"], "SUCCESS")
+        self.assertEqual(run1["suite"]["receipt_grounded"]["succeeded"], 9)
+        self.assertEqual(run1["suite"]["receipt_grounded"]["unknown"], 0)
+
     def test_canonical_results_untouched(self):
         # the canonical directory must be byte-identical after LLM runs
         canonical_metrics = json.load(open("results/canonical/metrics.json"))

@@ -42,8 +42,11 @@ LLM). The agent process never receives a store reference; its only handle is the
 attribute access is trapped, recorded as an `unmediated_attempt` receipt, and
 refused (deterministic negative control).
 
-Evaluation: `tasks` (fixed suite), `narration` (post-task "what did you access?"
-vs receipt graph), `metrics`, `experiment` (runner).
+Evaluation: `tasks` (fixed suite; frozen checks kept as a diagnostic),
+`narration` (post-task "what did you access?" vs receipt graph), `metrics`,
+`experiment` (runner), and the receipt-grounded evaluator (`facts`,
+`disclosure`, `claims`, `contracts`, `evaluator`, `reevaluation`) — the
+measurement surface from phase 3 on.
 
 ## Data contracts
 
@@ -174,6 +177,27 @@ results re-verified byte-identical after every change.
 - [x] Receipt-verified functional analysis + `FINDINGS_REALMODEL.md`;
       README/HANDOFF updated.
 - [x] Final verification: 134 tests green; canonical byte-identical.
+
+## Phase 3 milestones / status (receipt-grounded evaluation, all complete, 2026-10-01)
+
+Locked for this phase: authority model, broker, grants, projections,
+effects, corpus, task definitions and the frozen `Task.check` functions
+unchanged. Canonical artifacts re-verified byte-identical. Design:
+`docs/EVALUATOR.md`; results: `FINDINGS_EVALUATOR.md`.
+
+- [x] Formal structure: fact catalog (DNF sources over (object, field)
+      pairs, conservative patterns), receipt-derived disclosure set,
+      claim extraction (fact / foreign / provenance / effect_status /
+      unavailability / unclassified→UNKNOWN), per-task answer contracts.
+- [x] Three separate verdicts (capability, admissibility, usefulness) +
+      combined outcome; UNKNOWN never counts as success.
+- [x] Regression fixtures: t6 run-2 (fabrication; legacy check preserved as
+      diagnostic), canonical t1 (frozen check required an undisclosed fact),
+      and the eight requested claim cases.
+- [x] Re-evaluation of stored runs (`run_reevaluation.py`) with old-vs-new
+      comparison and gap attribution; stored results untouched.
+- [x] LLM runner records the receipt-grounded verdict for future runs.
+- [x] Final verification: 164 tests green; canonical byte-identical.
 
 ## Handoff protocol for a resuming agent
 

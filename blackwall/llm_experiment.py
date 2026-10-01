@@ -18,6 +18,7 @@ from .agent.harness import Harness, RunResult
 from .authority import PolicyAuthority
 from .broker import CapabilityBroker
 from .corpus import build_demo_corpus
+from .evaluator import evaluate_task
 from .llm_metrics import aggregate_runs, denial_recovery
 from .metrics import suite_metrics, task_metrics
 from .receipts import Ledger
@@ -88,11 +89,25 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
                 ledger, task.task_id)
             record["abandoned"] = result.truncated
             record["answer"] = result.answer
+            # receipt-grounded evaluation (docs/EVALUATOR.md): derived from
+            # the receipt rows alone; the legacy `success` is kept as-is
+            record["receipt_grounded"] = evaluate_task(
+                [r.to_dict() for r in ledger.all()], task.task_id, task.prompt)
             per_task[task.task_id] = record
 
+        suite = suite_metrics(per_task, success)
+        suite["receipt_grounded"] = {
+            "succeeded": sum(1 for r in per_task.values()
+                             if r["receipt_grounded"]["outcome"] == "SUCCESS"),
+            "unknown": sum(1 for r in per_task.values()
+                           if r["receipt_grounded"]["outcome"] == "UNKNOWN"),
+            "inadmissible": sum(
+                1 for r in per_task.values()
+                if r["receipt_grounded"]["admissibility"]["verdict"]
+                == "INADMISSIBLE"),
+        }
         run_record = {"run_id": run_id, "model": model, "label": label,
-                      "per_task": per_task,
-                      "suite": suite_metrics(per_task, success)}
+                      "per_task": per_task, "suite": suite}
         with open(os.path.join(run_dir, "metrics.json"), "w") as fh:
             json.dump(run_record, fh, indent=2, sort_keys=True)
             fh.write("\n")

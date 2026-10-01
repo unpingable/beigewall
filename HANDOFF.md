@@ -1,19 +1,22 @@
 # HANDOFF
 
 Date: 2026-10-01. Status: **spike complete + real-model exploratory experiment
-complete**. All milestones in `docs/PLAN.md` (phase 1 and phase 2) are checked.
-The canonical experiment result is recorded and unchanged; the real-model
-exploratory result is recorded in `FINDINGS_REALMODEL.md`.
+complete + receipt-grounded evaluator (phase 3) complete**. All milestones in
+`docs/PLAN.md` (phases 1–3) are checked. The canonical experiment result is
+recorded and unchanged; the real-model exploratory result is recorded in
+`FINDINGS_REALMODEL.md`; the receipt-grounded re-scoring of both is in
+`FINDINGS_EVALUATOR.md` with artifacts under `results/reevaluation/`.
 
 ## How to verify state
 
 ```
 cd /data/git/blackwall
-python3 -m unittest discover -s tests    # expect: Ran 134 tests ... OK
+python3 -m unittest discover -s tests    # expect: Ran 164 tests ... OK
 python3 run_experiment.py --out /tmp/bw-check
 diff /tmp/bw-check/metrics.json results/canonical/metrics.json     # identical
 diff /tmp/bw-check/receipts.jsonl results/canonical/receipts.jsonl # identical
 diff /tmp/bw-check/report.md results/canonical/report.md           # identical
+python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unknown
 ```
 
 ## Where things are
@@ -31,12 +34,21 @@ diff /tmp/bw-check/report.md results/canonical/report.md           # identical
   "Artifacts and storage disposition")
 - `blackwall/` — trusted layer: grants, receipts, corpus, projections,
   authority, broker, effects, tasks, narration, metrics, experiment
+- `docs/EVALUATOR.md` — receipt-grounded evaluator: formal structure,
+  verdicts, threat model, limitations
+- `FINDINGS_EVALUATOR.md` — old vs new scoring, t6 regression, gap
+  decomposition, normative-surface verdict
+- `blackwall/facts.py`, `disclosure.py`, `claims.py`, `contracts.py`,
+  `evaluator.py` — the evaluator; `blackwall/reevaluation.py` +
+  `run_reevaluation.py` — re-scoring of stored runs
+- `results/reevaluation/{canonical,gpt-oss-20b-20261001T185916Z}/` —
+  evaluation.json (every claim) + report.md; regenerable
 - `blackwall/llm_metrics.py`, `blackwall/llm_experiment.py`,
   `run_llm_experiment.py` — exploratory real-model telemetry, runner, CLI
 - `blackwall/agent/` — untrusted side: harness (tool loop + facade trap),
   drivers (scripted = normative; LLM = exploratory, env-gated)
-- `tests/` — 134 unittest tests (no real API key required; LLM paths use a
-  stub server)
+- `tests/` — 162 unittest tests (no real API key required; LLM paths use a
+  stub server); `test_evaluator.py` holds the regression fixtures
 
 ## Resuming / extending
 
@@ -61,25 +73,38 @@ diff /tmp/bw-check/report.md results/canonical/report.md           # identical
    The runner is resumable: sealed runs (those with `run-i/metrics.json`) are
    reused, missing runs re-executed into the same `--out` dir.
 5. New tasks go in `blackwall/tasks.py` with a check function and an intent
-   note; update `docs/PLAN.md`'s table and expect metric totals in
+   note, **and** an `AnswerContract` in `blackwall/contracts.py` (required /
+   forbidden facts and effects, what the policy blocks); new corpus facts
+   the task depends on go in the curated list in `blackwall/facts.py`.
+   Update `docs/PLAN.md`'s table and expect metric totals in
    `tests/test_metrics.py` to change deliberately.
+6. The receipt-grounded evaluator is the measurement surface; the frozen
+   `Task.check` is a diagnostic. Never loosen a claim rule to raise a
+   success rate; an uncertain claim returns UNKNOWN. Treat
+   `no_claims_extracted > 0` in any run as a coverage alarm.
 
 ## Open items (none blocking)
 
-- Receipt-grounded outcome evaluation (answer-vs-disclosure consistency) —
-  the recommended next research question; see FINDINGS_REALMODEL. Motivated
-  by t6 run-2: a fabricated answer passed the frozen string check while
-  receipts proved zero disclosure.
-- Strict-omission over-flagging (t10): consider query-scoped projections.
-- OS-level authority boundary: the experiment AFTER evaluation hardening;
-  explicitly out of scope so far.
-- Cross-model comparison is premature until evaluation is driver-independent.
+- **Rename before any public release.** "Blackwall" collides with CD Projekt
+  Red's Cyberpunk term; the working suggestion is "beigewall" or similar.
+  Do this before the repo, docs, or findings are published anywhere.
+- Next research question (see FINDINGS_EVALUATOR): capability negotiation —
+  18/60 real-model executions were honest, admissible and useless because an
+  obtainable grant was never requested. OS/process isolation stays deferred
+  behind that.
+- Evaluator coverage: all-prose fabrication (no catalog token, number,
+  quote, email, date, provenance) is admissible by absence of evidence;
+  tracked via `no_claims_extracted`.
+- Strict-omission over-flagging (t10 narrative detector): consider
+  query-scoped projections.
+- Cross-model comparison is now meaningful (driver-independent evaluation).
 
 ## Notes
 
 - Nested git repo: `/data/git` is an umbrella repo; BLACKWALL is its own repo
   inside it. Do not commit from the parent.
-- Storage: repo + results ≈0.9 MB total (exploratory tree ≈576 KB). The
+- Storage: repo + results ≈1.4 MB total (exploratory tree ≈576 KB,
+  reevaluation ≈0.5 MB regenerable). The
   interrupted-attempt dir is retained pending disposition review; see
   FINDINGS_REALMODEL "Artifacts and storage disposition".
 - Two broker fail-closed incompatibilities were found via the real model and
