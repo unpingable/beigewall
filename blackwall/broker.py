@@ -10,6 +10,7 @@ refs must match the task's registered prompt hash.
 """
 
 from .authority import PolicyAuthority
+from .capabilities import CapabilityCatalog
 from .corpus import Corpus
 from .effects import EFFECTS, EffectError
 from .grants import Budget, Grant, GrantError, validate_use
@@ -48,6 +49,10 @@ class CapabilityBroker:
         self._clock = clock
         self._grants: dict[str, Grant] = {}
         self._task_prompts: dict[str, str] = {}
+        self._catalog = CapabilityCatalog(
+            authority.rules, default_ttl=DEFAULT_TTL, max_ttl=authority.max_ttl,
+            default_budget={"reads": DEFAULT_BUDGET.reads,
+                            "objects": DEFAULT_BUDGET.objects})
 
     def begin_task(self, task_id: str, prompt_hash: str) -> None:
         self._task_prompts[task_id] = prompt_hash
@@ -78,6 +83,20 @@ class CapabilityBroker:
                                     "objects": grant.budget.objects})
         return {"ok": True, "grant_id": grant.grant_id, "expires_at": grant.expires_at,
                 "budget": {"reads": grant.budget.reads, "objects": grant.budget.objects}}
+
+    def discover(self, task_id: str, resource: str | None = None) -> dict:
+        """Capability discovery: the shape of requestable authority. Grants
+        nothing, discloses no corpus value, touches no grant state. Receipted
+        as `discovery` with the policy/catalog version shown."""
+        catalog = self._catalog.build(task_id, resource)
+        receipt = self._ledger.record(
+            "discovery", task_id, schema=catalog["schema"],
+            policy_version=catalog["policy_version"],
+            catalog_hash=catalog["catalog_hash"], query=resource,
+            query_matched=catalog["query_matched"],
+            rules_shown=len(catalog["rules"]))
+        return {"ok": True, "receipt_id": receipt.receipt_id,
+                "catalog": catalog}
 
     def read(self, task_id: str, grant_id: str, resource: str,
              projection: str) -> dict:

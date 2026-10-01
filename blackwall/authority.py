@@ -51,6 +51,16 @@ class PolicyAuthority:
         self.grants_minted = 0
         self.grants_denied = 0
 
+    @property
+    def rules(self) -> list[PolicyRule]:
+        """Read-only view of the policy table (for capability discovery and
+        post-hoc telemetry). Discovery never consults this at decision time."""
+        return list(self._rules)
+
+    @property
+    def max_ttl(self) -> float:
+        return self._max_ttl
+
     def decide(self, *, task_id: str, resource: str, operation: str,
                projection: str | None, ttl: float,
                budget: Budget) -> tuple[Grant | None, str]:

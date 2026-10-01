@@ -18,7 +18,9 @@ from .agent.harness import Harness, RunResult
 from .authority import PolicyAuthority
 from .broker import CapabilityBroker
 from .corpus import build_demo_corpus
+from .capabilities import policy_version
 from .evaluator import evaluate_task
+from .negotiation import negotiation_telemetry
 from .llm_metrics import aggregate_runs, denial_recovery
 from .metrics import suite_metrics, task_metrics
 from .receipts import Ledger
@@ -41,7 +43,13 @@ def _repeated_requests(ledger: Ledger, task_id: str) -> int:
 
 def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
                        base_url: str, runs: int = 5, tasks=None,
-                       max_steps: int = 40) -> dict:
+                       max_steps: int = 40, condition: str = "control") -> dict:
+    """condition: "control" (three-method facade, current manifest) or
+    "treatment" (facade additionally exposes capability discovery; the
+    driver factory is expected to build discovery-aware drivers)."""
+    if condition not in ("control", "treatment"):
+        raise ValueError(f"unknown condition {condition!r}")
+    discovery = condition == "treatment"
     tasks = tasks if tasks is not None else task_suite()
     os.makedirs(out_dir, exist_ok=True)
     started = datetime.now(timezone.utc).isoformat()
@@ -70,7 +78,7 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
         ledger = Ledger(clock=clock.now, sink_path=receipts_path)
         authority = PolicyAuthority(experiment_policy(), clock=clock.now)
         broker = CapabilityBroker(corpus, authority, ledger, clock=clock.now)
-        harness = Harness(broker, ledger)
+        harness = Harness(broker, ledger, discovery=discovery)
 
         per_task: dict[str, dict] = {}
         success: dict[str, bool] = {}
@@ -91,8 +99,11 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
             record["answer"] = result.answer
             # receipt-grounded evaluation (docs/EVALUATOR.md): derived from
             # the receipt rows alone; the legacy `success` is kept as-is
+            rows = [r.to_dict() for r in ledger.all()]
             record["receipt_grounded"] = evaluate_task(
-                [r.to_dict() for r in ledger.all()], task.task_id, task.prompt)
+                rows, task.task_id, task.prompt)
+            record["negotiation"] = negotiation_telemetry(
+                rows, task.task_id, authority.rules)
             per_task[task.task_id] = record
 
         suite = suite_metrics(per_task, success)
@@ -119,6 +130,9 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
         "label": label, "model": model, "base_url": base_url, "runs": runs,
         "driver": "llm-adapter", "exploratory": True,
         "max_steps": max_steps,
+        "condition": condition,
+        "capability_discovery": discovery,
+        "policy_version": policy_version(experiment_policy()),
         "runs_completed": runs_reused + runs_executed,
         "runs_reused": runs_reused,
         "runs_executed": runs_executed,

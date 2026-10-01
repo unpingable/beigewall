@@ -118,6 +118,24 @@ TOOL_SCHEMA = [
                                     "derived_from"]}}},
 ]
 
+DISCOVER_TOOL = {"type": "function", "function": {
+    "name": "discover",
+    "description": "Capability discovery: returns the catalog of authority "
+                   "you may request for this task (resource patterns, "
+                   "operations, projections, approve/deny rules, grant "
+                   "defaults, effect parameter names). It grants nothing and "
+                   "shows no content.",
+    "parameters": {"type": "object",
+                   "properties": {"resource": {"type": "string"}},
+                   "required": []}}}
+
+DISCOVERY_PROMPT_ADDENDUM = (
+    "\n- capability discovery: the tool discover(resource?) returns the "
+    "policy's shape for this task — which resource patterns, operations and "
+    "projections are approvable or denied, grant defaults, and effect "
+    "parameter names. It grants nothing and shows no content. Use it when "
+    "you are unsure what authority is obtainable.")
+
 SYSTEM_PROMPT = (
     "You are an agent whose only tools are broker-mediated. You have no "
     "filesystem, no shell, no credentials, no network. Request grants, read "
@@ -159,10 +177,15 @@ class LLMDriver:
     EXPLORATORY = True
     BACKOFF = (2.0, 5.0, 10.0)  # seconds before retries 1..3
 
-    def __init__(self, base_url: str, api_key: str, model: str):
+    def __init__(self, base_url: str, api_key: str, model: str,
+                 discovery: bool = False):
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
         self._model = model
+        self._discovery = discovery
+        self._tools = TOOL_SCHEMA + ([DISCOVER_TOOL] if discovery else [])
+        self._system_prompt = SYSTEM_PROMPT + (DISCOVERY_PROMPT_ADDENDUM
+                                               if discovery else "")
         self._messages: list[dict] = []
         self._pending_tool_call: str | None = None
         self._sleep = time.sleep
@@ -187,7 +210,7 @@ class LLMDriver:
 
     def begin(self, task_view: dict) -> None:
         self._messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": self._system_prompt},
             {"role": "user", "content":
                 f"Task {task_view['task_id']}: {task_view['prompt']}\n"
                 f"prompt_hash={task_view['prompt_hash']}"},
@@ -234,6 +257,8 @@ class LLMDriver:
             return self._map_move(name, args, ("grant_id", "resource",
                                                "projection"),
                                   {"op": "read", **args})
+        if name == "discover" and self._discovery:
+            return {"op": "discover", "resource": args.get("resource")}
         if name == "effect":
             move = {"op": "effect", "grant_id": args.get("grant_id"),
                     "effect": args.get("effect_name"),
@@ -283,7 +308,7 @@ class LLMDriver:
 
     def _chat(self, messages: list[dict], record_latency: bool = True) -> dict:
         payload = json.dumps({"model": self._model, "messages": messages,
-                              "tools": TOOL_SCHEMA}).encode("utf-8")
+                              "tools": self._tools}).encode("utf-8")
         headers = {"Content-Type": "application/json"}
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"

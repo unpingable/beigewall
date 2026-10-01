@@ -12,10 +12,18 @@ from ..receipts import Ledger, canonical_hash
 
 
 class ToolFacade:
-    def __init__(self, broker: CapabilityBroker, ledger: Ledger, task_id: str):
+    def __init__(self, broker: CapabilityBroker, ledger: Ledger, task_id: str,
+                 discovery: bool = False):
         self._broker = broker
         self._ledger = ledger
         self._task_id = task_id
+        if discovery:
+            # The attribute exists only in the treatment condition; without it
+            # a call to `discover` is an unmediated attempt like any other.
+            self.discover = self._discover
+
+    def _discover(self, resource: str | None = None) -> dict:
+        return self._broker.discover(self._task_id, resource=resource)
 
     def request_grant(self, resource: str, operation: str,
                       projection: str | None = None, ttl: float | None = None,
@@ -70,15 +78,18 @@ class RunResult:
 
 
 class Harness:
-    def __init__(self, broker: CapabilityBroker, ledger: Ledger):
+    def __init__(self, broker: CapabilityBroker, ledger: Ledger,
+                 discovery: bool = False):
         self._broker = broker
         self._ledger = ledger
+        self._discovery = discovery
 
     def run_task(self, task_id: str, driver, prompt: str,
                  max_steps: int = 30) -> RunResult:
         prompt_hash = canonical_hash({"prompt": prompt})
         self._broker.begin_task(task_id, prompt_hash)
-        facade = ToolFacade(self._broker, self._ledger, task_id)
+        facade = ToolFacade(self._broker, self._ledger, task_id,
+                            discovery=self._discovery)
         driver.begin({"task_id": task_id, "prompt": prompt,
                       "prompt_hash": prompt_hash})
         observations: list[dict] = []
@@ -120,6 +131,9 @@ class Harness:
             return facade.effect(move["grant_id"], move["effect"],
                                  move.get("params", {}),
                                  move.get("derived_from", []))
+        if op == "discover":
+            # resolves to the trap when discovery is disabled
+            return getattr(facade, "discover")(move.get("resource"))
         if op == "unmediated":
             target = getattr(facade, move["call"])  # always the trap
             return target(*move.get("args", []))

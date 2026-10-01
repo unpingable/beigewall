@@ -31,6 +31,10 @@ def main() -> int:
     parser.add_argument("--label", default=None)
     parser.add_argument("--out", default=None)
     parser.add_argument("--max-steps", type=int, default=40)
+    parser.add_argument("--condition", choices=("control", "treatment"),
+                        default="control",
+                        help="treatment exposes capability discovery "
+                             "(phase 4); control is the phase 2/3 setup")
     args = parser.parse_args()
 
     probe = LLMDriver.from_env()
@@ -55,14 +59,16 @@ def main() -> int:
         return 2
 
     def factory(_task):
-        return LLMDriver(base_url, api_key, model)
+        return LLMDriver(base_url, api_key, model,
+                         discovery=args.condition == "treatment")
 
     print(f"running {args.runs} exploratory run(s) of 12 tasks "
-          f"against {model} @ {base_url}")
+          f"against {model} @ {base_url} [condition={args.condition}]")
     print(f"output: {out}")
     result = run_llm_experiment(factory, out, label=label, model=model,
                                 base_url=base_url, runs=args.runs,
-                                max_steps=args.max_steps)
+                                max_steps=args.max_steps,
+                                condition=args.condition)
     agg = result["aggregate"]
     s = agg["suite"]["success_rate"]
     print(f"success rate per run: {['%.2f' % r for r in s['per_run']]} "
