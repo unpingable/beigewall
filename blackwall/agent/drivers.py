@@ -238,8 +238,19 @@ class LLMDriver:
         reply = self._chat(self._messages + [{"role": "user", "content": prompt}],
                            record_latency=False)
         text = reply["choices"][0]["message"].get("content", "")
+        return self._parse_narrative(text)
+
+    @staticmethod
+    def _parse_narrative(text: str) -> dict:
+        stripped = text.strip()
+        if stripped.startswith("```"):
+            lines = stripped.splitlines()
+            lines = lines[1:]  # drop opening fence (```json or ```)
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            stripped = "\n".join(lines).strip()
         try:
-            data = json.loads(text)
+            data = json.loads(stripped)
             return {"claims": data.get("claims", []),
                     "declared_effects": data.get("declared_effects", []),
                     "summary": data.get("summary", "")}
