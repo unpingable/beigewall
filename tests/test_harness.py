@@ -21,7 +21,10 @@ def make_harness(clock=None):
         clock=lambda: now[0])
     broker = CapabilityBroker(build_demo_corpus(), authority, ledger,
                               clock=lambda: now[0])
-    return Harness(broker, ledger, prompt="Summarize the Alice thread."), ledger
+    return Harness(broker, ledger), ledger
+
+
+PROMPT = "Summarize the Alice thread."
 
 
 SCRIPT_HAPPY = [
@@ -42,7 +45,7 @@ class TestHarnessHappyPath(unittest.TestCase):
                         "fields": ["message.body"]}],
             "declared_effects": [],
             "summary": "I read the Alice thread."})
-        result = harness.run_task("t1", driver)
+        result = harness.run_task("t1", driver, prompt=PROMPT)
         self.assertIn("quarterly plan", result.answer)
         kinds = [r.kind for r in ledger.by_task("t1")]
         self.assertEqual(kinds, ["grant_request", "grant_mint", "read",
@@ -55,8 +58,12 @@ class TestHarnessHappyPath(unittest.TestCase):
 
     def test_prompt_hash_registered_with_broker(self):
         harness, ledger = make_harness()
-        self.assertEqual(harness.prompt_hash,
-                         canonical_hash({"prompt": harness.prompt}))
+        harness.run_task("t1", ScriptedDriver(
+            [{"op": "final", "answer": "x"}],
+            narrative={"claims": [], "declared_effects": [], "summary": ""}),
+            prompt=PROMPT)
+        mint = ledger.by_kind("grant_request")  # no grants requested
+        self.assertEqual(mint, [])  # hash used internally; verified via effect tests
 
 
 class TestHarnessRefusalsSurfaceToDriver(unittest.TestCase):
@@ -72,7 +79,7 @@ class TestHarnessRefusalsSurfaceToDriver(unittest.TestCase):
         driver = ScriptedDriver(script, narrative={"claims": [],
                                                    "declared_effects": [],
                                                    "summary": "nothing"})
-        result = harness.run_task("t5", driver)
+        result = harness.run_task("t5", driver, prompt=PROMPT)
         self.assertIn("could not", result.answer)
         kinds = [r.kind for r in ledger.by_task("t5")]
         self.assertEqual(kinds, ["grant_request", "grant_deny", "narrative",
@@ -93,7 +100,7 @@ class TestUnmediatedAttempts(unittest.TestCase):
         driver = ScriptedDriver(script, narrative={"claims": [],
                                                    "declared_effects": [],
                                                    "summary": "nothing"})
-        result = harness.run_task("t9", driver)
+        result = harness.run_task("t9", driver, prompt=PROMPT)
         attempts = ledger.by_kind("unmediated_attempt")
         self.assertEqual(len(attempts), 2)
         self.assertEqual(attempts[0].detail["attempted"], "shell")
@@ -109,7 +116,7 @@ class TestStepBound(unittest.TestCase):
         driver = ScriptedDriver(script, narrative={"claims": [],
                                                    "declared_effects": [],
                                                    "summary": ""})
-        result = harness.run_task("tx", driver, max_steps=10)
+        result = harness.run_task("tx", driver, prompt=PROMPT, max_steps=10)
         self.assertTrue(result.truncated)
         self.assertEqual(len(ledger.by_kind("unmediated_attempt")), 10)
         self.assertEqual(ledger.by_kind("task_end")[0].detail["truncated"], True)

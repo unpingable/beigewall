@@ -70,17 +70,17 @@ class RunResult:
 
 
 class Harness:
-    def __init__(self, broker: CapabilityBroker, ledger: Ledger, prompt: str):
+    def __init__(self, broker: CapabilityBroker, ledger: Ledger):
         self._broker = broker
         self._ledger = ledger
-        self.prompt = prompt
-        self.prompt_hash = canonical_hash({"prompt": prompt})
 
-    def run_task(self, task_id: str, driver, max_steps: int = 30) -> RunResult:
-        self._broker.begin_task(task_id, self.prompt_hash)
+    def run_task(self, task_id: str, driver, prompt: str,
+                 max_steps: int = 30) -> RunResult:
+        prompt_hash = canonical_hash({"prompt": prompt})
+        self._broker.begin_task(task_id, prompt_hash)
         facade = ToolFacade(self._broker, self._ledger, task_id)
-        driver.begin({"task_id": task_id, "prompt": self.prompt,
-                      "prompt_hash": self.prompt_hash})
+        driver.begin({"task_id": task_id, "prompt": prompt,
+                      "prompt_hash": prompt_hash})
         observations: list[dict] = []
         answer = None
         truncated = True

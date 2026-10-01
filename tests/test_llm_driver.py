@@ -83,6 +83,7 @@ class TestLLMDriver(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.server.shutdown()
+        cls.server.server_close()
 
     def test_from_env_gating(self):
         saved = {k: os.environ.pop(k, None)
@@ -106,9 +107,9 @@ class TestLLMDriver(unittest.TestCase):
             clock=lambda: now[0])
         broker = CapabilityBroker(build_demo_corpus(), authority, ledger,
                                   clock=lambda: now[0])
-        harness = Harness(broker, ledger, prompt="Summarize the Alice thread.")
+        harness = Harness(broker, ledger)
         driver = LLMDriver(self.base_url, "test-key", "stub-model")
-        result = harness.run_task("tl1", driver)
+        result = harness.run_task("tl1", driver, prompt="Summarize the Alice thread.")
         self.assertIn("quarterly plan", result.answer)
         kinds = [r.kind for r in ledger.by_task("tl1")]
         self.assertEqual(kinds, ["grant_request", "grant_mint", "read",
