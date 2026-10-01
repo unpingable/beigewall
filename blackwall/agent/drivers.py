@@ -79,6 +79,11 @@ class ScriptedDriver:
     def narrate(self) -> dict:
         return self._narrative
 
+    def telemetry(self) -> dict:
+        """Uniform driver interface; the scripted driver has no endpoint."""
+        return {"turns": 0, "malformed_requests": 0, "transport_retries": 0,
+                "latencies": [], "tool_calls_by_name": {}}
+
 
 TOOL_SCHEMA = [
     {"type": "function", "function": {
