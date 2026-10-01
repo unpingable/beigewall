@@ -143,6 +143,38 @@ least one denial/refusal); friction (grants requested per successful task).
 - [x] Final verification: 106 tests green; two runs → byte-identical
       `metrics.json` and `receipts.jsonl` (asserted in tests/test_metrics.py)
 
+## Phase 2 milestones / status (real-model exploratory, all complete, 2026-10-01)
+
+Locked for this phase: no redesign of the authority model; broker, grants,
+projections, receipts, effects, corpus, task definitions, and evaluation
+semantics unchanged except documented fail-closed incompatibilities. Canonical
+results re-verified byte-identical after every change.
+
+- [x] LLM driver real-endpoint plumbing (tool roles, unknown-tool trap →
+      unmediated-attempt telemetry, malformed-argument telemetry, bounded
+      retries); harness `malformed` op. Canonical untouched.
+- [x] `blackwall/llm_metrics.py`: denial-recovery classification
+      (adjusted_minted / adjusted_denied / repeated / no_retry) + cross-run
+      aggregation with variance.
+- [x] `blackwall/llm_experiment.py` + `run_llm_experiment.py`: per-run isolated
+      runner (fresh corpus/ledger/authority), artifacts + aggregate + meta,
+      env-gated opt-in CLI, refuses `--out` inside `results/canonical/`,
+      resumable (sealed runs reused).
+- [x] Documented broker fail-closed fixes (concrete incompatibilities found via
+      real model): unknown resource names → refusal; malformed `derived_from`
+      → refusal. Canonical byte-identical after each.
+- [x] System-prompt environment manifest (addressing metadata only; no task
+      wording changes; no corpus content disclosed).
+- [x] Self-check: scripted drivers through the LLM runner reproduce canonical
+      receipts byte-for-byte.
+- [x] Real-model experiment: local Ollama `gpt-oss:20b`, 5 runs × 12 tasks,
+      sealed at `results/exploratory/gpt-oss-20b-20261001T185916Z/`
+      (checkpointed, resumable; runs 1–2 at `edf24b2`, runs 3–5 at `18e6228`,
+      orchestration-only delta).
+- [x] Receipt-verified functional analysis + `FINDINGS_REALMODEL.md`;
+      README/HANDOFF updated.
+- [x] Final verification: 134 tests green; canonical byte-identical.
+
 ## Handoff protocol for a resuming agent
 
 1. Read `PLAN.md` (this file), `HANDOFF.md`, and `git log --oneline`.

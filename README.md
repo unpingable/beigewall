@@ -82,7 +82,7 @@ claimed. See "Known limitations".
 ## Usage
 
 ```
-python3 -m unittest discover -s tests     # 106 tests
+python3 -m unittest discover -s tests     # 134 tests
 python3 run_experiment.py                 # writes results/canonical/
 python3 run_experiment.py --out /tmp/x    # byte-identical metrics/receipts
 ```
@@ -90,14 +90,29 @@ python3 run_experiment.py --out /tmp/x    # byte-identical metrics/receipts
 Canonical artifacts: `results/canonical/receipts.jsonl` (authoritative),
 `metrics.json`, `report.md`. Interpretation: `FINDINGS.md`.
 
+Exploratory real-model runs (opt-in, env-gated, never touch
+`results/canonical/`):
+
+```
+BLACKWALL_LLM_BASE_URL=http://localhost:11434/v1 \
+BLACKWALL_LLM_MODEL=gpt-oss:20b \
+python3 run_llm_experiment.py --runs 5 --label gpt-oss-20b
+# writes results/exploratory/<label>-<utc-ts>/
+```
+
+Exploratory artifacts and interpretation: `FINDINGS_REALMODEL.md`.
+
 ## Known limitations
 
 - **No OS isolation.** The authority boundary is convention, not mechanism.
   Realizing it needs process isolation or a capability-secure runtime.
 - **Scripted normative driver.** It proves the mediation layer enforces and
   measures; it does not prove a real model would navigate grant requests as
-  competently. The LLM adapter exists (stub-server tested) but no real-endpoint
-  run has been performed.
+  competently. The LLM adapter is stub-server tested, and one real-endpoint
+  exploratory experiment has been run (local gpt-oss:20b, 5×12 tasks) — see
+  `FINDINGS_REALMODEL.md`: the authority plane held in 60/60 executions while
+  strict task success fell to 25%. One model, one endpoint; not a general
+  result.
 - **Dependency provenance, not taint.** `derived_from` records declared
   dependencies and validates their existence; it does not prove the effect's
   content actually flowed from them.
