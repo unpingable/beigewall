@@ -63,7 +63,11 @@ untrusted-process restart or a relabelled task.
 
 - `resource_policy` (written once at server start, and again after a
   trusted restart): the configured bounds, so an observer knows the
-  budget.
+  budget; after a restart also `rebuilt_consumed` and `rebuilt_over_cap`.
+  A restart may keep or tighten the policy of the ledger it resumes;
+  dropping or loosening it on any field refuses to start (hostile review
+  F2) — the policy in force is always the last row, and it is never
+  weaker than an earlier one.
 - Budget refusal: the existing `refusal` kind with reason
   `effect budget exhausted: <effect> on <resource> (<consumed>/<cap>)`,
   `task effect budget exhausted (<consumed>/<cap>)`, or
@@ -76,6 +80,19 @@ untrusted-process restart or a relabelled task.
   on restart. A restart therefore never turns "3 consumed" into "0
   consumed"; with phase 6's closure rule the task cannot continue anyway,
   so the rebuild is a belt-and-braces invariant, documented as such.
+  Rebuilt counters above a tighter cap are retained (they refuse); the
+  consume-time invariant is asserted for the key just consumed, never as
+  a global scan after the handler (hostile review F1).
+- The independent observer (`lifecycle_metrics`) recognises a budget
+  refusal by the trusted `budget` detail only — never by reason text,
+  which can echo client-supplied strings — and agrees only when the
+  claimed scope is bounded by the policy row and the claimed counts equal
+  its own count at the cap. Rate refusals cannot be recomputed (the
+  wall-clock window is not receipted): they are reported as
+  `rate_limited_stated` and accepted only when a rate policy exists, the
+  detail is self-consistent and at least `cap` effects of that kind were
+  observed. A successful effect past the policy is reported as
+  `over_budget_success` (a disagreement).
 
 ## Conditions
 
@@ -104,7 +121,13 @@ Experimental values (small, to expose bypasses; not architecture):
 | N concurrent connections vs cap M (N ≫ M) | effects ≤ M, no double consumption |
 | replayed effect frame | "effect grant consumed" (existing) |
 | trusted restart | counters rebuilt from the ledger; task closed anyway |
+| trusted restart with a weaker or absent policy | server refuses to start |
 | malformed budget configuration | server refuses to start |
+
+The matrix runs every attack against one server in sequence, so later
+rows see an exhausted budget; the fresh-budget variant (one server per
+attack, `fresh-C-*.json`) shows each renewal path bounded at the cap from
+zero.
 
 ## Usefulness evaluation additions
 

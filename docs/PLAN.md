@@ -341,13 +341,17 @@ OS/user/namespace work; no general rate-limiting framework.
       changes; rebuilt from effect receipts on restart; `resource_policy`
       receipt; budget refusals receipted with scope/consumed/cap; observer
       verifies them. Unbounded by default (canonical byte-identical).
-- [ ] Hostile stress client + attack matrix (`run_effect_stress.py`),
+- [x] Hostile stress client + attack matrix (`run_effect_stress.py`),
       including N ≫ M concurrency, reconnect, second process, replay, forged
-      counters/task/grant ids, trusted restart.
-- [ ] Budget usefulness metrics (correctly blocked over-budget vs
-      incorrectly blocked legitimate effect; unrequested effects separate).
-- [ ] Deterministic results; hostile review; real-model bounded run vs the
-      phase 6 unbounded control; `FINDINGS_PHASE6B.md`; HANDOFF.
+      counters/task/grant ids, trusted restart; fresh-budget variant.
+- [x] Budget usefulness metrics (correctly blocked over-budget vs
+      incorrectly blocked legitimate effect; unrequested effects separate;
+      `unknown_need` when no contract).
+- [x] Deterministic results; hostile review (9 findings: restart policy
+      changes, observer verification, configuration edges — fixed or
+      documented, `tests/test_review_6b.py`).
+- [ ] Real-model bounded run vs the phase 6 unbounded control;
+      `FINDINGS_PHASE6B.md`; HANDOFF.
 
 ## Handoff protocol for a resuming agent
 
