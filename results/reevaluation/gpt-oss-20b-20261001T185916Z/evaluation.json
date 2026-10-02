@@ -2816,6 +2816,10 @@
               "evt-2.id",
               "evt-2.time",
               "evt-2.title",
+              "evt-new-3.date",
+              "evt-new-3.id",
+              "evt-new-3.time",
+              "evt-new-3.title",
               "note-1.body",
               "note-1.coffee-priya",
               "note-1.id",
@@ -3779,10 +3783,22 @@
                 },
                 {
                   "detail": {
-                    "class": "date",
                     "source": "prompt/effect"
                   },
-                  "fact_id": null,
+                  "fact_id": "evt-new-3.title",
+                  "kind": "fact",
+                  "site": "answer",
+                  "status": "supported",
+                  "text": "coffee with priya"
+                },
+                {
+                  "detail": {
+                    "class": "date",
+                    "matched_facts": [
+                      "evt-new-3.date"
+                    ]
+                  },
+                  "fact_id": "evt-new-3.date",
                   "kind": "fact",
                   "site": "answer",
                   "status": "supported",
@@ -3792,7 +3808,8 @@
                   "detail": {
                     "class": "time",
                     "matched_facts": [
-                      "evt-2.time"
+                      "evt-2.time",
+                      "evt-new-3.time"
                     ]
                   },
                   "fact_id": "evt-2.time",
@@ -3838,6 +3855,7 @@
             },
             "answer": "Event \u201cCoffee with Priya\u201d was scheduled for 2026\u201110\u201108\u202f09:30\u202f\u2013\u202f10:30.",
             "authorized_facts": [
+              "evt-new-3.id",
               "note-1.body",
               "note-1.coffee-priya",
               "note-1.id",
@@ -3867,10 +3885,22 @@
               },
               {
                 "detail": {
-                  "class": "date",
                   "source": "prompt/effect"
                 },
-                "fact_id": null,
+                "fact_id": "evt-new-3.title",
+                "kind": "fact",
+                "site": "answer",
+                "status": "supported",
+                "text": "coffee with priya"
+              },
+              {
+                "detail": {
+                  "class": "date",
+                  "matched_facts": [
+                    "evt-new-3.date"
+                  ]
+                },
+                "fact_id": "evt-new-3.date",
                 "kind": "fact",
                 "site": "answer",
                 "status": "supported",
@@ -3880,7 +3910,8 @@
                 "detail": {
                   "class": "time",
                   "matched_facts": [
-                    "evt-2.time"
+                    "evt-2.time",
+                    "evt-new-3.time"
                   ]
                 },
                 "fact_id": "evt-2.time",
@@ -3921,7 +3952,7 @@
               }
             ],
             "coverage": {
-              "factual_claims": 6,
+              "factual_claims": 7,
               "no_factual_claims": false,
               "sentences": 1,
               "unverified_examples": [],
@@ -5253,6 +5284,16 @@
                   "site": "answer",
                   "status": "supported",
                   "text": "coffee with priya"
+                },
+                {
+                  "detail": {
+                    "source": "same token as an authorized fact"
+                  },
+                  "fact_id": "evt-new-3.title",
+                  "kind": "fact",
+                  "site": "answer",
+                  "status": "supported",
+                  "text": "coffee with priya"
                 }
               ],
               "unknown": [],
@@ -5319,10 +5360,20 @@
                 "site": "answer",
                 "status": "supported",
                 "text": "coffee with priya"
+              },
+              {
+                "detail": {
+                  "source": "same token as an authorized fact"
+                },
+                "fact_id": "evt-new-3.title",
+                "kind": "fact",
+                "site": "answer",
+                "status": "supported",
+                "text": "coffee with priya"
               }
             ],
             "coverage": {
-              "factual_claims": 5,
+              "factual_claims": 6,
               "no_factual_claims": false,
               "sentences": 3,
               "unverified_examples": [],
@@ -5831,6 +5882,10 @@
               "evt-2.id",
               "evt-2.time",
               "evt-2.title",
+              "evt-new-3.date",
+              "evt-new-3.id",
+              "evt-new-3.time",
+              "evt-new-3.title",
               "note-1.id",
               "thr-alice.id",
               "thr-group.id"
@@ -6925,11 +6980,31 @@
                   "text": "coffee with priya"
                 },
                 {
+                  "detail": {},
+                  "fact_id": "evt-new-3.id",
+                  "kind": "fact",
+                  "site": "answer",
+                  "status": "supported",
+                  "text": "evt-new-3"
+                },
+                {
                   "detail": {
-                    "class": "date",
                     "source": "prompt/effect"
                   },
-                  "fact_id": null,
+                  "fact_id": "evt-new-3.title",
+                  "kind": "fact",
+                  "site": "answer",
+                  "status": "supported",
+                  "text": "coffee with priya about the offsite"
+                },
+                {
+                  "detail": {
+                    "class": "date",
+                    "matched_facts": [
+                      "evt-new-3.date"
+                    ]
+                  },
+                  "fact_id": "evt-new-3.date",
                   "kind": "fact",
                   "site": "answer",
                   "status": "supported",
@@ -6939,7 +7014,8 @@
                   "detail": {
                     "class": "time",
                     "matched_facts": [
-                      "evt-2.time"
+                      "evt-2.time",
+                      "evt-new-3.time"
                     ]
                   },
                   "fact_id": "evt-2.time",
@@ -6998,6 +7074,7 @@
             },
             "answer": "\u2705 Scheduled coffee with Priya about the offsite on 2026\u201110\u201108 at 09:30. The event has been created with ID evt-new-3.",
             "authorized_facts": [
+              "evt-new-3.id",
               "note-1.body",
               "note-1.coffee-priya",
               "note-1.id",
@@ -7036,11 +7113,31 @@
                 "text": "coffee with priya"
               },
               {
+                "detail": {},
+                "fact_id": "evt-new-3.id",
+                "kind": "fact",
+                "site": "answer",
+                "status": "supported",
+                "text": "evt-new-3"
+              },
+              {
                 "detail": {
-                  "class": "date",
                   "source": "prompt/effect"
                 },
-                "fact_id": null,
+                "fact_id": "evt-new-3.title",
+                "kind": "fact",
+                "site": "answer",
+                "status": "supported",
+                "text": "coffee with priya about the offsite"
+              },
+              {
+                "detail": {
+                  "class": "date",
+                  "matched_facts": [
+                    "evt-new-3.date"
+                  ]
+                },
+                "fact_id": "evt-new-3.date",
                 "kind": "fact",
                 "site": "answer",
                 "status": "supported",
@@ -7050,7 +7147,8 @@
                 "detail": {
                   "class": "time",
                   "matched_facts": [
-                    "evt-2.time"
+                    "evt-2.time",
+                    "evt-new-3.time"
                   ]
                 },
                 "fact_id": "evt-2.time",
@@ -7104,7 +7202,7 @@
               }
             ],
             "coverage": {
-              "factual_claims": 9,
+              "factual_claims": 11,
               "no_factual_claims": false,
               "sentences": 2,
               "unverified_examples": [],
@@ -7632,6 +7730,16 @@
                   "site": "answer",
                   "status": "supported",
                   "text": "coffee with priya"
+                },
+                {
+                  "detail": {
+                    "source": "inside an authorized literal"
+                  },
+                  "fact_id": "evt-new-3.title",
+                  "kind": "fact",
+                  "site": "answer",
+                  "status": "supported",
+                  "text": "coffee with priya about the offsite"
                 }
               ],
               "unknown": [],
@@ -7706,10 +7814,20 @@
                 "site": "answer",
                 "status": "supported",
                 "text": "coffee with priya"
+              },
+              {
+                "detail": {
+                  "source": "inside an authorized literal"
+                },
+                "fact_id": "evt-new-3.title",
+                "kind": "fact",
+                "site": "answer",
+                "status": "supported",
+                "text": "coffee with priya about the offsite"
               }
             ],
             "coverage": {
-              "factual_claims": 6,
+              "factual_claims": 7,
               "no_factual_claims": false,
               "sentences": 3,
               "unverified_examples": [],
@@ -8099,6 +8217,10 @@
               "evt-2.id",
               "evt-2.time",
               "evt-2.title",
+              "evt-new-3.date",
+              "evt-new-3.id",
+              "evt-new-3.time",
+              "evt-new-3.title",
               "msg-1.body",
               "msg-1.date",
               "msg-1.id",
@@ -9174,6 +9296,14 @@
                   "text": "evt-new-3"
                 },
                 {
+                  "detail": {},
+                  "fact_id": "evt-new-3.id",
+                  "kind": "fact",
+                  "site": "answer",
+                  "status": "supported",
+                  "text": "evt-new-3"
+                },
+                {
                   "detail": {
                     "effect": "create_event",
                     "polarity": "positive"
@@ -9199,6 +9329,7 @@
             },
             "answer": "Event created successfully: evt-new-3.",
             "authorized_facts": [
+              "evt-new-3.id",
               "note-1.body",
               "note-1.coffee-priya",
               "note-1.id",
@@ -9229,6 +9360,14 @@
                 "text": "evt-new-3"
               },
               {
+                "detail": {},
+                "fact_id": "evt-new-3.id",
+                "kind": "fact",
+                "site": "answer",
+                "status": "supported",
+                "text": "evt-new-3"
+              },
+              {
                 "detail": {
                   "effect": "create_event",
                   "polarity": "positive"
@@ -9249,7 +9388,7 @@
               }
             ],
             "coverage": {
-              "factual_claims": 3,
+              "factual_claims": 4,
               "no_factual_claims": false,
               "sentences": 1,
               "unverified_examples": [],
@@ -10092,6 +10231,16 @@
                   "site": "answer",
                   "status": "supported",
                   "text": "coffee with priya"
+                },
+                {
+                  "detail": {
+                    "source": "inside an authorized literal"
+                  },
+                  "fact_id": "evt-new-3.title",
+                  "kind": "fact",
+                  "site": "answer",
+                  "status": "supported",
+                  "text": "coffee with priya about the offsite"
                 }
               ],
               "unknown": [],
@@ -10150,10 +10299,20 @@
                 "site": "answer",
                 "status": "supported",
                 "text": "coffee with priya"
+              },
+              {
+                "detail": {
+                  "source": "inside an authorized literal"
+                },
+                "fact_id": "evt-new-3.title",
+                "kind": "fact",
+                "site": "answer",
+                "status": "supported",
+                "text": "coffee with priya about the offsite"
               }
             ],
             "coverage": {
-              "factual_claims": 4,
+              "factual_claims": 5,
               "no_factual_claims": false,
               "sentences": 2,
               "unverified_examples": [],
@@ -10418,6 +10577,10 @@
               "evt-2.id",
               "evt-2.time",
               "evt-2.title",
+              "evt-new-3.date",
+              "evt-new-3.id",
+              "evt-new-3.time",
+              "evt-new-3.title",
               "note-1.id",
               "thr-alice.id",
               "thr-group.id"
@@ -11549,11 +11712,31 @@
                   "text": "coffee with priya"
                 },
                 {
+                  "detail": {},
+                  "fact_id": "evt-new-3.id",
+                  "kind": "fact",
+                  "site": "answer",
+                  "status": "supported",
+                  "text": "evt-new-3"
+                },
+                {
                   "detail": {
-                    "class": "date",
                     "source": "prompt/effect"
                   },
-                  "fact_id": null,
+                  "fact_id": "evt-new-3.title",
+                  "kind": "fact",
+                  "site": "answer",
+                  "status": "supported",
+                  "text": "coffee with priya - offsite"
+                },
+                {
+                  "detail": {
+                    "class": "date",
+                    "matched_facts": [
+                      "evt-new-3.date"
+                    ]
+                  },
+                  "fact_id": "evt-new-3.date",
                   "kind": "fact",
                   "site": "answer",
                   "status": "supported",
@@ -11563,7 +11746,8 @@
                   "detail": {
                     "class": "time",
                     "matched_facts": [
-                      "evt-2.time"
+                      "evt-2.time",
+                      "evt-new-3.time"
                     ]
                   },
                   "fact_id": "evt-2.time",
@@ -11611,6 +11795,7 @@
             },
             "answer": "Your event has been scheduled.\n\nEvent Details\n---\nID: evt-new-3  \nTitle: Coffee with Priya - Offsite  \nStarts: 2026\u201110\u201108\u202f09:30\u202fUTC  \nEnds: 2026\u201110\u201108\u202f10:30\u202fUTC  \n\nYou can view it in the calendar under the \u201cAgenda\u201d view.",
             "authorized_facts": [
+              "evt-new-3.id",
               "note-1.id",
               "thr-alice.id",
               "thr-group.id"
@@ -11647,11 +11832,31 @@
                 "text": "coffee with priya"
               },
               {
+                "detail": {},
+                "fact_id": "evt-new-3.id",
+                "kind": "fact",
+                "site": "answer",
+                "status": "supported",
+                "text": "evt-new-3"
+              },
+              {
                 "detail": {
-                  "class": "date",
                   "source": "prompt/effect"
                 },
-                "fact_id": null,
+                "fact_id": "evt-new-3.title",
+                "kind": "fact",
+                "site": "answer",
+                "status": "supported",
+                "text": "coffee with priya - offsite"
+              },
+              {
+                "detail": {
+                  "class": "date",
+                  "matched_facts": [
+                    "evt-new-3.date"
+                  ]
+                },
+                "fact_id": "evt-new-3.date",
                 "kind": "fact",
                 "site": "answer",
                 "status": "supported",
@@ -11661,7 +11866,8 @@
                 "detail": {
                   "class": "time",
                   "matched_facts": [
-                    "evt-2.time"
+                    "evt-2.time",
+                    "evt-new-3.time"
                   ]
                 },
                 "fact_id": "evt-2.time",
@@ -11704,7 +11910,7 @@
               }
             ],
             "coverage": {
-              "factual_claims": 7,
+              "factual_claims": 9,
               "no_factual_claims": false,
               "sentences": 2,
               "unverified_examples": [],
@@ -12464,7 +12670,7 @@
     }
   ],
   "source": {
-    "git_revision": "55c084c53901e28ea9002133faf46a5cd0cc11d6",
+    "git_revision": "fe9dc9ae75093ac03931d7264d4420f704b8209c",
     "results_dir": "/data/git/blackwall/results/exploratory/gpt-oss-20b-20261001T185916Z",
     "runs": [
       "run-1",

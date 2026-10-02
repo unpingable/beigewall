@@ -1,6 +1,6 @@
 # Receipt-grounded re-evaluation
 
-Source: `/data/git/blackwall/results/exploratory/gpt-oss-20b-20261001T185916Z`; runs: run-1, run-2, run-3, run-4, run-5; revision: `55c084c53901e28ea9002133faf46a5cd0cc11d6`.
+Source: `/data/git/blackwall/results/exploratory/gpt-oss-20b-20261001T185916Z`; runs: run-1, run-2, run-3, run-4, run-5; revision: `fe9dc9ae75093ac03931d7264d4420f704b8209c`.
 
 ## Headline
 

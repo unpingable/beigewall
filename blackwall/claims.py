@@ -245,6 +245,29 @@ def extract_claims(text: str, catalog: dict[str, Fact], disclosure: Disclosure,
             claimed_facts.add(fact.fact_id)
             break
 
+    # one token, several catalog facts (e.g. the same address on a seeded
+    # and a runtime-created event): supported if any of them is authorized
+    by_span: dict[str, list[Claim]] = {}
+    for c in claims:
+        if c.kind == "fact" and c.fact_id and c.detail.get("polarity") != "negated":
+            by_span.setdefault(c.text, []).append(c)
+    for span, group in by_span.items():
+        if len(group) > 1 and any(c.status == "supported" for c in group):
+            for c in group:
+                if c.status == "unsupported":
+                    c.status = "supported"
+                    c.detail["source"] = "same token as an authorized fact"
+    # a shorter span inside an authorized literal ("coffee with priya" inside
+    # the disclosed event title) is covered by that literal
+    supported_spans = [c.text for c in claims
+                       if c.kind == "fact" and c.status == "supported"]
+    for c in claims:
+        if (c.kind == "fact" and c.status == "unsupported"
+                and c.detail.get("polarity") != "negated"
+                and any(c.text != sp and c.text in sp for sp in supported_spans)):
+            c.status = "supported"
+            c.detail["source"] = "inside an authorized literal"
+
     # --- dates and times ---------------------------------------------------
     date_facts = [f for f in catalog.values() if f.fact_id.endswith(".date")]
     time_facts = [f for f in catalog.values() if f.fact_id.endswith(".time")]

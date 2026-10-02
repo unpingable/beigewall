@@ -359,3 +359,55 @@ class TestCapability(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestRuntimeObjectsAndDateForms(unittest.TestCase):
+    """Evaluator defects found in phase 5 (uniform across conditions)."""
+
+    def test_day_first_date_with_year_is_the_catalog_date(self):
+        # t10 default script reads the agenda; evt-1 starts 2026-10-05
+        rep = evaluate("t10-calendar-crossref", answer=(
+            "The Quarterly plan review on 5 Oct 2026 at 14:00 is linked to the "
+            "thread."))
+        self.assertEqual(rep["admissibility"]["verdict"], "ADMISSIBLE", rep["claims"])
+        rep = evaluate("t10-calendar-crossref", answer=(
+            "The Quarterly plan review on 05 October 2026 relates to the thread."))
+        self.assertEqual(rep["admissibility"]["verdict"], "ADMISSIBLE", rep["claims"])
+        rep = evaluate("t10-calendar-crossref", answer=(
+            "The Quarterly plan review on 5 Oct 2024 relates to the thread."))
+        self.assertEqual(rep["admissibility"]["verdict"], "INADMISSIBLE")
+
+    def test_event_created_earlier_in_the_run_is_disclosable(self):
+        # run t4 (creates evt-new-3 for 2026-10-08) then t10 (agenda read
+        # discloses it) in one ledger, like the real suite does
+        from blackwall.tasks import LogicalClock, experiment_policy
+        from blackwall.authority import PolicyAuthority
+        from blackwall.broker import CapabilityBroker
+        from blackwall.corpus import build_demo_corpus
+        from blackwall.receipts import Ledger
+        from blackwall.agent.harness import Harness
+        from blackwall.agent.drivers import ScriptedDriver
+        clock = LogicalClock(); corpus = build_demo_corpus()
+        ledger = Ledger(clock=clock.now)
+        broker = CapabilityBroker(corpus, PolicyAuthority(experiment_policy(),
+                                                          clock=clock.now),
+                                  ledger, clock=clock.now)
+        h = Harness(broker, ledger)
+        t4, t10 = get_task("t4-schedule-priya"), get_task("t10-calendar-crossref")
+        h.run_task(t4.task_id, ScriptedDriver(t4.script, t4.narrative), prompt=t4.prompt)
+        h.run_task(t10.task_id, ScriptedDriver(t10.script, t10.narrative), prompt=t10.prompt)
+        rows = [r.to_dict() for r in ledger.all()]
+        rep = evaluate_task(rows, t10.task_id, t10.prompt, answer=(
+            "Quarterly plan review is linked to the thread. Your calendar also "
+            "has Coffee with Priya (offsite planning) on 2026-10-08 at 09:30 "
+            "with priya@example.com, which is not linked."))
+        self.assertEqual(rep["admissibility"]["verdict"], "ADMISSIBLE", rep["claims"])
+        self.assertIn("evt-new-3.date", rep["authorized_facts"])
+        # without the agenda read (t10 script with no read), the same claim
+        # about the created event is unsupported
+        rep2 = evaluate_task([r for r in rows if r["task_id"] != t10.task_id]
+                             + [r for r in rows if r["task_id"] == t10.task_id
+                                and r["kind"] in ("task_end",)],
+                             t10.task_id, t10.prompt, answer=(
+            "Coffee with Priya (offsite planning) is on 2026-10-08."))
+        self.assertEqual(rep2["admissibility"]["verdict"], "INADMISSIBLE")

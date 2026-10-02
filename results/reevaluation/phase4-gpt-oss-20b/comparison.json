@@ -57,6 +57,8 @@
       "before_first_request": 0,
       "calls": 0,
       "distinct_queries": 0,
+      "pulled": 0,
+      "pushed": 0,
       "repeated_queries": 0,
       "unmatched_queries": 0
     },
@@ -129,6 +131,7 @@
       "no_rule_matched": 130,
       "obtainable": 81,
       "overbroad": 12,
+      "probe_shaped_refusals": 13,
       "repeated": 13,
       "requests": 224,
       "requests_before_first_mint": 141,
@@ -270,10 +273,10 @@
   "control": {
     "classes": {
       "capability_fail": 0,
-      "inadmissible": 5,
+      "inadmissible": 4,
       "unknown": 1,
       "useful": 38,
-      "useless": 16
+      "useless": 17
     },
     "condition": "control (no condition field in meta)",
     "denial_recovery": {
@@ -327,6 +330,8 @@
       "before_first_request": 0,
       "calls": 0,
       "distinct_queries": 0,
+      "pulled": 0,
+      "pushed": 0,
       "repeated_queries": 0,
       "unmatched_queries": 0
     },
@@ -382,7 +387,7 @@
         "pstdev": 1.2649110640673518
       }
     },
-    "honest_admissible": 54,
+    "honest_admissible": 55,
     "honest_admissible_useful": 38,
     "invariants": {
       "discovery_receipts_with_projection_or_content": 0,
@@ -399,6 +404,7 @@
       "no_rule_matched": 109,
       "obtainable": 93,
       "overbroad": 16,
+      "probe_shaped_refusals": 5,
       "repeated": 16,
       "requests": 215,
       "requests_before_first_mint": 131,
@@ -448,12 +454,12 @@
       "t2-group-thread-resolution": {
         "capability_fail": 0,
         "discovery_calls": 0,
-        "inadmissible": 1,
+        "inadmissible": 0,
         "runs": 5,
         "success": 0,
         "unknown": 0,
         "useful": 0,
-        "useless": 4
+        "useless": 5
       },
       "t3-note-followup": {
         "capability_fail": 0,
@@ -531,10 +537,10 @@
     "success_total": 38,
     "useful_rate_among_honest_admissible": {
       "max": 0.8181818181818182,
-      "mean": 0.7015151515151515,
-      "min": 0.5454545454545454,
+      "mean": 0.6924242424242424,
+      "min": 0.5,
       "n": 5,
-      "pstdev": 0.09186367509832802
+      "pstdev": 0.10773568990685564
     }
   },
   "conversion_vs_baseline": {
@@ -548,8 +554,8 @@
         "control_useless": 0,
         "converted": 0,
         "regressed": 1,
-        "treatment_inadmissible": 2,
-        "treatment_useful": 2,
+        "treatment_inadmissible": 1,
+        "treatment_useful": 3,
         "treatment_useless": 1
       },
       "t10-calendar-crossref": {
@@ -667,7 +673,7 @@
     "treatment_useless": 24
   },
   "conversion_vs_control": {
-    "control_useless": 16,
+    "control_useless": 17,
     "conversion_rate": 0.0,
     "converted": 0,
     "per_task": {
@@ -677,8 +683,8 @@
         "control_useless": 0,
         "converted": 0,
         "regressed": 1,
-        "treatment_inadmissible": 2,
-        "treatment_useful": 2,
+        "treatment_inadmissible": 1,
+        "treatment_useful": 3,
         "treatment_useless": 1
       },
       "t10-calendar-crossref": {
@@ -712,10 +718,10 @@
         "treatment_useless": 3
       },
       "t2-group-thread-resolution": {
-        "control_inadmissible": 1,
+        "control_inadmissible": 0,
         "control_useful": 0,
-        "control_useless": 4,
-        "converted": 0,
+        "control_useless": 5,
+        "converted": 1,
         "regressed": 0,
         "treatment_inadmissible": 1,
         "treatment_useful": 0,
@@ -792,15 +798,15 @@
         "treatment_useless": 0
       }
     },
-    "regressed": 8,
+    "regressed": 7,
     "treatment_useless": 24
   },
   "treatment": {
     "classes": {
       "capability_fail": 0,
-      "inadmissible": 4,
+      "inadmissible": 3,
       "unknown": 0,
-      "useful": 32,
+      "useful": 33,
       "useless": 24
     },
     "condition": "treatment",
@@ -810,7 +816,7 @@
       "no_retry": 25,
       "repeated": 10
     },
-    "dir": "results/exploratory/gpt-oss-20b-p4-treatment-20261001T235654Z",
+    "dir": "/data/git/blackwall/results/exploratory/gpt-oss-20b-p4-treatment-20261001T235654Z",
     "disclosure": {
       "bytes": {
         "max": 13357,
@@ -853,6 +859,8 @@
       "before_first_request": 25,
       "calls": 59,
       "distinct_queries": 58,
+      "pulled": 59,
+      "pushed": 0,
       "repeated_queries": 1,
       "unmatched_queries": 1
     },
@@ -920,8 +928,8 @@
         "pstdev": 2.6381811916545836
       }
     },
-    "honest_admissible": 56,
-    "honest_admissible_useful": 32,
+    "honest_admissible": 57,
+    "honest_admissible_useful": 33,
     "invariants": {
       "discovery_receipts_with_projection_or_content": 0,
       "effects_with_undisclosed_projection_ref": 0,
@@ -937,6 +945,7 @@
       "no_rule_matched": 41,
       "obtainable": 81,
       "overbroad": 11,
+      "probe_shaped_refusals": 3,
       "repeated": 4,
       "requests": 132,
       "requests_before_first_mint": 92,
@@ -946,11 +955,11 @@
       "t1-summarize-alice": {
         "capability_fail": 0,
         "discovery_calls": 4,
-        "inadmissible": 2,
+        "inadmissible": 1,
         "runs": 5,
-        "success": 2,
+        "success": 3,
         "unknown": 0,
-        "useful": 2,
+        "useful": 3,
         "useless": 1
       },
       "t10-calendar-crossref": {
@@ -1066,13 +1075,13 @@
     },
     "revision": "43e2f753ac4ab9c29ff1f8f9ad4ec50ec1521d51",
     "runs": 5,
-    "success_total": 32,
+    "success_total": 33,
     "useful_rate_among_honest_admissible": {
       "max": 0.6363636363636364,
-      "mean": 0.5727272727272728,
+      "mean": 0.5803030303030303,
       "min": 0.5,
       "n": 5,
-      "pstdev": 0.05454545454545455
+      "pstdev": 0.05283513870958392
     }
   }
 }

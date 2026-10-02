@@ -21,7 +21,7 @@ from .claims import Claim, extract_claims
 from .contracts import AnswerContract, EffectSpec, contract_for
 from .corpus import build_demo_corpus
 from .disclosure import Disclosure, authorized_facts, disclosure_from_receipts, is_authorized
-from .facts import Fact, fact_catalog, normalize
+from .facts import Fact, fact_catalog, normalize, runtime_event_facts
 
 _CATALOG_CACHE: dict[str, Fact] | None = None
 
@@ -149,7 +149,11 @@ def evaluate_usefulness(disclosure: Disclosure, contract: AnswerContract,
 def evaluate_task(receipts: list[dict], task_id: str, prompt: str, *,
                   answer: str | None = None, contract: AnswerContract | None = None,
                   catalog: dict[str, Fact] | None = None) -> dict:
-    catalog = catalog or default_catalog()
+    catalog = dict(catalog or default_catalog())
+    # objects created by effects earlier in the run (any task) are part of
+    # the receipt graph; a projection that discloses them authorizes their
+    # facts exactly like seeded objects
+    catalog.update(runtime_event_facts(receipts))
     contract = contract or contract_for(task_id)
     disclosure = disclosure_from_receipts(receipts, task_id, prompt)
     if answer is None:
@@ -157,13 +161,19 @@ def evaluate_task(receipts: list[dict], task_id: str, prompt: str, *,
 
     claims = extract_claims(answer, catalog, disclosure, site="answer")
     for e in disclosure.effects:
+        # the effect that creates an object is not a claim about that
+        # object: exclude the runtime facts it defines from its own params
+        created = (e.get("result_summary") or {}).get("event_id")
+        site_catalog = ({k: v for k, v in catalog.items()
+                         if not k.startswith(f"{created}.")}
+                        if created else catalog)
         for key, value in e.get("effect", {}).get("params", {}).items():
             params_text = " ".join(_strings(value))
             # start/end of a created event are the agent's scheduling
             # choices, not assertions about the corpus; every other param
             # (body, title, description, attendees) is fully checked
             claims.extend(extract_claims(
-                params_text, catalog, disclosure, site="effect",
+                params_text, site_catalog, disclosure, site="effect",
                 skip_datetime=key in ("start", "end")))
 
     capability = evaluate_capability(disclosure, contract, catalog)

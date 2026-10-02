@@ -74,7 +74,9 @@ def _single(object_id: str, field: str) -> tuple:
 
 
 def _literal(value: str) -> str:
-    return r"\b" + re.escape(normalize(value)) + r"\b"
+    # lookarounds rather than \b so literals that end in punctuation
+    # ("... (offsite planning)") still match
+    return r"(?<!\w)" + re.escape(normalize(value)) + r"(?!\w)"
 
 
 def _body_pattern(body: str) -> str:
@@ -94,7 +96,10 @@ def date_patterns(iso_ts: str) -> list[str]:
     for name in names:
         forms.append(rf"{name}\.? {int(d)}\b(,? {y})?")
         forms.append(rf"{name}\.? {d}\b(,? {y})?")
-        forms.append(rf"\b{int(d)} {name}\b")
+        forms.append(rf"\b{int(d)} (of )?{name}\b(,? {y})?")
+        forms.append(rf"\b{d} (of )?{name}\b(,? {y})?")
+    forms.append(rf"\b{int(d)}/{int(m)}/{y}\b")
+    forms.append(rf"\b{int(m)}/{int(d)}/{y}\b")
     return forms
 
 
@@ -274,6 +279,43 @@ def fact_catalog(corpus: Corpus) -> dict[str, Fact]:
             raise ValueError(f"duplicate fact id {f.fact_id}")
         catalog[f.fact_id] = f
     return catalog
+
+
+def runtime_event_facts(receipts: list[dict]) -> dict[str, Fact]:
+    """Facts about events created at runtime by `create_event` effects
+    (anywhere in the run): their title, start date/time and attendee
+    addresses, sourced to the created object's `event.*` fields so that an
+    agenda read that discloses the new object authorizes them. Derived from
+    effect receipts only — the receipt graph, not the agent."""
+    facts: dict[str, Fact] = {}
+    for r in receipts:
+        if r.get("kind") != "effect":
+            continue
+        eff = r.get("effect", {})
+        eid = (r.get("result_summary") or {}).get("event_id")
+        if eff.get("name") != "create_event" or not eid:
+            continue
+        params = eff.get("params", {}) or {}
+        src = _single(eid, "event.id")
+        facts[f"{eid}.id"] = Fact(f"{eid}.id", src, (_literal(eid),), "id")
+        title = params.get("title")
+        if isinstance(title, str) and title.strip():
+            facts[f"{eid}.title"] = Fact(f"{eid}.title", _single(eid, "event.title"),
+                                         (_literal(title),), "value",
+                                         text=title)
+        start = params.get("start")
+        if isinstance(start, str) and len(start) >= 10:
+            facts[f"{eid}.date"] = Fact(f"{eid}.date", _single(eid, "event.start"),
+                                        tuple(date_patterns(start)), "value")
+            if len(start) >= 16 and start[10] in "tT":
+                facts[f"{eid}.time"] = Fact(f"{eid}.time", _single(eid, "event.start"),
+                                            tuple(time_patterns(start)), "value")
+        for att in params.get("attendees") or []:
+            if isinstance(att, str) and "@" in att:
+                facts[f"{eid}.attendee-{att.split('@')[0]}"] = Fact(
+                    f"{eid}.attendee-{att.split('@')[0]}",
+                    _single(eid, "event.attendees"), (_literal(att),), "value")
+    return facts
 
 
 def _referrers(corpus: Corpus, oid: str) -> list:

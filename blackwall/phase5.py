@@ -82,15 +82,92 @@ def summarize(cond: dict) -> dict:
     return s
 
 
+def _per_run(cond_summary_input: dict, key: str) -> list[float]:
+    """Per-run values of a primary measure from an enriched condition."""
+    out = []
+    for r in cond_summary_input["runs"]:
+        ts = list(r["per_task"].values())
+        ha = [t for t in ts if t["class"] in ("useful", "useless")]
+        if key == "useful_rate_ha":
+            out.append(sum(1 for t in ha if t["class"] == "useful") / len(ha) if ha else 0.0)
+        elif key == "useless":
+            out.append(sum(1 for t in ts if t["class"] == "useless"))
+        elif key == "useful":
+            out.append(sum(1 for t in ts if t["class"] == "useful"))
+        elif key == "empty":
+            out.append(sum(1 for t in ts if t["empty_answer"]))
+        elif key == "grants_requested":
+            out.append(sum(t["metrics"]["grants_requested"] for t in ts))
+    return out
+
+
+def permutation_test(a: list[float], b: list[float]) -> dict:
+    """Exact two-sided permutation test on the difference of means (all
+    C(n+m, n) relabelings when that is ≤ 200k, else deterministic
+    seeded sampling). Deterministic; stdlib only."""
+    import itertools
+    import math
+    import random
+    pooled = list(a) + list(b)
+    n, total = len(a), len(pooled)
+    observed = statistics.mean(a) - statistics.mean(b) if a and b else 0.0
+    if not a or not b:
+        return {"observed_diff": observed, "p_two_sided": None, "method": "n/a"}
+    count = 0
+    combos = math.comb(total, n)
+    if combos <= 200_000:
+        hits = 0
+        for idx in itertools.combinations(range(total), n):
+            sa = [pooled[i] for i in idx]
+            rest = [pooled[i] for i in range(total) if i not in set(idx)]
+            if abs(statistics.mean(sa) - statistics.mean(rest)) >= abs(observed) - 1e-12:
+                hits += 1
+            count += 1
+        method = f"exact ({combos} relabelings)"
+    else:
+        rng = random.Random(20261002)
+        hits = 0
+        for _ in range(20_000):
+            rng.shuffle(pooled)
+            sa, rest = pooled[:n], pooled[n:]
+            if abs(statistics.mean(sa) - statistics.mean(rest)) >= abs(observed) - 1e-12:
+                hits += 1
+            count += 1
+        method = "sampled (20000, seed 20261002)"
+    return {"observed_diff": observed, "p_two_sided": hits / count, "method": method,
+            "n_a": n, "n_b": len(b)}
+
+
+def per_run_tests(enriched: dict, base_name: str = "control") -> dict:
+    base = enriched.get(base_name)
+    if base is None:
+        return {}
+    out = {}
+    for name, cond in enriched.items():
+        if name == base_name:
+            continue
+        out[name] = {}
+        for key in ("useful_rate_ha", "useless", "useful", "empty", "grants_requested"):
+            out[name][key] = permutation_test(_per_run(cond, key), _per_run(base, key))
+    return out
+
+
 def compare(conditions: dict, anchors: dict | None = None) -> dict:
     """conditions: {name: dir}; the entry named "control" is the comparison
     base. anchors: {name: dir} of sealed earlier batches, reported but never
     pooled."""
     out = {"conditions": {}, "anchors": {}, "conversion": {}}
+    enriched, enriched_anchors = {}, {}
     for name, d in conditions.items():
-        out["conditions"][name] = summarize(enrich(load_condition(d)))
+        enriched[name] = enrich(load_condition(d))
+        out["conditions"][name] = summarize(enriched[name])
     for name, d in (anchors or {}).items():
-        out["anchors"][name] = summarize(enrich(load_condition(d)))
+        enriched_anchors[name] = enrich(load_condition(d))
+        out["anchors"][name] = summarize(enriched_anchors[name])
+    out["per_run_tests"] = per_run_tests(enriched)
+    # batch drift: every anchor against the fresh control, same tests
+    out["anchor_tests"] = per_run_tests({**enriched_anchors, "control": enriched.get("control")}) \
+        if "control" in enriched else {}
     base = out["conditions"].get("control")
     if base:
         for name, s in out["conditions"].items():
@@ -140,6 +217,22 @@ def render(result: dict) -> str:
         L.append(f"| {tid} | " + " | ".join(
             f"{c['per_task'][tid]['useless']}/{c['per_task'][tid]['useful']}"
             for _, c in conds) + " |")
+    if result.get("per_run_tests"):
+        L += ["", "Per-run permutation tests vs control (difference of per-run means; "
+              "two-sided p):", "", "| condition | measure | diff | p | method |",
+              "|---|---|---|---|---|"]
+        for name, tests in result["per_run_tests"].items():
+            for key, t in tests.items():
+                L.append(f"| {name} | {key} | {t['observed_diff']:+.3f} | "
+                         f"{'-' if t['p_two_sided'] is None else f'{t['p_two_sided']:.3f}'} | {t['method']} |")
+        if result.get("anchor_tests"):
+            L += ["", "Batch drift: sealed anchors vs the phase 5 control (same tests):", "",
+                  "| anchor | measure | diff | p |", "|---|---|---|---|"]
+            for name, tests in result["anchor_tests"].items():
+                for key in ("useful_rate_ha", "useless", "empty"):
+                    t = tests[key]
+                    L.append(f"| {name} | {key} | {t['observed_diff']:+.3f} | "
+                             f"{'-' if t['p_two_sided'] is None else f'{t['p_two_sided']:.3f}'} |")
     L += ["", "Per-run variance of the useless count per task (mean, sd over runs):", "",
           "| task | " + " | ".join(n for n, _ in conds) + " |", "|---|" + "---|" * len(conds)]
     for tid in sorted(conds[0][1]["per_task"]):
