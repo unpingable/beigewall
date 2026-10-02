@@ -17,7 +17,7 @@ recorded and unchanged; the real-model exploratory result is recorded in
 
 ```
 cd /data/git/blackwall
-python3 -m unittest discover -s tests    # expect: Ran 272 tests ... OK
+python3 -m unittest discover -s tests    # expect: Ran 318 tests ... OK
 python3 run_experiment.py --out /tmp/bw-check
 diff /tmp/bw-check/metrics.json results/canonical/metrics.json     # identical
 diff /tmp/bw-check/receipts.jsonl results/canonical/receipts.jsonl # identical
@@ -122,11 +122,19 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   encountered it (it mints just in time and never reuses a grant), so
   real-model expiry recovery remains unobserved (deterministic coverage
   exists); refusal-reason oracle repaired. `FINDINGS_PHASE5C.md`.
-- **Next**: the OS/process-boundary experiment. Not started here; start it
-  deliberately. Carry forward: the budget-count wording re-seal; a
-  lifecycle design where one grant must span several uses if real-model
-  expiry recovery is to be observed; the "approvable ≠ expected" effect
-  policy question.
+- **Phase 6 in progress (2026-10-02)**: process boundary built and reviewed
+  (`a757097`): trusted membrane server (`python3 -m blackwall.ipc.server`)
+  and untrusted agent process (`run_agent_process.py`) joined only by
+  `blackwall-ipc/1` over a Unix socket; 21+2 adversarial probes, 7
+  lifecycle tests, equivalence and import-graph tests; scripted suite
+  across processes == canonical ledger. Real-model run under
+  `results/exploratory/phase6-ipc-gpt-oss-20b/` (orchestrator
+  `run_ipc_experiment.py`; benchmark `python3 -m blackwall.ipc_bench`).
+  Same-user limitation: no OS enforcement of the storage/socket boundary
+  (documented in `docs/PROCESS_BOUNDARY.md`). Carry forward unchanged: the
+  budget-count wording re-seal; multi-use grants for real-model expiry;
+  the "approvable ≠ expected" effect policy question, now quantified
+  (unbounded grants/effects per task).
 - **Policy question raised by phase 5**: an approvable effect is not an
   expected effect; effect *grants* carry no user-intent reference.
 - **Refusal-reason oracle (phase 5C): repaired for existence/type.**

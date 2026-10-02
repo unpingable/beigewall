@@ -317,7 +317,10 @@ data. Design: `docs/PROCESS_BOUNDARY.md`; results: `FINDINGS_PHASE6.md`.
 - [x] 21 adversarial probes, 7 lifecycle tests, equivalence and import-graph
       tests against real subprocesses (303 tests).
 - [x] Orchestrator (`run_ipc_experiment.py`), benchmark (`ipc_bench`).
-- [ ] Hostile review; defects fixed with reproducers and regression tests.
+- [x] Hostile review: 2 high (client-chosen task identity; agent-shaped
+      records crashing evaluation), 5 medium, several low — all fixed with
+      reproducers and regression tests; quantified limitations documented
+      (unbounded grants/effects per task; same-user visibility). 318 tests.
 - [ ] Scripted + real-model runs under `results/exploratory/phase6-ipc-*`;
       IPC overhead vs in-process.
 - [ ] `FINDINGS_PHASE6.md` results; HANDOFF updated.

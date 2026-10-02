@@ -71,6 +71,11 @@ untrusted side                     trusted side (mediation layer)
   checks every broker decision. Effect grants are consumed by their first
   successful effect; grants can be revoked. `docs/LIFECYCLE.md`,
   `FINDINGS_PHASE5B.md`.
+- **Process boundary** (`blackwall/ipc/`, phase 6): the membrane as a
+  separate trusted process behind a Unix-domain socket and a fail-closed,
+  versioned protocol; the agent process holds only harness, driver and a
+  remote facade and imports no trusted module. `docs/PROCESS_BOUNDARY.md`,
+  `FINDINGS_PHASE6.md`.
 - **Agent harness** (`blackwall/agent/`): a simple tool loop. The scripted
   driver is the normative experiment (deterministic; intentionally includes
   correct behavior, overbroad requests, repeated grant requests, inference
@@ -107,7 +112,7 @@ claimed. See "Known limitations".
 ## Usage
 
 ```
-python3 -m unittest discover -s tests     # 272 tests
+python3 -m unittest discover -s tests     # 318 tests
 python3 run_experiment.py                 # writes results/canonical/
 python3 run_experiment.py --out /tmp/x    # byte-identical metrics/receipts
 python3 run_reevaluation.py results/canonical                 # receipt-grounded
