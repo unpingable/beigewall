@@ -137,7 +137,8 @@ class TestReads(BrokerFixture):
         with self.assertRaises(RefusalError) as ctx:
             self.broker.read("t1", g["grant_id"], "messages/thread/alice",
                              projection="conversation@1")
-        self.assertIn("unknown resource", str(ctx.exception))
+        # phase 5C: unknown and wrong-typed ids share one reason (no oracle)
+        self.assertIn("not available", str(ctx.exception))
 
     def test_effect_on_nonexistent_target_refused_not_crash(self):
         self.broker.begin_task("t8", self.prompt_hash)
@@ -155,7 +156,8 @@ class TestReads(BrokerFixture):
                     {"type": "projection",
                      "ref": out["projection_meta"]["content_hash"]},
                     {"type": "user_input", "ref": self.prompt_hash}])
-        self.assertIn("unknown resource", str(ctx.exception))
+        # phase 5C: unknown and wrong-typed ids share one reason (no oracle)
+        self.assertIn("not available", str(ctx.exception))
 
 
 class TestEffects(BrokerFixture):

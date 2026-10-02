@@ -12670,7 +12670,7 @@
     }
   ],
   "source": {
-    "git_revision": "fe9dc9ae75093ac03931d7264d4420f704b8209c",
+    "git_revision": "0d15277da922744cc9088c20c6e7cd6cf5422406",
     "results_dir": "/data/git/blackwall/results/exploratory/gpt-oss-20b-20261001T185916Z",
     "runs": [
       "run-1",

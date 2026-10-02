@@ -201,12 +201,10 @@ class TestFacadeMalformed(unittest.TestCase):
 
 
 class TestKnownOpenDefect(unittest.TestCase):
-    @unittest.expectedFailure
     def test_refusal_reasons_do_not_reveal_existence_or_type(self):
-        """PRE-EXISTING, OPEN: refusal reasons differ between an unknown id,
-        a wrong-typed id and a budget overflow, and no read is charged.
-        Fixing it changes sealed canonical receipts (t6's refusal reason) and
-        the live control condition; deferred with this pin."""
+        """Was an expected failure in phase 5 (refusal-reason oracle);
+        repaired in phase 5C: one reason for unknown and wrong-typed ids,
+        and every refused read is charged."""
         _, _, _, broker = fixture()
         broker.begin_task("t1-summarize-alice", "h")
         g = broker.request_grant("t1-summarize-alice", "messages/*", "read",
@@ -216,9 +214,9 @@ class TestKnownOpenDefect(unittest.TestCase):
             try:
                 broker.read("t1-summarize-alice", g, res, "conversation@1")
             except RefusalError as exc:
-                reasons.add(str(exc))
-        self.assertEqual(len(reasons), 1)   # fails today: two distinct oracles
-        self.assertEqual(broker._grants[g].reads_used, 2)   # fails: probing is free
+                reasons.add(str(exc).replace(res, "<resource>"))
+        self.assertEqual(len(reasons), 1)   # one reason shape: no oracle
+        self.assertEqual(broker._grants[g].reads_used, 2)   # probing is charged
 
 
 if __name__ == "__main__":

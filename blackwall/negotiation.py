@@ -50,7 +50,8 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
             continue
         reason = r.get("reason", "")
         named = {m.group(0) for m in _OBJECT_ID.finditer(reason)} - _MANIFEST
-        if "unknown resource" in reason or (named - disclosed):
+        if ("unknown resource" in reason or "is not available for" in reason
+                or "effect target not available" in reason or (named - disclosed)):
             probe_refusals += 1
     for r in rows:
         if r["kind"] == "grant_request":

@@ -148,11 +148,18 @@ class CapabilityBroker:
                 raise GrantError(
                     f"grant {grant_id} object budget would be exceeded: "
                     f"{new_objects} > {grant.budget.objects}")
-        except (GrantError, ProjectionError) as exc:
+        except GrantError as exc:
+            # interface / own-authority refusals (scope, projection, budget,
+            # expiry, revocation): the reason may be specific. Every refused
+            # read costs one read, so probing is bounded by the approved budget.
+            grant.reads_used += 1
             raise self._refuse(task_id, "read", grant_id, resource, str(exc))
-        except KeyError as exc:
+        except (ProjectionError, KeyError):
+            # protected-state refusals: an unknown id and an id of another
+            # type must be indistinguishable (refusal-reason oracle, phase 5C)
+            grant.reads_used += 1
             raise self._refuse(task_id, "read", grant_id, resource,
-                               f"unknown resource: {exc}")
+                               f"{projection} is not available for {resource}")
 
         grant.reads_used += 1
         grant.objects_disclosed += result.accounting["objects_disclosed"]
@@ -185,9 +192,10 @@ class CapabilityBroker:
         handler = EFFECTS[effect_name]
         try:
             summary = handler(self._corpus, params)
-        except (KeyError, EffectError) as exc:
+        except (KeyError, EffectError):
+            # unknown target and wrong-typed target are indistinguishable
             raise self._refuse(task_id, effect_name, grant_id, resource,
-                               f"unknown resource or invalid effect target: {exc}")
+                               "effect target not available")
         grant.effects_used += 1
         receipt = self._ledger.record("effect", task_id, grant_id=grant_id,
                                       effect={"name": effect_name, "params": params},
