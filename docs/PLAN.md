@@ -303,6 +303,25 @@ results: `FINDINGS_PHASE5C.md`.
 - [x] `FINDINGS_PHASE5C.md`; HANDOFF updated. Phase 5C sealed; the
       OS/process-boundary experiment is next and was not started.
 
+## Phase 6 milestones / status (process boundary, 2026-10-02)
+
+Smallest real process boundary; no containers/VMs/seccomp/namespaces/desktop
+data. Design: `docs/PROCESS_BOUNDARY.md`; results: `FINDINGS_PHASE6.md`.
+
+- [x] `blackwall-ipc/1`: framing, fail-closed validation, bounds.
+- [x] Trusted server (owns corpus/authority/broker/projections/effects/
+      catalog/ledger/prompts); receipt seq, clock and grant ids resume across
+      restart; authority does not.
+- [x] Remote client + untrusted harness/agent process importing no trusted
+      module; scripted suite across processes == canonical ledger.
+- [x] 21 adversarial probes, 7 lifecycle tests, equivalence and import-graph
+      tests against real subprocesses (303 tests).
+- [x] Orchestrator (`run_ipc_experiment.py`), benchmark (`ipc_bench`).
+- [ ] Hostile review; defects fixed with reproducers and regression tests.
+- [ ] Scripted + real-model runs under `results/exploratory/phase6-ipc-*`;
+      IPC overhead vs in-process.
+- [ ] `FINDINGS_PHASE6.md` results; HANDOFF updated.
+
 ## Handoff protocol for a resuming agent
 
 1. Read `PLAN.md` (this file), `HANDOFF.md`, and `git log --oneline`.
