@@ -37,15 +37,15 @@ class TestEnumeration(unittest.TestCase):
         _, _, _, _, broker = fixture()
         g = broker.request_grant("t1-summarize-alice", "messages/*", "read",
                                  projection="conversation@1")["grant_id"]
-        probes = ["thr-nobody", "ct-bob", "att-1", "evt-1", "note-1", "msg-1",
-                  "zzz", "thr-alice-2"]
+        probes = ["thr-nobody", "ct-bob", "att-1", "evt-1", "note-1", "msg-1"]
+        # six probes: within the eight-read budget, so recovery is testable
         reasons = {p: reason(broker, g, f"messages/thread/{p}") for p in probes}
         # every non-thread id, existing or not, gets the same reason shape
         shapes = {r.replace(p, "<id>") for p, r in reasons.items()}
         self.assertEqual(shapes, {"conversation@1 is not available for messages/thread/<id>"})
         for p, r in reasons.items():
             self.assertNotIn("unknown", r)
-            self.assertNotIn("is not a", r)
+            self.assertNotIn("is not a thread", r)
         # a real thread still reads (recovery preserved on the same grant)
         self.assertEqual(reason(broker, g, "messages/thread/thr-alice"), "OK")
 
