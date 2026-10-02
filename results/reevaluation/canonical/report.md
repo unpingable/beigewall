@@ -1,6 +1,6 @@
 # Receipt-grounded re-evaluation
 
-Source: `/data/git/blackwall/results/canonical`; runs: canonical; revision: `cee1103ceaa46b5ce422f288aa59ad90d045519c`.
+Source: `/data/git/blackwall/results/canonical`; runs: canonical; revision: `55c084c53901e28ea9002133faf46a5cd0cc11d6`.
 
 ## Headline
 

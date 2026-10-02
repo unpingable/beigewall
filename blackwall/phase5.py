@@ -170,14 +170,14 @@ def render(result: dict) -> str:
     L += ["", "## Request selection (totals)", "", hdr()]
     for k in ("requests", "obtainable", "unavailable", "overbroad", "no_rule_matched",
               "repeated", "breadth_escalations", "narrowed_after_denial",
-              "requests_before_first_mint"):
+              "requests_before_first_mint", "probe_shaped_refusals"):
         L.append(f"| {k} | " + " | ".join(str(c["negotiation"][k]) for _, c in allc) + " |")
     for k in ("adjusted_minted", "adjusted_denied", "repeated", "no_retry"):
         L.append(f"| denial recovery: {k} | " + " | ".join(
             str(c["denial_recovery"][k]) for _, c in allc) + " |")
     L += ["", "## Discovery use and probing telemetry", "", hdr()]
-    for k in ("calls", "before_first_request", "after_denial", "distinct_queries",
-              "unmatched_queries", "repeated_queries"):
+    for k in ("calls", "pulled", "pushed", "before_first_request", "after_denial",
+              "distinct_queries", "unmatched_queries", "repeated_queries"):
         L.append(f"| {k} | " + " | ".join(str(c["discovery"][k]) for _, c in allc) + " |")
     for n, c in conds:
         if c["discovery_queries"]:

@@ -8,8 +8,13 @@ executions into useful ones without increasing disclosure or reducing
 admissibility?
 """
 
+import re
+
 from .capabilities import policy_decision
 from .grants import scope_matches
+
+_OBJECT_ID = re.compile(r"\b(thr|msg|ct|note|evt|att)-[a-z0-9-]+\b")
+_MANIFEST = {"thr-alice", "thr-group", "note-1"}
 
 WILDCARDS = ("*",)
 
@@ -35,6 +40,18 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
     requests, discoveries = [], []
     first_mint_seq = None
     denial_seqs = []
+    disclosed = {oid for r in rows if r["kind"] == "read"
+                 for oid in r["projection"]["source_object_ids"]}
+    # probe-shaped refusals: the (pre-existing) refusal-reason oracle fired
+    # on an object the task never disclosed, or on an unknown resource
+    probe_refusals = 0
+    for r in rows:
+        if r["kind"] != "refusal":
+            continue
+        reason = r.get("reason", "")
+        named = {m.group(0) for m in _OBJECT_ID.finditer(reason)} - _MANIFEST
+        if "unknown resource" in reason or (named - disclosed):
+            probe_refusals += 1
     for r in rows:
         if r["kind"] == "grant_request":
             decision, rule = policy_decision(
@@ -104,6 +121,7 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
             "requests_before_first_mint": sum(
                 1 for q in requests
                 if first_mint_seq is None or q["seq"] < first_mint_seq),
+            "probe_shaped_refusals": probe_refusals,
         },
         "discovery": {
             "calls": len(discoveries),

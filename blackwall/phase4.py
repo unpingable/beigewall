@@ -112,9 +112,11 @@ def summarize_condition(cond: dict) -> dict:
                             / len(ha) if ha else 0.0)
     neg_keys = ("requests", "obtainable", "unavailable", "overbroad",
                 "no_rule_matched", "repeated", "breadth_escalations",
-                "narrowed_after_denial", "requests_before_first_mint")
-    disc_keys = ("calls", "before_first_request", "after_denial",
-                 "distinct_queries", "unmatched_queries", "repeated_queries")
+                "narrowed_after_denial", "requests_before_first_mint",
+                "probe_shaped_refusals")
+    disc_keys = ("calls", "pulled", "pushed", "before_first_request",
+                 "after_denial", "distinct_queries", "unmatched_queries",
+                 "repeated_queries")
     rec_keys = ("adjusted_minted", "adjusted_denied", "repeated", "no_retry")
     div_keys = ("overclaim", "omission", "imprecise_attribution",
                 "undeclared_effect")
