@@ -71,27 +71,47 @@ The in-process broker — the frozen canonical reference — is unchanged:
    (durable). The resource rebuild counts committed and indeterminate
    intents as consumed and releases aborted ones. The task is closed by
    phase 6's rule anyway.
-5. **Torn tail.** A crash during a write leaves an unparsable last line.
-   The server refuses to start unless `--recover` is given; then it drops
-   exactly that line, fsyncs, and records `trusted_restart
-   {torn_tail_recovered: {bytes, sha256}}`. Any other corruption refuses
-   to start regardless. If the torn line was a commit, its intent is
-   unresolved and becomes indeterminate.
-6. **Ledger ordering.** A row is visible in memory only after it reached
-   the disk, and after one sink failure the ledger is failed for good
-   (`LedgerError`). Only intent, commit, abort and indeterminate rows are
-   fsynced; other rows may be lost by a crash and that loss is visible
-   (seq gaps are not possible — the surviving prefix is contiguous — but
-   the suffix is missing), never silently reinterpreted.
+5. **Torn tail.** A crash during a write leaves a last line without its
+   newline. That is never accepted silently: the server refuses to start
+   unless `--recover` is given; then a tail that parses as a complete row
+   is terminated in place (its newline appended and fsynced) and a partial
+   tail is truncated in place — never by rewriting the file, so there is
+   no moment at which the complete rows are absent — and `trusted_restart
+   {torn_tail_recovered: {bytes, sha256, action}}` records it. Any other
+   corruption refuses to start regardless. If the dropped line was a
+   commit, its intent is unresolved and becomes indeterminate.
+6. **Ledger ordering and durability.** A row is visible in memory only
+   after it reached the disk, and after one sink failure the ledger is
+   failed for good (`LedgerError`); the server is then degraded for every
+   operation (`ledger_failed`, reported by `hello`). The rows an observer's
+   conclusions depend on are fsynced before the response (`DURABLE_KINDS`:
+   read disclosures, grant mints and revocations, task ends, restart and
+   policy rows, lifecycle injections, intents, commits, aborts, markers;
+   the directory once at creation). Grant requests and denials, non-abort
+   refusals, narratives, discovery and ipc rows are not: a power loss may
+   lose a suffix of those, and the loss is visible as absence, never
+   reinterpreted.
+7. **Unexpected handler exceptions** (anything but the handler's own
+   `KeyError`/`EffectError`, which fail before mutation) are an explicit
+   indeterminate outcome: consumed, fail-stop, marked on restart. A failed
+   abort write is an explicit `evidence` error (the effect did not occur)
+   with the intent left for recovery to mark conservatively.
+8. **Ownership and quotas.** The exclusive lock is on the ledger's own
+   inode (a second server through any path to it refuses to start); a
+   duplicate effect id in a prior ledger refuses the start; client-driven
+   rows (narrative, unmediated reports) are bounded per task so a client
+   cannot fill the disk to force the fail-stop.
 
 ## Retry, replay, duplicates
 
 - A retry **on the same grant** after a lost response is safe by
   construction: an effect grant is consumed by its first success, so the
   trusted side either performs the effect now (the first request never
-  arrived) or refuses "effect grant consumed" and, new in this phase,
-  names `prior_effect {effect_id, receipt_id, status: committed |
-  indeterminate}` in the response. The refusal receipt is unchanged.
+  arrived) or refuses and, new in this phase, names `prior_effect
+  {effect_id, receipt_id, status: committed | indeterminate}` in the
+  response — on every refusal of a grant that carried an effect, whatever
+  the reason (consumed, expired, revoked), so expiry between the attempts
+  cannot hide the outcome. The refusal receipt is unchanged.
 - The untrusted client (`RemoteBroker.effect`) does exactly that: on a
   transport failure it re-sends the identical effect on the same grant
   once; a committed prior effect becomes a recovered success observation
@@ -135,6 +155,9 @@ commit). Non-effect calls are unchanged. Measured in `FINDINGS_PHASE6C.md`.
   cannot be undone and the ledger cannot be written atomically with it.
   The claim is the three-state invariant above, nothing stronger.
 - Durability of non-effect rows across a crash (not fsynced).
-- Anything about a ledger an attacker can write: both processes are one
-  UID (phase 6 limitation); phase 7 addresses that.
+- Anything about a ledger an attacker can write: the invariant assumes an
+  honest ledger file (no hash chain, no MAC); both processes are one UID
+  (phase 6 limitation), so the agent process can forge a complete row and
+  steer recovery — demonstrated in `tests/test_review_6c.py` (F10). Phase
+  7 addresses that.
 - Duplicate prevention across grants.

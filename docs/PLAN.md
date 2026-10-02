@@ -369,10 +369,11 @@ OS/user/namespace work.
       In-process canonical semantics unchanged (byte-identical).
 - [x] Fault-injection tests for every named failure point, replay, duplicate
       retry, client restart, trusted restart, observer reconstruction.
-- [ ] Hostile review (consume-before-receipt, receipt-before-effect,
-      duplicates, lost receipts/responses, restart after partial commit,
-      budget/observer disagreement, effect-id reuse, replay); fixes;
-      `FINDINGS_PHASE6C.md`; HANDOFF.
+- [x] Hostile review: 12 findings (recovery rewrite window, retry after
+      expiry, torn-newline wedge, failed abort, degraded scope, fsync set,
+      lock inode, rebuild/observer abort semantics, equivalence blind
+      spot); fixed or documented, `tests/test_review_6c.py`;
+      `FINDINGS_PHASE6C.md`; HANDOFF. Phase 6C sealed 2026-10-02.
 
 ## Handoff protocol for a resuming agent
 

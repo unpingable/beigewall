@@ -18,7 +18,7 @@ recorded and unchanged; the real-model exploratory result is recorded in
 
 ```
 cd /data/git/blackwall
-python3 -m unittest discover -s tests    # expect: Ran 368 tests ... OK
+python3 -m unittest discover -s tests    # expect: Ran 405 tests ... OK
 python3 run_experiment.py --out /tmp/bw-check
 diff /tmp/bw-check/metrics.json results/canonical/metrics.json     # identical
 diff /tmp/bw-check/receipts.jsonl results/canonical/receipts.jsonl # identical
@@ -63,7 +63,7 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   `run_llm_experiment.py` — exploratory real-model telemetry, runner, CLI
 - `blackwall/agent/` — untrusted side: harness (tool loop + facade trap),
   drivers (scripted = normative; LLM = exploratory, env-gated)
-- `tests/` — 368 unittest tests (no real API key required; LLM paths use a
+- `tests/` — 405 unittest tests (no real API key required; LLM paths use a
   stub server); `test_evaluator.py` holds the regression fixtures
 
 ## Resuming / extending
@@ -150,6 +150,20 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   `docs/RESOURCE_BOUNDS.md`. Harness defect fixed: the untrusted client
   now ends a task even when its narrative call loses the connection
   (`tests/test_ipc_task_end.py`).
+- **Phase 6C sealed (2026-10-02)**: evidence durability. The trusted
+  server brackets every effect with a durable `effect_intent` before the
+  handler and an `effect` commit (or aborting refusal) after it, both with
+  a server-minted `effect_id`; a commit that cannot be written is an
+  explicit `indeterminate` outcome and the server fail-stops; a restart
+  records unresolved intents as `effect_indeterminate` and counts them as
+  consumed; a torn ledger tail is refused unless `--recover` (in place,
+  receipted); any refusal on a grant that carried an effect names it, and
+  the untrusted client recovers a lost response on the same grant. Three
+  recovery states established for every named failure point
+  (`tests/test_evidence.py`); hostile review's 12 findings fixed or
+  documented (`tests/test_review_6c.py`). In-process canonical semantics
+  unchanged. Assumes an honest ledger file — the same-UID gap phase 7
+  exists for. `FINDINGS_PHASE6C.md`, `docs/EVIDENCE_DURABILITY.md`.
 - **Next (not started)**: OS enforcement of the boundary — user or
   namespace separation — as its own experiment. Carry forward unchanged:
   the budget-count wording re-seal; multi-use grants for real-model expiry;
