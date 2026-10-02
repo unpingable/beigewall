@@ -3,7 +3,8 @@
 Date: 2026-10-02. Status: **spike complete + real-model exploratory experiment
 complete + receipt-grounded evaluator (phase 3) complete + capability
 negotiation experiment (phase 4) complete + task-conditioned negotiation
-(phase 5) complete + long-horizon authority lifecycle (phase 5B) complete**. All milestones in `docs/PLAN.md`
+(phase 5) complete + long-horizon authority lifecycle (phase 5B) complete +
+context reset / forced expiry / refusal-oracle repair (phase 5C) complete**. All milestones in `docs/PLAN.md`
 (phases 1–4) are checked. Phase 4 result: the discovery mechanism is sound
 and halved negotiation overhead, but did **not** convert the
 honest-but-useless class (0 conversions, 8 regressions); see
@@ -16,7 +17,7 @@ recorded and unchanged; the real-model exploratory result is recorded in
 
 ```
 cd /data/git/blackwall
-python3 -m unittest discover -s tests    # expect: Ran 259 tests ... OK (expected failures=1)
+python3 -m unittest discover -s tests    # expect: Ran 272 tests ... OK
 python3 run_experiment.py --out /tmp/bw-check
 diff /tmp/bw-check/metrics.json results/canonical/metrics.json     # identical
 diff /tmp/bw-check/receipts.jsonl results/canonical/receipts.jsonl # identical
@@ -112,9 +113,18 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   content bleeds across tasks (prior disclosure used as present authority
   to speak; 15 pure-bleed inadmissible executions), usefulness decays with
   session position (50% → ~20%), 40% empty answers. `FINDINGS_PHASE5B.md`.
-- **Next**: the OS/process-boundary question is earned. Cheap first:
-  driver-side per-task disclosure reset (is bleed prompt-fixable?) and a
-  real-model mid-task expiry injection.
+- **Phase 5C sealed (2026-10-02)**: per-task context reset eliminated
+  the pure cross-task bleed class (15 → 0) and the session decay (useful
+  41 → 71 of 130) at 1.8× grant friction, trusted side unchanged; the
+  forced mid-task expiry fired in 11/20 target tasks and the model never
+  encountered it (it mints just in time and never reuses a grant), so
+  real-model expiry recovery remains unobserved (deterministic coverage
+  exists); refusal-reason oracle repaired. `FINDINGS_PHASE5C.md`.
+- **Next**: the OS/process-boundary experiment. Not started here; start it
+  deliberately. Carry forward: the budget-count wording re-seal; a
+  lifecycle design where one grant must span several uses if real-model
+  expiry recovery is to be observed; the "approvable ≠ expected" effect
+  policy question.
 - **Policy question raised by phase 5**: an approvable effect is not an
   expected effect; effect *grants* carry no user-intent reference.
 - **Refusal-reason oracle (phase 5C): repaired for existence/type.**

@@ -36,7 +36,10 @@ _STATED_ONLY = {"projection mismatch": "projection_mismatch",
                 "object budget would be exceeded": "budget_exceeded"}
 _PROVENANCE = ("never disclosed", "malformed derived_from", "prompt hash",
                "non-empty derived_from", "unknown derived_from type")
-_TARGET = ("unknown resource",)
+# target / shape refusals on an otherwise valid grant: the resource is not
+# something this projection or effect can act on (never a grant-state matter)
+_TARGET = ("unknown resource", "is not available for", "effect target not available",
+           "does not match", "does not handle", "is not a ")
 _STALE = ("expired", "revoked")
 _REPLAY = ("read budget exhausted", "effect grant consumed")
 _SCOPE = ("outside scope", "projection mismatch", "operation mismatch")
@@ -106,8 +109,9 @@ class _Grants:
                 "operation": row["operation"],
                 "projection": row.get("projection"),
                 "expires_at": row["expires_at"], "budget": row["budget"],
-                "reads_used": 0, "objects_disclosed": 0, "effects_used": 0,
-                "revoked": False, "mint_seq": row["seq"], "last_refused": False}
+                "reads_used": 0, "reads_charged": 0, "objects_disclosed": 0,
+                "effects_used": 0, "revoked": False, "mint_seq": row["seq"],
+                "last_refused": False}
         elif k == "grant_revoke":
             if row.get("grant_id") in self.g:
                 self.g[row["grant_id"]]["revoked"] = True
@@ -116,11 +120,21 @@ class _Grants:
                                        "seq": row["seq"], "kind": "revoke_unknown",
                                        "grant_id": row.get("grant_id")})
         elif k == "refusal" and row.get("grant_id") in self.g:
-            self.g[row["grant_id"]]["last_refused"] = True
+            st = self.g[row["grant_id"]]
+            st["last_refused"] = True
+            # the repaired broker (phase 5C) charges every refused read; the
+            # pre-repair broker did not. `reads_charged` counts both successes
+            # and refusals; `reads_used` successes only. A success is judged
+            # against the strict count (never masks a definite violation); a
+            # "read budget exhausted" refusal is accepted if the charged count
+            # explains it.
+            if _row_operation(row) == "read" and st["task_id"] == row["task_id"]:
+                st["reads_charged"] += 1
         elif k == "read" and row.get("grant_id") in self.g:
             st = self.g[row["grant_id"]]
             st["last_refused"] = False
             st["reads_used"] += 1
+            st["reads_charged"] += 1
             st["objects_disclosed"] += \
                 row["projection"]["accounting"]["objects_disclosed"]
         elif k == "effect" and row.get("grant_id") in self.g:
@@ -198,7 +212,11 @@ def reconstruct(rows: list[dict]) -> list[dict]:
                 agree = any(_has(reason, _STATE_REASONS[s]) for s in v)
             else:
                 stated = [s for n, s in _STATED_ONLY.items() if n in reason]
-                if stated:
+                st = grants.g.get(row["grant_id"])
+                if ("read budget exhausted" in reason and st is not None
+                        and st["reads_charged"] >= st["budget"]["reads"]):
+                    state, agree = "consumed", True   # explained by charged refusals
+                elif stated:
                     state, agree = stated[0], True
                 elif _has(reason, _PROVENANCE):
                     state, agree = "provenance", True

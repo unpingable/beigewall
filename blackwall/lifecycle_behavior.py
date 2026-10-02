@@ -164,7 +164,8 @@ def trajectory_behaviour(rows: list[dict], evaluations: dict | None = None) -> d
     uses = [o for o in obs.values() if o["broker_outcome"] in ("success", "refused")]
     injections = [r for r in rows if r["kind"] == "lifecycle"
                   and r.get("event") in ("time_jump", "revoke", "transport_loss",
-                                         "duplicate_delivery", "session_restart")]
+                                         "duplicate_delivery", "session_restart",
+                                         "expire_after_first_use")]
     consequence = 0
     for inj in injections:
         ev = inj["event"]
@@ -176,6 +177,8 @@ def trajectory_behaviour(rows: list[dict], evaluations: dict | None = None) -> d
             ok = True   # the clock advance itself is in the chain (ts gap)
         elif ev == "transport_loss":
             ok = any(r["receipt_id"] == inj.get("dropped_receipt_id") for r in rows)
+        elif ev == "expire_after_first_use":
+            ok = any(r["receipt_id"] == inj.get("after_receipt_id") for r in rows)
         elif ev == "duplicate_delivery":
             ok = inj.get("first") in mint_task and inj.get("second") in mint_task
         else:

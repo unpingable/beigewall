@@ -297,8 +297,11 @@ results: `FINDINGS_PHASE5C.md`.
       wrong-typed ids on read and effect paths; refused reads charged);
       interface refusals intact; adversarial enumeration tests; canonical
       byte-identical; the phase 5 expected-failure pin now passes. 268 tests.
-- [ ] A and B real-model runs and results.
-- [ ] `FINDINGS_PHASE5C.md` results; HANDOFF updated.
+- [x] A: pure bleed 15 → 0, useful 41 → 71, position decay gone, friction
+      1.8×; B: expiry fired 11/20, encountered 0/20 (just-in-time grants);
+      observer updated for the repaired broker (272 tests).
+- [x] `FINDINGS_PHASE5C.md`; HANDOFF updated. Phase 5C sealed; the
+      OS/process-boundary experiment is next and was not started.
 
 ## Handoff protocol for a resuming agent
 

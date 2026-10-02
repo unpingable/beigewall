@@ -215,5 +215,38 @@ class TrajectoryTest(unittest.TestCase):
                          {"executions": 1, "useful": 1})
 
 
+class TestObserverChargedRefusals(unittest.TestCase):
+    """Phase 5C: refused reads cost a read on the repaired broker; the
+    observer accepts both broker generations without masking violations."""
+
+    def test_budget_exhausted_after_charged_refusals_agrees(self):
+        b = B().mint("t1", "g-1", reads=3)
+        for i in range(3):
+            b.refuse("t1", "g-1", "conversation@1 is not available for messages/thread/x")
+        b.refuse("t1", "g-1", "grant g-1 read budget exhausted")
+        self.assertEqual(disagreements(b.rows), [])
+
+    def test_success_after_many_refusals_on_old_broker_agrees(self):
+        b = B().mint("t1", "g-1", reads=2)
+        for i in range(5):
+            b.refuse("t1", "g-1", "unknown resource: 'x'")
+        b.read("t1", "g-1")                     # old broker: refusals were free
+        self.assertEqual(disagreements(b.rows), [])
+
+    def test_strict_consumption_still_flags_a_real_violation(self):
+        b = B().mint("t1", "g-1", reads=1).read("t1", "g-1").read("t1", "g-1")
+        self.assertEqual([d["observer_state"] for d in disagreements(b.rows)], ["consumed"])
+
+    def test_target_and_shape_refusals_are_not_disagreements(self):
+        b = B().mint("t1", "g-1")
+        for reason in ("effect target not available",
+                       "conversation@1 is not available for messages/thread/zzz",
+                       "resource 'messages/thread/thr-alice' does not match messages/attachment/<id>",
+                       "contact-directory@1 does not handle contacts/ct-alice",
+                       "ct-bob is not a thread"):
+            b.refuse("t1", "g-1", reason)
+        self.assertEqual(disagreements(b.rows), [])
+
+
 if __name__ == "__main__":
     unittest.main()

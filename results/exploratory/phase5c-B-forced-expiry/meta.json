@@ -1,0 +1,14 @@
+{
+  "base_url": "http://localhost:11434/v1",
+  "complete": true,
+  "condition": "control",
+  "context": "session",
+  "driver": "llm",
+  "finished": "2026-10-02T16:59:52.332078+00:00",
+  "git_revision": "efb74a48e93658741dccdc3d7dab20bea007b560",
+  "label": "phase5c-B-forced-expiry",
+  "model": "gpt-oss:20b",
+  "started": "2026-10-02T16:14:36.183071+00:00",
+  "suite": "expiry",
+  "trajectories": 20
+}

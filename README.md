@@ -104,7 +104,7 @@ claimed. See "Known limitations".
 ## Usage
 
 ```
-python3 -m unittest discover -s tests     # 259 tests (1 expected failure)
+python3 -m unittest discover -s tests     # 272 tests
 python3 run_experiment.py                 # writes results/canonical/
 python3 run_experiment.py --out /tmp/x    # byte-identical metrics/receipts
 python3 run_reevaluation.py results/canonical                 # receipt-grounded

@@ -1,0 +1,14 @@
+{
+  "base_url": "http://localhost:11434/v1",
+  "complete": true,
+  "condition": "control",
+  "context": "reset",
+  "driver": "llm",
+  "finished": "2026-10-02T16:14:36.069495+00:00",
+  "git_revision": "4c926e4fcaa7f8ebbee7f2bc745430d85972fdf3",
+  "label": "phase5c-A-context-reset",
+  "model": "gpt-oss:20b",
+  "started": "2026-10-02T15:05:55.543370+00:00",
+  "suite": "lifecycle",
+  "trajectories": 20
+}
