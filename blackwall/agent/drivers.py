@@ -191,7 +191,12 @@ class LLMDriver:
         self._sleep = time.sleep
         self._telemetry = {"turns": 0, "malformed_requests": 0,
                            "transport_retries": 0, "latencies": [],
-                           "tool_calls_by_name": {}}
+                           "tool_calls_by_name": {},
+                           # safe metadata about non-answer fields only:
+                           # presence and size, never content
+                           "reasoning_turns": 0, "reasoning_chars": 0,
+                           "final_reasoning_only": False,
+                           "final_empty": False}
 
     @classmethod
     def from_env(cls) -> "LLMDriver | None":
@@ -229,10 +234,19 @@ class LLMDriver:
         reply = self._chat(self._messages)
         self._telemetry["turns"] += 1
         message = reply["choices"][0]["message"]
+        reasoning = message.get("reasoning")
+        if isinstance(reasoning, str) and reasoning:
+            self._telemetry["reasoning_turns"] += 1
+            self._telemetry["reasoning_chars"] += len(reasoning)
         self._messages.append(message)
         tool_calls = message.get("tool_calls") or []
         if not tool_calls:
-            return {"op": "final", "answer": message.get("content", "")}
+            content = message.get("content") or ""
+            if not content.strip():
+                self._telemetry["final_empty"] = True
+                self._telemetry["final_reasoning_only"] = bool(
+                    isinstance(reasoning, str) and reasoning.strip())
+            return {"op": "final", "answer": content}
         call = tool_calls[0]
         fn = call["function"]
         name = fn["name"]
