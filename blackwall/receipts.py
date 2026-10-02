@@ -44,9 +44,25 @@ class Ledger:
         self._clock = clock
         self._sink_path = sink_path
         self._receipts: list[Receipt] = []
+        self._seq_offset = 0
+
+    @staticmethod
+    def existing_rows(path: str) -> list[dict]:
+        """Rows already in a JSONL sink (for a trusted-process restart)."""
+        import os
+        if not path or not os.path.exists(path):
+            return []
+        with open(path, encoding="utf-8") as fh:
+            return [json.loads(line) for line in fh if line.strip()]
+
+    def resume_after(self, rows: list[dict]) -> None:
+        """Continue receipt numbering after existing rows without loading
+        them as live state: identities never collide across a restart.
+        Grants and other authority state are not restored (by design)."""
+        self._seq_offset = max((r["seq"] for r in rows), default=0)
 
     def record(self, kind: str, task_id: str, **detail) -> Receipt:
-        seq = len(self._receipts) + 1
+        seq = self._seq_offset + len(self._receipts) + 1
         r = Receipt(receipt_id=f"r-{seq}", seq=seq, ts=self._clock(),
                     kind=kind, task_id=task_id, detail=detail)
         self._receipts.append(r)
