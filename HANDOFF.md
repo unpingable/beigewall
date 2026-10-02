@@ -96,6 +96,18 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
 
 ## Open items (none blocking)
 
+- **Phase 5 in progress (2026-10-02)**: control (10 runs) sealed at
+  `3f59855`; global/denial/task queued at `bf0c07f` under
+  `results/exploratory/phase5-gpt-oss-20b/<condition>/`; resume with
+  `python3 run_phase5.py --root results/exploratory/phase5-gpt-oss-20b
+  --runs 10 --conditions global denial task`; report with `--report
+  --anchor baseline=results/exploratory/gpt-oss-20b-20261001T185916Z`.
+- **Open defect, first item next phase**: broker refusal reasons are an
+  existence/type/count oracle at zero budget cost (pinned as an expected
+  failure in `tests/test_phase5_review_fixes.py`). Fixing it changes the
+  sealed canonical t6 refusal receipts: plan a documented canonical
+  regeneration, not a silent one.
+
 - **Rename before any public release.** "Blackwall" collides with CD Projekt
   Red's Cyberpunk term; the working suggestion is "beigewall" or similar.
   Do this before the repo, docs, or findings are published anywhere.

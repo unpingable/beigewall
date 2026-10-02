@@ -106,8 +106,12 @@ refused read/effect, after the `grant_deny`/`refusal` receipt. Scoped to the
 *class* of the denied resource (first path segment: `messages`, `notes`,
 `contacts`, `calendar`): the task-applicable rules for that class, the
 projections whose resource shape is in that class, the effects granted on
-that class, grant defaults, `denied: {resource, operation, reason}`. No
-request schema, no other classes. The hint for `messages/thread/thr-nobody`
+that class, grant defaults, `denied: {resource, operation}`. The refusal or
+denial *reason* is deliberately not repeated in the hint (it is already in
+the result's error field, and the broker's refusal reasons are a known,
+pre-existing existence/type oracle — see FINDINGS_PHASE5 "Open defects").
+No request schema, no other classes. Classes outside `messages`, `notes`,
+`contacts`, `calendar` are clamped to `other`. The hint for `messages/thread/thr-nobody`
 is byte-identical to the hint for `messages/thread/thr-group` except for
 the echoed `denied.resource` (asserted in tests): it cannot confirm
 existence.
@@ -153,3 +157,29 @@ it is identical for every task and contains no object ids or values.
 Task wording, `prompt_hash`, policy, projections, effects, receipts and the
 evaluator are identical across conditions (asserted in
 `tests/test_phase5_discovery.py`).
+
+## Adversarial review disposition (phase 5, 2026-10-02)
+
+A second-model review attacked leakage, policy-oracle behaviour, receipt
+completeness, authority equivalence, prompt/task drift, evaluator
+regressions, condition contamination and resume/retry. Clean: authority
+equivalence across all four modes (identical non-discovery receipts, mints,
+disclosure, evaluations), hint/view leakage (no corpus value in 12 tasks ×
+19 resources × 8 operation/projection pairs; hints for real and invented
+ids identical), receipt ordering and hash commitments, control-path
+byte-identity against the revision the control batch started on, prompt
+and tool-schema equality. Fixed with regression tests
+(`tests/test_phase5_review_fixes.py`): refusal-reason text supporting fact
+claims in the evaluator; discovery-hash citations; wildcard "narrowing";
+pushed/pulled discovery conflation; `'s` suffix bug and class clamp;
+deference misclassifications; cross-condition resume, non-atomic seals,
+truncated-seal reuse, revision provenance; malformed-argument crashes.
+**Not fixed, pinned as an expected failure**: the broker's refusal reasons
+distinguish unknown ids, wrong-typed ids and budget overflows (with object
+counts) and charge no read. Fixing it changes the sealed canonical t6
+refusal receipts and the live control condition; it is the first item for
+the next phase. Also not changed: the t2 exact-match deny rule that lets
+`messages/thread/*` mint (policy is locked this phase; the telemetry no
+longer counts that mint as narrowing); the logical clock ticking once per
+discovery receipt (grant expiry shifts by one tick per hint; TTL 600 vs
+≈15 ticks per task).

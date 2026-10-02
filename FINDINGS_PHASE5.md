@@ -74,4 +74,23 @@ Acquisition timing: for each minted grant, the trigger of the most recent
 discovery receipt before it (initial / denial / global / none) and whether
 that discovery's scope covered the minted class.
 
+## Adversarial review before the matrix
+
+Summarised in `docs/CAPABILITIES.md` "Adversarial review disposition".
+Two findings matter for interpreting results:
+
+1. **Open defect (pre-existing, not fixed this phase): refusal reasons are
+   an existence/type/count oracle.** With any read grant, probing
+   `messages/thread/thr-nobody` returns "unknown resource", `notes/evt-2`
+   returns "evt-2 is not a note", and an undersized budget returns
+   "13 > 1", at no budget cost. Present in every condition and every
+   earlier batch. Pinned by `TestKnownOpenDefect` (expected failure).
+   Mitigations this phase: the evaluator no longer treats refusal text as
+   authorized for fact claims (an id learned by probing is unsupported),
+   and the denial hint no longer repeats the reason. The telemetry below
+   counts refusals whose reason names an object the task never disclosed
+   as **probe-shaped refusals**.
+2. **The evaluator change is uniform and did not move any stored verdict**
+   (phase 3 baseline and canonical re-evaluated: identical counts).
+
 RESULTS_PLACEHOLDER
