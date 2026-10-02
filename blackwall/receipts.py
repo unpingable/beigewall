@@ -37,14 +37,27 @@ class Receipt:
         return d
 
 
+class LedgerError(Exception):
+    """The sink could not be written: the ledger is failed and records
+    nothing further (phase 6C). The caller decides what that means for the
+    operation in flight; the ledger never pretends a row was kept."""
+
+
 class Ledger:
-    """In-memory ledger with an optional append-only JSONL sink."""
+    """In-memory ledger with an optional append-only JSONL sink.
+
+    Phase 6C ordering: a row reaches the sink before it is visible in
+    memory, so the in-memory view never contains a row the disk lacks.
+    `record(..., _durable=True)` additionally fsyncs the row (used for the
+    rows recovery depends on: effect intents, commits, aborts). After one
+    sink failure the ledger is failed: every later record raises."""
 
     def __init__(self, clock, sink_path: str | None = None):
         self._clock = clock
         self._sink_path = sink_path
         self._receipts: list[Receipt] = []
         self._seq_offset = 0
+        self.failed: Exception | None = None
 
     @staticmethod
     def existing_rows(path: str) -> list[dict]:
@@ -61,15 +74,30 @@ class Ledger:
         Grants and other authority state are not restored (by design)."""
         self._seq_offset = max((r["seq"] for r in rows), default=0)
 
-    def record(self, kind: str, task_id: str, **detail) -> Receipt:
+    def record(self, kind: str, task_id: str, _durable: bool = False, **detail) -> Receipt:
+        if self.failed is not None:
+            raise LedgerError(f"ledger failed earlier: {self.failed}")
         seq = self._seq_offset + len(self._receipts) + 1
         r = Receipt(receipt_id=f"r-{seq}", seq=seq, ts=self._clock(),
                     kind=kind, task_id=task_id, detail=detail)
-        self._receipts.append(r)
         if self._sink_path is not None:
-            with open(self._sink_path, "a", encoding="utf-8") as fh:
-                fh.write(json.dumps(r.to_dict(), sort_keys=True) + "\n")
+            try:
+                self._sink_write(json.dumps(r.to_dict(), sort_keys=True) + "\n", _durable)
+            except OSError as exc:
+                self.failed = exc
+                raise LedgerError(str(exc)) from exc
+        self._receipts.append(r)
         return r
+
+    def _sink_write(self, line: str, durable: bool) -> None:
+        """One appended line; with `durable`, flushed and fsynced before
+        returning (the only point where the process waits on the disk)."""
+        import os
+        with open(self._sink_path, "a", encoding="utf-8") as fh:
+            fh.write(line)
+            if durable:
+                fh.flush()
+                os.fsync(fh.fileno())
 
     def all(self) -> list[Receipt]:
         return list(self._receipts)

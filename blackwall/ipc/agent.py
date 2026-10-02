@@ -9,7 +9,8 @@ final answer through the protocol. Prompts and prompt hashes come from the
 trusted side via `begin_task`; the agent process cannot choose them.
 """
 
-from .client import RefusalError, RemoteBroker, TransportError
+from .client import (EvidenceError, IndeterminateError, RefusalError, RemoteBroker,
+                     TransportError)
 from .protocol import ProtocolError
 
 
@@ -44,6 +45,14 @@ class RemoteFacade:
             return call()
         except RefusalError as exc:
             return self._refused(exc)
+        except IndeterminateError as exc:
+            # the effect may have happened; say so, never "failed"
+            return {"ok": False, "indeterminate": True, "effect_id": exc.effect_id,
+                    "grant_id": exc.grant_id,
+                    "error": f"effect outcome indeterminate: {exc}; do not retry"}
+        except EvidenceError as exc:
+            return {"ok": False, "evidence_unavailable": True,
+                    "error": f"effect not performed: {exc}"}
         except ProtocolError as exc:
             return {"ok": False, "malformed": True, "protocol_rejected": True,
                     "error": f"malformed broker request: {exc}"}
@@ -53,6 +62,8 @@ class RemoteFacade:
         out = {"ok": False, "error": str(exc), "receipt_id": exc.receipt_id}
         if exc.hint is not None:
             out["capability_hint"] = exc.hint
+        if getattr(exc, "prior_effect", None) is not None:
+            out["prior_effect"] = exc.prior_effect
         return out
 
     def __getattr__(self, name):

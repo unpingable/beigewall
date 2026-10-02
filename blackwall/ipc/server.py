@@ -15,6 +15,8 @@ clock continue, authority state does not).
 
 import argparse
 import fcntl
+import hashlib
+import json
 import os
 import re
 import signal
@@ -25,7 +27,7 @@ import time
 import uuid
 
 from ..authority import PolicyAuthority
-from ..broker import CapabilityBroker, RefusalError
+from ..broker import CapabilityBroker, EvidenceError, IndeterminateEffect, RefusalError
 from ..corpus import build_demo_corpus
 from ..receipts import Ledger, canonical_hash
 from ..resources import ResourceConfigError, ResourceLedger, ResourcePolicy
@@ -39,10 +41,21 @@ def task_id_of(req: dict) -> str:
     return req.get("task_id", "") if isinstance(req, dict) else ""
 
 
+def unresolved_intents(rows: list[dict]) -> list[dict]:
+    """Effect intents in `rows` with neither a commit (`effect` with the
+    same effect_id) nor an abort (`refusal` with the same effect_id) nor an
+    earlier indeterminate marker."""
+    resolved = {r.get("effect_id") for r in rows
+                if r.get("kind") in ("effect", "refusal", "effect_indeterminate")
+                and r.get("effect_id")}
+    return [r for r in rows if r.get("kind") == "effect_intent"
+            and r.get("effect_id") not in resolved]
+
+
 class TrustedServer:
     def __init__(self, socket_path: str, ledger_path: str, condition: str = "control",
                  run_id: str | None = None, tasks: list[str] | None = None,
-                 resource_policy: ResourcePolicy | None = None):
+                 resource_policy: ResourcePolicy | None = None, recover: bool = False):
         if condition not in ("control", "global", "denial", "task"):
             raise ValueError(f"unknown condition {condition!r}")
         self.socket_path = socket_path
@@ -59,8 +72,9 @@ class TrustedServer:
                      "task": "task"}[condition]
         self.run_id = run_id or uuid.uuid4().hex[:12]
         self.clock = LogicalClock()
-        prior = Ledger.existing_rows(ledger_path)
+        prior = self._load_prior(ledger_path, recover)
         self.ledger = Ledger(clock=self.clock.now, sink_path=ledger_path)
+        self.degraded: str | None = None     # set after a ledger failure: fail-stop
         self.tasks = {t.task_id: t for t in task_suite()}
         if prior:
             self.ledger.resume_after(prior)
@@ -89,20 +103,38 @@ class TrustedServer:
                 self.resources.rebuild(prior, effect_resource)
         self.broker = CapabilityBroker(self.corpus, self.authority, self.ledger,
                                        clock=self.clock.now, discovery_mode=self.mode,
-                                       resources=self.resources)
+                                       resources=self.resources, durable_effects=True)
         if prior:
             # grant identities must not collide across a restart either:
             # continue the authority's counter after the highest minted id
             # (authority *state* — the grants themselves — is not restored)
             highest = 0
+            highest_effect = 0
             for r in prior:
                 if r.get("kind") == "grant_mint":
                     m = re.fullmatch(r"g-(\d+)", str(r.get("grant_id", "")))
                     if m:
                         highest = max(highest, int(m.group(1)))
+                if r.get("kind") in ("effect_intent", "effect", "effect_indeterminate"):
+                    m = re.fullmatch(r"e-(\d+)", str(r.get("effect_id", "")))
+                    if m:
+                        highest_effect = max(highest_effect, int(m.group(1)))
             self.authority._grant_seq = highest
+            self.broker.resume_effect_seq(highest_effect)
             self.ledger.record("trusted_restart", "", run_id=self.run_id,
-                               prior_receipts=len(prior), grant_seq_resumed=highest)
+                               prior_receipts=len(prior), grant_seq_resumed=highest,
+                               effect_seq_resumed=highest_effect,
+                               torn_tail_recovered=self._torn_tail)
+            # phase 6C recovery: an intent with neither a commit nor an
+            # abort is an effect whose outcome this process cannot know.
+            # It is recorded as indeterminate — never as success or failure
+            # — and stays consumed (the resource rebuild counted it).
+            for it in unresolved_intents(prior):
+                self.ledger.record("effect_indeterminate", it["task_id"], _durable=True,
+                                   effect_id=it["effect_id"], grant_id=it["grant_id"],
+                                   resource=it.get("resource"), effect=it.get("effect"),
+                                   cause="unresolved_intent_at_restart",
+                                   intent_receipt=it["receipt_id"])
         # The server owns task identity: the client may begin only tasks the
         # orchestrator designated for this run, each at most once, one at a
         # time; ops are accepted only for the active task; a closed task is
@@ -133,13 +165,48 @@ class TrustedServer:
         self._conn_serial = 0
         self._stop = False
 
+    def _load_prior(self, ledger_path: str, recover: bool) -> list[dict]:
+        """Prior rows for a restart. A torn last line (a crash during a
+        write) refuses the start unless `recover` is set, in which case
+        the torn bytes are dropped and the fact is receipted; any other
+        corruption refuses the start regardless."""
+        self._torn_tail = None
+        try:
+            return Ledger.existing_rows(ledger_path)
+        except ValueError:
+            pass
+        with open(ledger_path, "rb") as fh:
+            raw = fh.read()
+        head, _, tail = raw.rpartition(b"\n")
+        complete = raw if raw.endswith(b"\n") else head + b"\n"
+        torn = b"" if raw.endswith(b"\n") else tail
+        try:
+            rows = [json.loads(l) for l in complete.decode("utf-8").splitlines() if l.strip()]
+        except ValueError as exc:
+            raise ValueError(f"ledger {ledger_path} is corrupt beyond its last line: {exc}")
+        if not torn:
+            raise ValueError(f"ledger {ledger_path} has an unparsable complete line")
+        if not recover:
+            raise ValueError(f"ledger {ledger_path} ends in a torn line ({len(torn)} bytes); "
+                             "restart with --recover to drop it (receipted)")
+        with open(ledger_path, "wb") as fh:
+            fh.write(complete)
+            fh.flush()
+            os.fsync(fh.fileno())
+        self._torn_tail = {"bytes": len(torn), "sha256": hashlib.sha256(torn).hexdigest()}
+        return rows
+
     # -- dispatch ---------------------------------------------------------
     def handle(self, req: dict) -> dict:
         op, task_id, args, rid = req["op"], req["task_id"], req["args"], req["id"]
         if op == "hello":
             return P.ok_response(rid, {"protocol": P.PROTOCOL, "server_run_id": self.run_id,
                                        "condition": self.condition,
-                                       "started_at": self.started_at})
+                                       "started_at": self.started_at,
+                                       "degraded": self.degraded})
+        if self.degraded is not None:
+            # fail-stop: a membrane that cannot write evidence does not act
+            raise P.ProtocolError("ledger_failed")
         if op == "begin_task":
             task = self.tasks.get(task_id)
             if task is None:
@@ -175,9 +242,22 @@ class TrustedServer:
                 return P.ok_response(rid, self.broker.read(
                     task_id, args["grant_id"], args["resource"], args["projection"]))
             if op == "effect":
-                return P.ok_response(rid, self.broker.effect(
-                    task_id, args["grant_id"], args["effect_name"], args["params"],
-                    args["derived_from"]))
+                try:
+                    return P.ok_response(rid, self.broker.effect(
+                        task_id, args["grant_id"], args["effect_name"], args["params"],
+                        args["derived_from"]))
+                except EvidenceError as exc:
+                    # the effect did not occur; the ledger is failed
+                    self.degraded = "ledger_failed"
+                    return P.error_response(rid, "evidence", str(exc))
+                except IndeterminateEffect as exc:
+                    # the effect may have occurred; the client must not
+                    # retry it on a fresh grant; the ledger is failed
+                    self.degraded = "ledger_failed"
+                    err = P.error_response(rid, "indeterminate", str(exc))
+                    err["error"]["effect_id"] = exc.effect_id
+                    err["error"]["grant_id"] = exc.grant_id
+                    return err
             if op == "discover":
                 if self.mode != "global":
                     raise P.ProtocolError("unknown_op")
@@ -205,6 +285,8 @@ class TrustedServer:
                 return P.ok_response(rid, {"receipt_id": r.receipt_id})
         except RefusalError as exc:
             err = P.error_response(rid, "refusal", str(exc), exc.receipt_id)
+            if exc.prior_effect is not None:
+                err["error"]["prior_effect"] = exc.prior_effect
             if exc.hint is not None:
                 err["error"]["capability_hint"] = exc.hint
             return err
@@ -346,6 +428,9 @@ def main(argv=None) -> int:
     p.add_argument("--task-effects", type=int, default=None,
                    help="max successful effects per task")
     p.add_argument("--rate", default=None, help="n/seconds per (task, effect)")
+    p.add_argument("--recover", action="store_true",
+                   help="drop a torn last ledger line left by a crash during a write "
+                        "(receipted as torn_tail_recovered); otherwise refuse to start")
     a = p.parse_args(argv)
     tasks = [t for t in a.tasks.split(",") if t] if a.tasks else None
     try:
@@ -353,7 +438,13 @@ def main(argv=None) -> int:
     except ResourceConfigError as exc:
         print(f"error: invalid resource policy: {exc}", file=sys.stderr)
         return 2
-    TrustedServer(a.socket, a.ledger, a.condition, a.run_id, tasks, policy).serve_forever()
+    try:
+        server = TrustedServer(a.socket, a.ledger, a.condition, a.run_id, tasks, policy,
+                               recover=a.recover)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    server.serve_forever()
     return 0
 
 

@@ -138,6 +138,8 @@ def task_budget_outcome(rows: list[dict], task_id: str,
     return {
         "task_id": task_id,
         "effects": len(effects),
+        "indeterminate_effects": sum(1 for r in task_rows
+                                     if r.get("kind") == "effect_indeterminate"),
         "budget_refusals": {"total": len(refusals), **refusal_split},
         "required_effect_satisfied_before_first_budget_refusal": satisfied_before,
         "classification": cls,
@@ -156,7 +158,7 @@ def task_budget_outcome(rows: list[dict], task_id: str,
     }
 
 
-_SUM_KEYS = ("effects", "unrequested_effects", "duplicate_effects",
+_SUM_KEYS = ("effects", "indeterminate_effects", "unrequested_effects", "duplicate_effects",
              "missing_expected_effect", "unauthorized_effects",
              "grants_requested", "grants_minted", "grant_churn")
 

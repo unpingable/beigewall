@@ -76,8 +76,8 @@ def _ordered(rows):
 def _row_operation(row) -> str:
     if row["kind"] == "read":
         return "read"
-    if row["kind"] == "effect":
-        return row["effect"]["name"]
+    if row["kind"] in ("effect", "effect_intent", "effect_indeterminate"):
+        return (row.get("effect") or {}).get("name", "")
     return row.get("operation", "")
 
 
@@ -113,8 +113,12 @@ class _Grants:
         self.g = {}
         self.anomalies = []    # duplicate mint ids, unknown revokes
         self.policy = None     # resource_policy row (phase 6B), if any
-        self.effects_by_key: dict = {}   # (task, effect, resource) -> successes
+        self.effects_by_key: dict = {}   # (task, effect, resource) -> accepted effects
         self.task_total: dict = {}
+        # phase 6C evidence: effect_id -> intent record; an intent counts as
+        # consumed when written, is released by an abort, and is resolved
+        # by a commit, an abort or an indeterminate marker
+        self.intents: dict = {}
 
     def apply(self, row) -> None:
         k = row["kind"]
@@ -159,24 +163,69 @@ class _Grants:
         elif k == "effect" and row.get("grant_id") in self.g:
             self.g[row["grant_id"]]["effects_used"] += 1
             self.g[row["grant_id"]]["last_refused"] = False
-        if k == "effect":
+        if k == "effect_intent":
             eff = row.get("effect", {})
             key = (row["task_id"], eff.get("name"), _effect_target(eff.get("name"), eff.get("params")))
-            self.effects_by_key[key] = self.effects_by_key.get(key, 0) + 1
-            self.task_total[row["task_id"]] = self.task_total.get(row["task_id"], 0) + 1
+            eid = row.get("effect_id")
+            if eid in self.intents:
+                self.anomalies.append({"receipt_id": row["receipt_id"], "seq": row["seq"],
+                                       "kind": "duplicate_effect_id", "grant_id": row.get("grant_id")})
+            self.intents[eid] = {"task_id": row["task_id"], "key": key, "seq": row["seq"],
+                                 "grant_id": row.get("grant_id"), "resolved": None}
+            self._count(key, row["task_id"], +1)
+        elif k == "effect":
+            eid = row.get("effect_id")
+            if eid is None:
+                # legacy (in-process) ledger: the commit is the only evidence
+                eff = row.get("effect", {})
+                key = (row["task_id"], eff.get("name"),
+                       _effect_target(eff.get("name"), eff.get("params")))
+                self._count(key, row["task_id"], +1)
+            else:
+                it = self.intents.get(eid)
+                if it is None or it["task_id"] != row["task_id"] or it["resolved"] is not None:
+                    self.anomalies.append({"receipt_id": row["receipt_id"], "seq": row["seq"],
+                                           "kind": "commit_without_open_intent",
+                                           "grant_id": row.get("grant_id")})
+                else:
+                    it["resolved"] = "committed"
+        elif k == "refusal" and row.get("effect_id") is not None:
+            it = self.intents.get(row["effect_id"])
+            if it is None or it["resolved"] is not None:
+                self.anomalies.append({"receipt_id": row["receipt_id"], "seq": row["seq"],
+                                       "kind": "abort_without_open_intent",
+                                       "grant_id": row.get("grant_id")})
+            else:
+                it["resolved"] = "aborted"
+                self._count(it["key"], it["task_id"], -1)   # the world did not change
+        elif k == "effect_indeterminate":
+            it = self.intents.get(row.get("effect_id"))
+            if it is None or it["resolved"] is not None:
+                self.anomalies.append({"receipt_id": row["receipt_id"], "seq": row["seq"],
+                                       "kind": "indeterminate_without_open_intent",
+                                       "grant_id": row.get("grant_id")})
+            else:
+                it["resolved"] = "indeterminate"          # stays counted
         elif k == "resource_policy":
             self.policy = row
 
+    def _count(self, key, task_id, delta: int) -> None:
+        self.effects_by_key[key] = self.effects_by_key.get(key, 0) + delta
+        self.task_total[task_id] = self.task_total.get(task_id, 0) + delta
+
+    def open_intents(self) -> list[str]:
+        return [eid for eid, it in self.intents.items() if it["resolved"] is None]
+
     def _budget_key(self, row) -> tuple:
         eff = _row_operation(row)
-        if row["kind"] == "effect":
-            e = row.get("effect", {})
+        if row["kind"] in ("effect", "effect_intent", "effect_indeterminate"):
+            e = row.get("effect") or {}
             return (row["task_id"], eff, _effect_target(eff, e.get("params")))
         return (row["task_id"], eff, row.get("resource", ""))
 
     def over_budget(self, row) -> str | None:
-        """For a successful effect row: the policy bound it exceeds, if any
-        (checked before the row is applied)."""
+        """For a successful effect row (legacy) or an effect intent: the
+        policy bound it exceeds, if any (checked before the row is applied)."""
         pol = self.policy or {}
         key = self._budget_key(row)
         cap_e, cap_t = pol.get("effect_count"), pol.get("task_effects")
@@ -268,6 +317,7 @@ def reconstruct(rows: list[dict]) -> list[dict]:
     grants = _Grants()
     out = []
     last_ts = None
+    pending_at_restart: list = []
     for row in _ordered(rows):
         # the ledger clock is monotonic; a regression means a forged or
         # mis-ordered row and every later expiry judgement is suspect
@@ -285,9 +335,10 @@ def reconstruct(rows: list[dict]) -> list[dict]:
             state = v[0] if v else "active"
             if not refused:
                 agree = not v
-                if row["kind"] == "effect" and grants.policy:
+                if row["kind"] == "effect" and grants.policy and row.get("effect_id") is None:
                     # a success past the policy is the failure the budget
-                    # exists to prevent; the observer must see it (F4)
+                    # exists to prevent; the observer must see it (F4).
+                    # With phase 6C evidence the check is made at the intent.
                     over = grants.over_budget(row)
                     if over:
                         state, agree = over, False
@@ -317,6 +368,17 @@ def reconstruct(rows: list[dict]) -> list[dict]:
                         "observer_state": state,
                         "broker_outcome": "refused" if refused else "success",
                         "broker_reason": reason, "agree": agree})
+        if row["kind"] == "effect_intent" and grants.policy:
+            over = grants.over_budget(row)
+            if over:
+                out.append({"receipt_id": row["receipt_id"], "seq": row["seq"],
+                            "task_id": row["task_id"], "grant_id": row.get("grant_id"),
+                            "operation": _row_operation(row), "observer_state": "over_budget_intent",
+                            "broker_outcome": "accepted", "broker_reason": None, "agree": False})
+        if row["kind"] == "trusted_restart":
+            # every intent open at a restart must be resolved by the end of
+            # the ledger (the restarted server records it indeterminate)
+            pending_at_restart.append((row, list(grants.open_intents())))
         n_before = len(grants.anomalies)
         grants.apply(row)
         for a in grants.anomalies[n_before:]:
@@ -325,6 +387,24 @@ def reconstruct(rows: list[dict]) -> list[dict]:
                         "operation": row["kind"], "observer_state": a["kind"],
                         "broker_outcome": "n/a", "broker_reason": None,
                         "agree": False})
+    for restart, open_ids in pending_at_restart:
+        for eid in open_ids:
+            it = grants.intents[eid]
+            if it["resolved"] is None:
+                out.append({"receipt_id": restart["receipt_id"], "seq": restart["seq"],
+                            "task_id": it["task_id"], "grant_id": it["grant_id"],
+                            "operation": "effect_intent",
+                            "observer_state": "intent_unresolved_after_restart",
+                            "broker_outcome": "n/a", "broker_reason": eid, "agree": False})
+    for eid in grants.open_intents():
+        # an intent still open at the end of the ledger: the trusted process
+        # stopped between intent and commit and has not been restarted;
+        # reported, not a disagreement — recovery will resolve it
+        it = grants.intents[eid]
+        out.append({"receipt_id": None, "seq": it["seq"], "task_id": it["task_id"],
+                    "grant_id": it["grant_id"], "operation": "effect_intent",
+                    "observer_state": "intent_pending_recovery",
+                    "broker_outcome": "n/a", "broker_reason": eid, "agree": True})
     return out
 
 

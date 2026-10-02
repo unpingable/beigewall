@@ -15,7 +15,7 @@ from .corpus import Corpus
 from .effects import EFFECTS, EffectError
 from .grants import Budget, Grant, GrantError, validate_use
 from .projections import ProjectionError, run_projection
-from .receipts import Ledger
+from .receipts import Ledger, LedgerError
 
 DEFAULT_TTL = 600.0
 DEFAULT_BUDGET = Budget(reads=8, objects=200)
@@ -29,6 +29,27 @@ class RefusalError(Exception):
         super().__init__(message)
         self.receipt_id = receipt_id
         self.hint = hint   # denial-triggered capability hint (receipted)
+        # phase 6C: a retry on a consumed effect grant learns the outcome of
+        # the effect that consumed it (effect_id, receipt_id, status) rather
+        # than nothing — so a retry after a lost response needs no new grant
+        self.prior_effect: dict | None = None
+
+
+class EvidenceError(Exception):
+    """The effect did NOT occur: its intent could not be made durable, and
+    the broker will not change the world without evidence (phase 6C)."""
+
+
+class IndeterminateEffect(Exception):
+    """The effect MAY have occurred: the handler ran but the commit receipt
+    could not be written. Nothing the broker can say is authoritative
+    beyond the durable intent; recovery on restart records the effect as
+    indeterminate and counts it as consumed (phase 6C)."""
+
+    def __init__(self, effect_id: str, grant_id: str):
+        super().__init__(f"effect {effect_id} indeterminate: commit receipt not written")
+        self.effect_id = effect_id
+        self.grant_id = grant_id
 
 
 def effect_resource(effect_name: str, params: dict) -> str:
@@ -53,12 +74,21 @@ def _effect_resource(effect_name: str, params: dict) -> str:
 class CapabilityBroker:
     def __init__(self, corpus: Corpus, authority: PolicyAuthority,
                  ledger: Ledger, clock, discovery_mode: str | None = None,
-                 resources=None):
+                 resources=None, durable_effects: bool = False):
         if discovery_mode not in DISCOVERY_MODES:
             raise ValueError(f"unknown discovery mode {discovery_mode!r}")
         # phase 6B: optional trusted resource ledger constraining consumption
         # of already-authorized effects; None (default) = unbounded, as before
         self._resources = resources
+        # phase 6C: with durable_effects (the trusted server's mode) every
+        # effect is bracketed by a durable `effect_intent` receipt before the
+        # handler and an `effect` commit receipt after it, both carrying a
+        # server-minted effect_id; a handler failure aborts the intent with
+        # the refusal receipt. Off (default): the frozen in-process
+        # semantics — one `effect` receipt after the handler.
+        self._durable = durable_effects
+        self._effect_seq = 0
+        self._effects_by_grant: dict[str, dict] = {}   # grant_id -> prior_effect
         self._corpus = corpus
         self._authority = authority
         self._ledger = ledger
@@ -185,6 +215,13 @@ class CapabilityBroker:
         return {"ok": True, "receipt_id": receipt.receipt_id,
                 "content": result.content, "projection_meta": meta}
 
+    def resume_effect_seq(self, highest: int) -> None:
+        """Continue effect ids after the highest id in a prior ledger."""
+        self._effect_seq = max(self._effect_seq, highest)
+
+    def prior_effect(self, grant_id: str) -> dict | None:
+        return self._effects_by_grant.get(grant_id)
+
     def effect(self, task_id: str, grant_id: str, effect_name: str,
                params: dict, derived_from: list[dict]) -> dict:
         try:
@@ -198,7 +235,10 @@ class CapabilityBroker:
                          projection=None, now=self._clock())
             self._validate_provenance(task_id, derived_from)
         except GrantError as exc:
-            raise self._refuse(task_id, effect_name, grant_id, resource, str(exc))
+            refusal = self._refuse(task_id, effect_name, grant_id, resource, str(exc))
+            if "effect grant consumed" in str(exc):
+                refusal.prior_effect = self._effects_by_grant.get(grant_id)
+            raise refusal
         if self._resources is not None:
             # resource budget: checked after authorization and provenance,
             # before the world changes; a budget refusal never widens or
@@ -209,21 +249,57 @@ class CapabilityBroker:
                                               grant_id=grant_id, resource=resource,
                                               reason=over["reason"], budget=over["budget"])
                 raise RefusalError(over["reason"], receipt.receipt_id)
+        effect_id = None
+        if self._durable:
+            # 1. durable intent BEFORE the world changes: the only evidence
+            #    that survives a crash between here and the commit. If it
+            #    cannot be written the effect does not happen.
+            self._effect_seq += 1
+            effect_id = f"e-{self._effect_seq}"
+            try:
+                self._ledger.record("effect_intent", task_id, _durable=True,
+                                    effect_id=effect_id, grant_id=grant_id,
+                                    resource=resource,
+                                    effect={"name": effect_name, "params": params},
+                                    derived_from=derived_from)
+            except LedgerError as exc:
+                self._effect_seq -= 1
+                raise EvidenceError(f"evidence unavailable: {exc}") from exc
         handler = EFFECTS[effect_name]
         try:
             summary = handler(self._corpus, params)
         except (KeyError, EffectError):
-            # unknown target and wrong-typed target are indistinguishable
+            # unknown target and wrong-typed target are indistinguishable;
+            # the handler changes nothing before it can fail, so the
+            # intent is aborted (the refusal receipt names the effect_id)
             raise self._refuse(task_id, effect_name, grant_id, resource,
-                               "effect target not available")
+                               "effect target not available", effect_id=effect_id)
+        # 2. the world has changed: from here on nothing may be undone;
+        #    consumption and the grant advance before the commit so that a
+        #    failure leaves them ahead of the evidence, never behind it
         if self._resources is not None:
             self._resources.consume(task_id, effect_name, resource)
         grant.effects_used += 1
-        receipt = self._ledger.record("effect", task_id, grant_id=grant_id,
-                                      effect={"name": effect_name, "params": params},
-                                      derived_from=derived_from,
-                                      result_summary=summary)
-        return {"ok": True, "receipt_id": receipt.receipt_id, "summary": summary}
+        commit = {"grant_id": grant_id, "effect": {"name": effect_name, "params": params},
+                  "derived_from": derived_from, "result_summary": summary}
+        if effect_id is not None:
+            commit["effect_id"] = effect_id
+        try:
+            receipt = self._ledger.record("effect", task_id, _durable=self._durable, **commit)
+        except LedgerError:
+            # 3. the commit could not be written: the effect is indeterminate
+            #    to everyone but this process. The durable intent is the
+            #    record; recovery resolves it. The grant stays consumed.
+            self._effects_by_grant[grant_id] = {"effect_id": effect_id, "receipt_id": None,
+                                                "status": "indeterminate"}
+            raise IndeterminateEffect(effect_id or "", grant_id)
+        self._effects_by_grant[grant_id] = {"effect_id": effect_id,
+                                            "receipt_id": receipt.receipt_id,
+                                            "status": "committed"}
+        out = {"ok": True, "receipt_id": receipt.receipt_id, "summary": summary}
+        if effect_id is not None:
+            out["effect_id"] = effect_id
+        return out
 
     def revoke(self, task_id: str, grant_id: str, reason: str) -> dict:
         """Authority-side revocation of a live grant (phase 5B). Terminal:
@@ -247,10 +323,13 @@ class CapabilityBroker:
         return grant
 
     def _refuse(self, task_id: str, operation: str, grant_id: str,
-                resource: str, reason: str) -> RefusalError:
+                resource: str, reason: str, effect_id: str | None = None) -> RefusalError:
+        extra = {}
+        if effect_id is not None:
+            extra["effect_id"] = effect_id      # this refusal aborts that intent
         receipt = self._ledger.record("refusal", task_id, operation=operation,
                                       grant_id=grant_id, resource=resource,
-                                      reason=reason)
+                                      reason=reason, _durable=effect_id is not None, **extra)
         hint = None
         if self._discovery_mode == "denial" and resource:
             hint = self._denial_hint(task_id, resource, operation, reason)

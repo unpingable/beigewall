@@ -174,12 +174,27 @@ class ResourceLedger:
 
     # -- restart ---------------------------------------------------------
     def rebuild(self, rows: list[dict], effect_resource) -> int:
-        """Re-derive consumption from effect receipts (trusted ledger). Rate
-        stamps are not restored (wall-clock continuity across a restart is
-        not meaningful); counts are. Returns the number of effects counted."""
+        """Re-derive consumption from the trusted ledger. Rate stamps are
+        not restored (wall-clock continuity across a restart is not
+        meaningful); counts are. Returns the number of effects counted.
+
+        Phase 6C: an `effect_intent` is counted as consumed unless a
+        `refusal` aborted it — a committed effect and an indeterminate one
+        both count (fail closed: the observer must never be allowed to
+        conclude more authority remains than does). Legacy `effect` rows
+        without an effect_id (in-process ledgers) are counted directly."""
+        aborted = {r.get("effect_id") for r in rows
+                   if r.get("kind") == "refusal" and r.get("effect_id")}
         n = 0
         for r in rows:
-            if r.get("kind") != "effect":
+            kind = r.get("kind")
+            if kind == "effect_intent":
+                if r.get("effect_id") in aborted:
+                    continue
+            elif kind == "effect":
+                if r.get("effect_id"):
+                    continue        # already counted at its intent
+            else:
                 continue
             eff = r.get("effect", {})
             try:

@@ -17,10 +17,19 @@ TRUSTED = {"blackwall.broker", "blackwall.corpus", "blackwall.authority",
            "blackwall.tasks", "blackwall.grants", "blackwall.capabilities"}
 
 
+# The trusted server adds evidence the frozen in-process run does not have
+# (phase 6: ipc_* and trusted_restart rows; phase 6C: effect_intent rows and
+# the effect_id on commits/aborts). Everything else must be identical.
+SERVER_ONLY_KINDS = ("trusted_restart", "effect_intent", "effect_indeterminate")
+SERVER_ONLY_KEYS = ("effect_id",)
+
+
 def strip(rows):
     return [{k: v for k, v in r.items()
-             if k not in ("receipt_id", "seq", "ts", "expires_at", "self_reported")}
-            for r in rows if not r["kind"].startswith("ipc_") and r["kind"] != "trusted_restart"]
+             if k not in ("receipt_id", "seq", "ts", "expires_at", "self_reported")
+             and k not in SERVER_ONLY_KEYS}
+            for r in rows if not r["kind"].startswith("ipc_")
+            and r["kind"] not in SERVER_ONLY_KINDS]
 
 
 class TestProcessSeparatedEquivalence(unittest.TestCase):

@@ -20,10 +20,26 @@ class RefusalError(Exception):
         super().__init__(message)
         self.receipt_id = receipt_id
         self.hint = hint
+        self.prior_effect: dict | None = None
 
 
 class TransportError(Exception):
     """The request's outcome is unknown to the client."""
+
+
+class IndeterminateError(Exception):
+    """The trusted side says the effect MAY have occurred and could not be
+    receipted (phase 6C). It must not be retried on a fresh grant."""
+
+    def __init__(self, message: str, effect_id: str | None, grant_id: str | None):
+        super().__init__(message)
+        self.effect_id = effect_id
+        self.grant_id = grant_id
+
+
+class EvidenceError(Exception):
+    """The trusted side could not record the intent: the effect did NOT
+    occur (phase 6C); the trusted process is fail-stopped."""
 
 
 class RemoteBroker:
@@ -35,6 +51,7 @@ class RemoteBroker:
         self._sock: socket.socket | None = None
         self._telemetry = {"requests": 0, "latency_ms": [], "bytes_in": 0,
                            "bytes_out": 0, "reconnects": 0, "transport_failures": 0,
+                           "effect_recoveries": 0,
                            "connects": 0}
         self._connect(initial=True)
 
@@ -94,10 +111,22 @@ class RemoteBroker:
         self._telemetry["latency_ms"].append((time.perf_counter() - start) * 1000)
         if resp.get("ok"):
             return resp["result"]
+        self._raise_for(resp)
+
+    @staticmethod
+    def _raise_for(resp: dict):
+        """Turn an error response into the matching exception."""
         err = resp.get("error", {})
         if err.get("code") == "refusal":
-            raise RefusalError(err.get("message", "refused"), err.get("receipt_id", ""),
+            exc = RefusalError(err.get("message", "refused"), err.get("receipt_id", ""),
                                err.get("capability_hint"))
+            exc.prior_effect = err.get("prior_effect")
+            raise exc
+        if err.get("code") == "indeterminate":
+            raise IndeterminateError(err.get("message", "indeterminate"),
+                                     err.get("effect_id"), err.get("grant_id"))
+        if err.get("code") == "evidence":
+            raise EvidenceError(err.get("message", "evidence unavailable"))
         raise P.ProtocolError(err.get("message", "protocol error"))
 
     def _drop(self) -> None:
@@ -138,8 +167,32 @@ class RemoteBroker:
                                             "projection": projection})
 
     def effect(self, task_id, grant_id, effect_name, params, derived_from) -> dict:
-        return self._call("effect", task_id, {"grant_id": grant_id, "effect_name": effect_name,
-                                              "params": params, "derived_from": derived_from})
+        args = {"grant_id": grant_id, "effect_name": effect_name,
+                "params": params, "derived_from": derived_from}
+        try:
+            return self._call("effect", task_id, args)
+        except TransportError as first:
+            # The result is unknown. Re-sending the SAME effect on the SAME
+            # grant is safe: an effect grant is consumed by its first
+            # success, so the trusted side either performs it now (the
+            # first never arrived) or refuses "effect grant consumed" and
+            # names the prior effect's outcome. A fresh grant would risk a
+            # duplicate (phase 5C observed one). One recovery attempt only.
+            self._telemetry["effect_recoveries"] += 1
+            try:
+                return self._call("effect", task_id, args)
+            except RefusalError as exc:
+                if exc.prior_effect is not None:
+                    prior = exc.prior_effect
+                    if prior.get("status") == "committed":
+                        return {"ok": True, "receipt_id": prior.get("receipt_id"),
+                                "effect_id": prior.get("effect_id"), "recovered": True,
+                                "summary": None}
+                    raise IndeterminateError("effect indeterminate after recovery",
+                                             prior.get("effect_id"), grant_id)
+                raise
+            except TransportError as second:
+                raise TransportError(f"{first}; recovery attempt also failed: {second}")
 
     def discover(self, task_id, resource=None) -> dict:
         return self._call("discover", task_id, {} if resource is None else {"resource": resource})
