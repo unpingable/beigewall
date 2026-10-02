@@ -18,7 +18,7 @@ recorded and unchanged; the real-model exploratory result is recorded in
 
 ```
 cd /data/git/blackwall
-python3 -m unittest discover -s tests    # expect: Ran 318 tests ... OK
+python3 -m unittest discover -s tests    # expect: Ran 368 tests ... OK
 python3 run_experiment.py --out /tmp/bw-check
 diff /tmp/bw-check/metrics.json results/canonical/metrics.json     # identical
 diff /tmp/bw-check/receipts.jsonl results/canonical/receipts.jsonl # identical
@@ -63,7 +63,7 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   `run_llm_experiment.py` — exploratory real-model telemetry, runner, CLI
 - `blackwall/agent/` — untrusted side: harness (tool loop + facade trap),
   drivers (scripted = normative; LLM = exploratory, env-gated)
-- `tests/` — 162 unittest tests (no real API key required; LLM paths use a
+- `tests/` — 368 unittest tests (no real API key required; LLM paths use a
   stub server); `test_evaluator.py` holds the regression fixtures
 
 ## Resuming / extending
@@ -133,12 +133,30 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   **Established at protocol strength only**: both processes are one OS
   user, so storage and socket secrecy are not OS-enforced
   (`docs/PROCESS_BOUNDARY.md`). Stopped here, as specified.
+- **Phase 6B sealed (2026-10-02)**: server-enforced resource budgets for
+  already-authorized effects (`blackwall/resources.py`, server flags
+  `--effect-count/--task-effects/--rate`, unbounded by default). A hostile
+  client with valid authority landed exactly the cap (3 of 323 attempts;
+  203 unbounded) across fresh grants, reconnects, a second process, 20
+  concurrent connections, replays and reordering, and the cap from zero on
+  each path; forged counters/task/grant ids never reach the accounting;
+  a trusted restart closes the task, rebuilds the counters and may only
+  keep or tighten the policy. Hostile review: 9 findings (restart policy
+  changes, observer verification, configuration edges) fixed or
+  documented, `tests/test_review_6b.py`. Real model under bounds: useful
+  33/60 = 33/60 unbounded, zero budget refusals (the suite's legitimate
+  need is ≤ 1 effect per task), observer 108/108; one unrequested send
+  (intent, not solved by quotas). `FINDINGS_PHASE6B.md`,
+  `docs/RESOURCE_BOUNDS.md`. Harness defect fixed: the untrusted client
+  now ends a task even when its narrative call loses the connection
+  (`tests/test_ipc_task_end.py`).
 - **Next (not started)**: OS enforcement of the boundary — user or
   namespace separation — as its own experiment. Carry forward unchanged:
   the budget-count wording re-seal; multi-use grants for real-model expiry;
-  per-task authority quotas / "approvable ≠ expected" (quantified: 200
-  correctly-authorised sends in 0.09 s by a compromised client); corpus
-  persistence across trusted restart.
+  a task suite whose legitimate need exceeds a cap (to measure the
+  usefulness trade-off the budget metrics can score); receipted rate
+  windows; corpus persistence across trusted restart; "approvable ≠
+  expected" (one unrequested send under budget in phase 6B).
 - **Policy question raised by phase 5**: an approvable effect is not an
   expected effect; effect *grants* carry no user-intent reference.
 - **Refusal-reason oracle (phase 5C): repaired for existence/type.**

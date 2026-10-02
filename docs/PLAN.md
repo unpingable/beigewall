@@ -350,8 +350,9 @@ OS/user/namespace work; no general rate-limiting framework.
 - [x] Deterministic results; hostile review (9 findings: restart policy
       changes, observer verification, configuration edges — fixed or
       documented, `tests/test_review_6b.py`).
-- [ ] Real-model bounded run vs the phase 6 unbounded control;
-      `FINDINGS_PHASE6B.md`; HANDOFF.
+- [x] Real-model bounded run vs the phase 6 unbounded control (5 × 12 each:
+      useful 33 = 33, zero budget refusals, zero observer disagreements);
+      `FINDINGS_PHASE6B.md`; HANDOFF. Phase 6B sealed 2026-10-02.
 
 ## Handoff protocol for a resuming agent
 
