@@ -40,8 +40,10 @@ _PROVENANCE = ("never disclosed", "malformed derived_from", "prompt hash",
 # something this projection or effect can act on (never a grant-state matter)
 _TARGET = ("unknown resource", "is not available for", "effect target not available",
            "does not match", "does not handle", "is not a ")
-_BUDGET = ("effect budget exhausted", "task effect budget exhausted")
-_RATE = ("effect rate exceeded",)
+# Resource-budget refusals are recognised by the trusted `budget` detail the
+# broker writes, never by reason text: the reason can echo client-supplied
+# strings (hostile review F3).
+_BUDGET_SCOPES = {"task-effect-resource": "effect_count", "task": "task_effects"}
 
 
 def _effect_target(name: str, params: dict) -> str:
@@ -165,6 +167,57 @@ class _Grants:
         elif k == "resource_policy":
             self.policy = row
 
+    def _budget_key(self, row) -> tuple:
+        eff = _row_operation(row)
+        if row["kind"] == "effect":
+            e = row.get("effect", {})
+            return (row["task_id"], eff, _effect_target(eff, e.get("params")))
+        return (row["task_id"], eff, row.get("resource", ""))
+
+    def over_budget(self, row) -> str | None:
+        """For a successful effect row: the policy bound it exceeds, if any
+        (checked before the row is applied)."""
+        pol = self.policy or {}
+        key = self._budget_key(row)
+        cap_e, cap_t = pol.get("effect_count"), pol.get("task_effects")
+        if cap_e is not None and self.effects_by_key.get(key, 0) >= cap_e:
+            return "over_budget_success"
+        if cap_t is not None and self.task_total.get(row["task_id"], 0) >= cap_t:
+            return "over_budget_success"
+        return None
+
+    def verify_budget_refusal(self, row, budget: dict) -> tuple[str, bool]:
+        """A budget refusal agrees only if the trusted `budget` detail names
+        a scope the policy row bounds and its counts equal the observer's
+        own count for that scope, which must be at the cap (F5, F6). Rate
+        refusals cannot be recomputed (wall-clock windows are not
+        receipted): they are accepted only when the policy has a rate, the
+        detail is self-consistent and at least `cap` effects of that kind
+        were observed — a necessary condition, so the state is reported as
+        `rate_limited_stated`."""
+        pol = self.policy or {}
+        scope = budget.get("scope")
+        if scope in _BUDGET_SCOPES:
+            cap = pol.get(_BUDGET_SCOPES[scope])
+            if scope == "task":
+                mine = self.task_total.get(row["task_id"], 0)
+            else:
+                mine = self.effects_by_key.get(self._budget_key(row), 0)
+            agree = (cap is not None and budget.get("cap") == cap
+                     and budget.get("consumed") == mine and mine >= cap)
+            return "budget_exhausted", agree
+        if scope == "rate":
+            rate = pol.get("rate") or {}
+            eff = _row_operation(row)
+            seen = sum(v for (t, e, _r), v in self.effects_by_key.items()
+                       if t == row["task_id"] and e == eff)
+            agree = (bool(rate) and budget.get("cap") == rate.get("n")
+                     and budget.get("seconds") == rate.get("seconds")
+                     and budget.get("consumed") == budget.get("cap")
+                     and seen >= rate.get("n", 0))
+            return "rate_limited_stated", agree
+        return "budget_unknown_scope", False
+
     def consumed(self, st) -> bool:
         if st["operation"] == "read":
             return st["reads_used"] >= st["budget"]["reads"]
@@ -232,27 +285,20 @@ def reconstruct(rows: list[dict]) -> list[dict]:
             state = v[0] if v else "active"
             if not refused:
                 agree = not v
+                if row["kind"] == "effect" and grants.policy:
+                    # a success past the policy is the failure the budget
+                    # exists to prevent; the observer must see it (F4)
+                    over = grants.over_budget(row)
+                    if over:
+                        state, agree = over, False
             elif v:
                 agree = any(_has(reason, _STATE_REASONS[s]) for s in v)
             else:
                 stated = [s for n, s in _STATED_ONLY.items() if n in reason]
                 st = grants.g.get(row["grant_id"])
-                if _has(reason, _BUDGET):
-                    # resource budget refusal: verifiable against the policy row
-                    # and the effects counted so far (phase 6B)
-                    state = "budget_exhausted"
-                    pol = grants.policy or {}
-                    eff = _row_operation(row)
-                    key = (row["task_id"], eff, row.get("resource", ""))
-                    used = grants.effects_by_key.get(key, 0)
-                    total = grants.task_total.get(row["task_id"], 0)
-                    cap_e, cap_t = pol.get("effect_count"), pol.get("task_effects")
-                    agree = bool(pol) and (
-                        (cap_e is not None and used >= cap_e)
-                        or (cap_t is not None and total >= cap_t))
-                elif _has(reason, _RATE):
-                    pol = grants.policy or {}
-                    state, agree = "rate_limited", bool(pol.get("rate"))
+                budget = row.get("budget") if isinstance(row.get("budget"), dict) else None
+                if budget is not None:
+                    state, agree = grants.verify_budget_refusal(row, budget)
                 elif ("read budget exhausted" in reason and st is not None
                         and st["reads_charged"] >= st["budget"]["reads"]):
                     state, agree = "consumed", True   # explained by charged refusals

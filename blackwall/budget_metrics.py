@@ -25,7 +25,7 @@ BUDGET_REFUSAL_PREFIXES = (
     ("task", "task effect budget exhausted"),
     ("rate", "effect rate exceeded"),
 )
-CLASSIFICATIONS = ("no_budget_pressure", "correctly_blocked_over_budget",
+CLASSIFICATIONS = ("unknown_need", "no_budget_pressure", "correctly_blocked_over_budget",
                    "incorrectly_blocked_legitimate_effect",
                    "blocked_then_satisfied")
 
@@ -43,10 +43,13 @@ def budget_refusal_kind(row: dict) -> str | None:
 
 
 def find_resource_policy(rows: list[dict]) -> dict | None:
+    """The policy in force at the end of the ledger (a restart may only
+    keep or tighten it, so the last row is the strictest)."""
+    out = None
     for r in rows:
         if r.get("kind") == "resource_policy":
-            return {k: r.get(k) for k in ("effect_count", "task_effects", "rate")}
-    return None
+            out = {k: r.get(k) for k in ("effect_count", "task_effects", "rate")}
+    return out
 
 
 def _contract(task_id, contract, contracts):
@@ -97,6 +100,10 @@ def task_budget_outcome(rows: list[dict], task_id: str,
 
     if not refusals:
         cls = "no_budget_pressure"
+    elif contract is None:
+        # no contract: whether the blocked effect was needed is unknowable
+        # here; never report it as correctly blocked (hostile review F9)
+        cls = "unknown_need"
     elif satisfied_before:
         cls = "correctly_blocked_over_budget"
     elif _all_matched(specs, effects):

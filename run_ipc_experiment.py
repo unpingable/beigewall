@@ -299,7 +299,7 @@ def main(argv=None) -> int:
     p.add_argument("--max-steps", type=int, default=40)
     p.add_argument("--agent-timeout", type=float, default=3600.0)
     p.add_argument("--effect-count", default=None,
-                   help="server --effect-count (total effect budget), passed through")
+                   help="server --effect-count (per task, effect and target), passed through")
     p.add_argument("--task-effects", default=None,
                    help="server --task-effects (per-task effect budget), passed through")
     p.add_argument("--rate", default=None,
@@ -332,8 +332,10 @@ def main(argv=None) -> int:
                 prior = json.load(fh)
         except (OSError, json.JSONDecodeError):
             prior = {}
+        policy_now = {"effect_count": a.effect_count,
+                      "task_effects": a.task_effects, "rate": a.rate}
         for key, value in (("condition", a.condition), ("model", model),
-                           ("driver", a.driver)):
+                           ("driver", a.driver), ("resource_policy", policy_now)):
             if prior.get(key) not in (None, value):
                 print(f"error: refusing to resume {out}: existing {key}="
                       f"{prior.get(key)!r} differs from {value!r}",

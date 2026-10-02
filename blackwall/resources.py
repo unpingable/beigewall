@@ -13,6 +13,8 @@ import math
 import time
 from dataclasses import dataclass
 
+MIN_RATE_SECONDS = 0.001
+
 
 class ResourceConfigError(ValueError):
     """A budget configuration that is not a positive, finite bound."""
@@ -44,11 +46,16 @@ class ResourcePolicy:
             if (isinstance(s, bool) or not isinstance(s, (int, float))
                     or not math.isfinite(s) or s <= 0):
                 raise ResourceConfigError(f"rate seconds must be positive and finite, got {s!r}")
+            if s < MIN_RATE_SECONDS:
+                # a window shorter than the IPC round trip is a no-op rate
+                raise ResourceConfigError(f"rate seconds must be >= {MIN_RATE_SECONDS}, got {s!r}")
 
     @classmethod
     def parse(cls, effect_count=None, task_effects=None, rate: str | None = None):
         n = secs = None
-        if rate:
+        if rate is not None:
+            # an empty string is a configuration error, not "no rate"
+            # (hostile review F8): absence is None
             try:
                 a, b = rate.split("/", 1)
                 n, secs = int(a), float(b)
@@ -65,6 +72,25 @@ class ResourcePolicy:
         return {"effect_count": self.effect_count, "task_effects": self.task_effects,
                 "rate": ({"n": self.rate_n, "seconds": self.rate_seconds}
                          if self.rate_n is not None else None)}
+
+    def looser_than(self, prior: dict) -> list[str]:
+        """Fields on which this policy admits more than `prior` (a
+        `resource_policy` receipt's fields). A trusted restart may keep or
+        tighten the bounds of the run it resumes, never loosen or drop them
+        (hostile review F2)."""
+        out = []
+        for name in ("effect_count", "task_effects"):
+            old, new = prior.get(name), getattr(self, name)
+            if old is not None and (new is None or new > old):
+                out.append(name)
+        old_rate = prior.get("rate")
+        if old_rate:
+            if self.rate_n is None:
+                out.append("rate")
+            elif (self.rate_n / self.rate_seconds
+                  > old_rate["n"] / old_rate["seconds"] + 1e-12):
+                out.append("rate")
+        return out
 
 
 class ResourceLedger:
@@ -109,17 +135,42 @@ class ResourceLedger:
         self.consumed[key] = self.consumed.get(key, 0) + 1
         self.task_total[task_id] = self.task_total.get(task_id, 0) + 1
         if self.policy.rate_n is not None:
-            self.stamps.setdefault((task_id, effect), []).append(self._wall())
-        self.assert_invariant()
+            now = self._wall()
+            window = [t for t in self.stamps.get((task_id, effect), [])
+                      if now - t < self.policy.rate_seconds]
+            self.stamps[(task_id, effect)] = window + [now]
+        # the invariant is asserted for the key this consume touched only:
+        # counters rebuilt from a run under a looser policy may legitimately
+        # sit above the cap (they refuse), and a global scan here would
+        # raise after the handler ran and leave a landed effect without a
+        # receipt (hostile review F1)
+        self.assert_invariant(key)
 
-    def assert_invariant(self) -> None:
+    def assert_invariant(self, key: tuple | None = None) -> None:
         p = self.policy
-        for key, n in self.consumed.items():
+        keys = [key] if key is not None else list(self.consumed)
+        for k in keys:
+            n = self.consumed.get(k, 0)
             if n < 0 or (p.effect_count is not None and n > p.effect_count):
-                raise AssertionError(f"resource invariant violated for {key}: {n}")
-        for task, n in self.task_total.items():
+                raise AssertionError(f"resource invariant violated for {k}: {n}")
+        tasks = [key[0]] if key is not None else list(self.task_total)
+        for task in tasks:
+            n = self.task_total.get(task, 0)
             if n < 0 or (p.task_effects is not None and n > p.task_effects):
                 raise AssertionError(f"resource invariant violated for task {task}: {n}")
+
+    def over_cap(self) -> dict:
+        """Keys whose rebuilt consumption already meets or exceeds the
+        policy (every further effect on them is refused)."""
+        p = self.policy
+        out = {}
+        if p.effect_count is not None:
+            out["consumed"] = {"|".join(k): v for k, v in self.consumed.items()
+                               if v >= p.effect_count}
+        if p.task_effects is not None:
+            out["task_total"] = {t: v for t, v in self.task_total.items()
+                                 if v >= p.task_effects}
+        return out
 
     # -- restart ---------------------------------------------------------
     def rebuild(self, rows: list[dict], effect_resource) -> int:

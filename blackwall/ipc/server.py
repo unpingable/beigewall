@@ -69,6 +69,18 @@ class TrustedServer:
         self.authority = PolicyAuthority(experiment_policy(), clock=self.clock.now)
         self.resource_policy = resource_policy or ResourcePolicy()
         self.resources = None
+        prior_policy = None
+        for r in prior:
+            if r.get("kind") == "resource_policy":
+                prior_policy = r
+        if prior_policy is not None:
+            # a restart may keep or tighten the bounds of the run it resumes;
+            # loosening or dropping them silently is a reset by another
+            # name (hostile review F2)
+            looser = self.resource_policy.looser_than(prior_policy)
+            if looser:
+                raise SystemExit("error: resource policy looser than the prior run's on "
+                                 f"{looser}; refusing to start")
         if self.resource_policy.bounded:
             from ..broker import effect_resource
             self.resources = ResourceLedger(self.resource_policy)
@@ -104,7 +116,8 @@ class TrustedServer:
         self.active: str | None = None
         if self.resource_policy.bounded:
             self.ledger.record("resource_policy", "", **self.resource_policy.to_dict(),
-                               rebuilt_consumed=(self.resources.snapshot() if prior else None))
+                               rebuilt_consumed=(self.resources.snapshot() if prior else None),
+                               rebuilt_over_cap=(self.resources.over_cap() if prior else None))
         # only rows the server attributed to a task close it; rejected
         # frames carry no task attribution (a client could otherwise lock a
         # task out by claiming its id in a bad frame)
