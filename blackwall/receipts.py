@@ -53,9 +53,14 @@ class Ledger:
     sink failure the ledger is failed: every later record raises."""
 
     def __init__(self, clock, sink_path: str | None = None,
-                 durable_kinds: frozenset | None = None):
+                 durable_kinds: frozenset | None = None, witness=None):
         self._clock = clock
         self._sink_path = sink_path
+        # phase 7B: an independent witness receives each canonical receipt
+        # directly from the producer, BEFORE the (possibly compromised) writer
+        # persists it, and keeps its own out-of-custody record. Default None
+        # keeps every existing run (and the canonical artifacts) unchanged.
+        self._witness = witness
         self._receipts: list[Receipt] = []
         self._seq_offset = 0
         self.failed: Exception | None = None
@@ -85,6 +90,10 @@ class Ledger:
         seq = self._seq_offset + len(self._receipts) + 1
         r = Receipt(receipt_id=f"r-{seq}", seq=seq, ts=self._clock(),
                     kind=kind, task_id=task_id, detail=detail)
+        if self._witness is not None:
+            # independent custody first: the witness holds the truth even if the
+            # writer below omits or corrupts the row
+            self._witness.observe(r.to_dict())
         if self._sink_path is not None:
             try:
                 self._sink_write(json.dumps(r.to_dict(), sort_keys=True) + "\n",

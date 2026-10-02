@@ -32,6 +32,9 @@ from ..corpus import build_demo_corpus
 from ..receipts import Ledger, LedgerError, canonical_hash
 from ..resources import ResourceConfigError, ResourceLedger, ResourcePolicy
 from ..tasks import LogicalClock, experiment_policy, task_suite
+from ..witness import Witness
+from ..witness import classify as custody_classify
+from ..witness import recovery_decision as custody_recovery
 from . import protocol as P
 
 READ_TIMEOUT = 30.0
@@ -60,11 +63,13 @@ def unresolved_intents(rows: list[dict]) -> list[dict]:
 class TrustedServer:
     def __init__(self, socket_path: str, ledger_path: str, condition: str = "control",
                  run_id: str | None = None, tasks: list[str] | None = None,
-                 resource_policy: ResourcePolicy | None = None, recover: bool = False):
+                 resource_policy: ResourcePolicy | None = None, recover: bool = False,
+                 witness_path: str | None = None):
         if condition not in ("control", "global", "denial", "task"):
             raise ValueError(f"unknown condition {condition!r}")
         self.socket_path = socket_path
         self.ledger_path = ledger_path
+        self.witness_path = witness_path
         # exclusive ownership of the ledger: a second server on the same
         # ledger (or socket) must not start (identity corruption otherwise).
         # The lock is on the ledger's own inode, so another path to the
@@ -80,13 +85,39 @@ class TrustedServer:
         self.run_id = run_id or uuid.uuid4().hex[:12]
         self.clock = LogicalClock()
         prior = self._load_prior(ledger_path, recover)
+        # phase 7B: evidence custody. With a witness, the primary ledger (the
+        # writer's output) is NOT trusted on restart: it is verified against
+        # the independent witness, the start fails closed on any divergence,
+        # and seq/clock resume from the WITNESS head (so a rolled-back or
+        # truncated writer ledger can never let identities be reused).
+        self.witness = None
+        self.custody = None
+        if witness_path is not None:
+            self.witness = Witness.load(witness_path)
+            self.witness._sink_path = witness_path
+            if self.witness.records:
+                report = custody_classify(prior, self.witness.records,
+                                          at_restart=True,
+                                          prior_head=self.witness.head_seq)
+                decision = custody_recovery(report, safety_dependent=True)
+                self.custody = {"restart_report_health": report["health"],
+                                "decision": decision}
+                if decision["fail_closed"]:
+                    raise SystemExit(
+                        "evidence custody: primary ledger diverges from the "
+                        f"witness ({decision['state']}: {decision['reason']}); "
+                        "refusing to start")
         self.ledger = Ledger(clock=self.clock.now, sink_path=ledger_path,
-                             durable_kinds=DURABLE_KINDS)
+                             durable_kinds=DURABLE_KINDS, witness=self.witness)
         self.degraded: str | None = None     # set after a ledger failure: fail-stop
         self._client_rows: dict[str, int] = {}   # task -> narrative/unmediated rows
         self.tasks = {t.task_id: t for t in task_suite()}
         if prior:
             self.ledger.resume_after(prior)
+            if self.witness is not None and self.witness.head_seq:
+                # the witness head is authoritative for identity continuation
+                self.ledger._seq_offset = max(self.ledger._seq_offset,
+                                              self.witness.head_seq)
             self.clock.t = max((r["ts"] for r in prior), default=1000.0) + 1.0
         self.corpus = build_demo_corpus()
         self.authority = PolicyAuthority(experiment_policy(), clock=self.clock.now)
@@ -518,6 +549,10 @@ def main(argv=None) -> int:
     p.add_argument("--recover", action="store_true",
                    help="drop a torn last ledger line left by a crash during a write "
                         "(receipted as torn_tail_recovered); otherwise refuse to start")
+    p.add_argument("--witness", default=None,
+                   help="phase 7B: independent witness sink path. With it, the "
+                        "primary ledger is verified against the witness on restart "
+                        "(fail-closed on divergence) and identities resume from it")
     a = p.parse_args(argv)
     if (a.socket is None) == (a.vsock_port is None):
         p.error("exactly one of --socket and --vsock-port")
@@ -531,7 +566,7 @@ def main(argv=None) -> int:
         return 2
     try:
         server = TrustedServer(a.socket, a.ledger, a.condition, a.run_id, tasks, policy,
-                               recover=a.recover)
+                               recover=a.recover, witness_path=a.witness)
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
