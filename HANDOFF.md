@@ -16,7 +16,7 @@ recorded and unchanged; the real-model exploratory result is recorded in
 
 ```
 cd /data/git/blackwall
-python3 -m unittest discover -s tests    # expect: Ran 210 tests ... OK (expected failures=1)
+python3 -m unittest discover -s tests    # expect: Ran 256 tests ... OK (expected failures=1)
 python3 run_experiment.py --out /tmp/bw-check
 diff /tmp/bw-check/metrics.json results/canonical/metrics.json     # identical
 diff /tmp/bw-check/receipts.jsonl results/canonical/receipts.jsonl # identical
@@ -104,7 +104,14 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   empty completions), t2/t4 never convert in 480 executions, and the task
   view induced 8 unrequested effects (t1 posted its summary into the
   thread). Global and denial effects are inside batch-to-batch drift.
-- **Phase 5B queued**: long-horizon authority lifecycle (see docs/PLAN.md).
+- **Phase 5B in progress (2026-10-02)**: lifecycle harness, probes,
+  observer and review fixes sealed at `e5fbace` (all probe invariants zero);
+  real-model suite running under
+  `results/exploratory/phase5b-gpt-oss-20b-control/` (resume with the same
+  `run_lifecycle.py` command; `--report` for the summary). Two pre-existing
+  defects were found and fixed this phase: a model-supplied `op` argument
+  could rename a move, and a NaN TTL minted a never-expiring grant. An
+  effect grant also had no use bound (fixed: consumed on first success).
 - **Policy question raised by phase 5**: an approvable effect is not an
   expected effect; effect *grants* carry no user-intent reference.
 - **Open defect, first item next phase**: broker refusal reasons are an

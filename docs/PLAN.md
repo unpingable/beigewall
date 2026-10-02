@@ -255,17 +255,29 @@ Design: `docs/CAPABILITIES.md` (phase 5 shapes); results:
       converts 18/47 (p≈0.03) mostly via fewer empty completions; t2/t4
       never convert; 8 unrequested effects under the task view.
 
-## Phase 5B (queued): long-horizon authority lifecycle
+## Phase 5B milestones / status (long-horizon authority lifecycle, 2026-10-02)
 
 Research question: does BLACKWALL preserve authority isolation and
 provenance correctness over a long-lived session with retries, task
 transitions, expiration, revocation, restart, duplicate delivery and stale
-authority? Trajectory suite derived from the existing tasks (4–8 transitions
-each, ≈20 trajectories), lifecycle injections, cross-task isolation checks,
-recovery semantics, receipt-chain invariants, hostile review. No change to
-grant/projection/effect/receipt/evaluator semantics or to the 12 tasks.
-Starts only with phase 5 sealed (done) and its invariants resolved (all
-zero; one open pre-existing oracle documented).
+authority? Design and receipt-schema gaps: `docs/LIFECYCLE.md`; results:
+`FINDINGS_PHASE5B.md`.
+
+- [x] Receipt-schema gaps documented before any change.
+- [x] Defect demonstrated then fixed fail-closed: effect grants had no use
+      bound (retry landed an effect twice) → consumed on first success.
+      Authority revocation added (`grant_revoke`).
+- [x] Trajectory harness with receipted injections (time jump, TTL cap,
+      revoke, transport loss, duplicate delivery, session restart);
+      scripted trajectory driver with cross-task aliases; 7 deterministic
+      probes; independent observer reconstructing grant state from receipts;
+      resumable runner and report.
+- [x] Hostile review: 2 pre-existing defects (forgeable move op; NaN TTL),
+      1 design defect (task repeats), observer blind spots — fixed with
+      regression tests; canonical byte-identical. 256 tests.
+- [ ] Real-model suite: 20 trajectories, control condition, under
+      `results/exploratory/phase5b-gpt-oss-20b-control/`.
+- [ ] `FINDINGS_PHASE5B.md` results; HANDOFF updated.
 
 ## Handoff protocol for a resuming agent
 
