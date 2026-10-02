@@ -28,10 +28,13 @@ class ToolFacade:
     def request_grant(self, resource: str, operation: str,
                       projection: str | None = None, ttl: float | None = None,
                       budget: dict | None = None) -> dict:
+        import math
         bad = (not isinstance(resource, str) or not isinstance(operation, str)
                or (projection is not None and not isinstance(projection, str))
                or (ttl is not None and isinstance(ttl, bool))
                or (ttl is not None and not isinstance(ttl, (int, float)))
+               or (ttl is not None and isinstance(ttl, (int, float))
+                   and (not math.isfinite(ttl) or ttl <= 0))
                or (budget is not None and not (
                    isinstance(budget, dict)
                    and isinstance(budget.get("reads"), int)

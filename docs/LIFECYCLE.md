@@ -50,8 +50,8 @@ task initiated it, and whether a retry or duplicate occurred.
   over one corpus/ledger/authority/broker; a step is a task (one of the 12,
   unchanged) or an injection; the driver is one session across steps.
   Injections: `time_jump` (advance the logical clock past TTLs),
-  `revoke` (revoke the most recent active grant of the current task, or a
-  named alias), `transport_loss` (the next successful effect's result is
+  `revoke` (revoke the current task's first minted grant right after it is
+  minted), `transport_loss` (the next successful effect's result is
   replaced by an error "transport failure: result unknown" — the effect
   *did* land; the receipt exists), `session_restart` (driver conversation
   reset with a note that the session restarted; broker state persists),
@@ -126,3 +126,44 @@ process memory; a broker restart would lose all grants — documented
 limitation, not simulated). No general agent runtime. No new policy
 abstractions: revocation is an authority action on an existing grant;
 effect consumption is a bound on an existing grant.
+
+## Conventions and bounds fixed after the hostile review (2026-10-02)
+
+- **Task identity is the isolation boundary.** The broker isolates by
+  `task_id`; two executions of the same task in one ledger would be one
+  task to it, and the evaluator would merge their receipts. A trajectory
+  therefore never repeats a task (`run_trajectory` raises; the suite
+  generator never produces one). Documented limitation: per-execution
+  identity would need the policy's task-keyed rules to resolve a base task
+  id — not added.
+- **Moves are named by the tool, not by the model.** The LLM driver builds
+  each move as `{**whitelisted_args, "op": <tool name>}`; a model-supplied
+  `op` key cannot rename a move (it could previously have forged the
+  trusted `time_jump` probe op). The mid-task `time_jump` op is honoured
+  only for the deterministic probe driver and only with positive ticks;
+  any other driver hits the unmediated trap.
+- **Request shape is validated fail-closed.** A TTL that is not finite and
+  positive is refused at the facade (malformed) and denied by the authority
+  (`min(nan, cap)` is `nan`, which would defeat every cap); requested
+  budgets are clamped to the ceiling `MAX_BUDGET` (8 reads / 200 objects);
+  non-positive budgets are denied. Canonical requests always used the
+  default budget, so canonical artifacts are unchanged.
+- **Observer conventions.** A use receipt's `ts` is one tick after the
+  broker's validation (the ledger reads the clock again when recording), so
+  the observer compares `ts − 1` against `expires_at`. Effect scope is
+  derived from params (`thread_id` → `messages/thread/<id>`, `create_event`
+  → `calendar/events`, `note_id` → `notes/<id>`). A repeated mint id, a
+  revoke of an unknown grant, or a clock regression is a disagreement.
+  A re-request right after a budget refusal is recovery, not duplicate
+  acquisition.
+- **Duplicate effects are split.** `duplicate_effects_same_grant` (a replay
+  on one grant) is a critical invariant and must be 0.
+  `duplicate_effects_after_transport_loss` and
+  `duplicate_effects_fresh_grant` are reported: when the agent is told
+  "result unknown" and legitimately requests a *new* grant to send again,
+  the broker is correct and the world has two messages — a lifecycle gap
+  (no idempotency key, no effect-status query), not a broker defect.
+- An armed injection that never fires is receipted as `lifecycle
+  {event: disarmed}` at task end. Provenance means "disclosed in this
+  task" regardless of the disclosing grant's later state (expired or
+  revoked grants do not retract what they disclosed); this is intended.

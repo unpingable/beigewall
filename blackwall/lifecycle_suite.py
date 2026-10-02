@@ -63,7 +63,9 @@ def _try_build(rng: random.Random, ids: list[str], kinds: list[str]):
     tasks: list[str] = []
     while len(tasks) < k:
         t = rng.choice(ids)
-        if tasks and tasks[-1] == t:
+        if t in tasks:
+            # task identity is the authority boundary: a trajectory never
+            # repeats a task (two executions would merge into one task)
             continue
         tasks.append(t)
     if not any(t in EFFECT_TASKS for t in tasks):

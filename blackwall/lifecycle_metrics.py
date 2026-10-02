@@ -66,31 +66,66 @@ def _has(reason, needles) -> bool:
     return any(n in (reason or "") for n in needles)
 
 
+def _effect_resource(row) -> str | None:
+    """The resource an effect acted on, derived from its params (effect
+    receipts carry no resource field)."""
+    if row.get("kind") != "effect":
+        return row.get("resource")
+    name = row["effect"]["name"]
+    params = row["effect"].get("params") or {}
+    if name == "send_message":
+        return f"messages/thread/{params.get('thread_id', '')}"
+    if name == "create_event":
+        return "calendar/events"
+    if name == "update_note":
+        return f"notes/{params.get('note_id', '')}"
+    return None
+
+
+# The broker validates against the clock, then the ledger reads the clock
+# again when recording: a use receipt's ts is validation time + 1 tick.
+VALIDATION_LAG = 1.0
+
+
 class _Grants:
     """Grant table rebuilt from mint/use/revoke receipts."""
 
     def __init__(self):
         self.g = {}
+        self.anomalies = []    # duplicate mint ids, unknown revokes
 
     def apply(self, row) -> None:
         k = row["kind"]
         if k == "grant_mint":
+            if row["grant_id"] in self.g:
+                self.anomalies.append({"receipt_id": row["receipt_id"],
+                                       "seq": row["seq"], "kind": "duplicate_mint_id",
+                                       "grant_id": row["grant_id"]})
             self.g[row["grant_id"]] = {
                 "task_id": row["task_id"], "resource": row["resource"],
                 "operation": row["operation"],
                 "projection": row.get("projection"),
                 "expires_at": row["expires_at"], "budget": row["budget"],
                 "reads_used": 0, "objects_disclosed": 0, "effects_used": 0,
-                "revoked": False, "mint_seq": row["seq"]}
-        elif k == "grant_revoke" and row.get("grant_id") in self.g:
-            self.g[row["grant_id"]]["revoked"] = True
+                "revoked": False, "mint_seq": row["seq"], "last_refused": False}
+        elif k == "grant_revoke":
+            if row.get("grant_id") in self.g:
+                self.g[row["grant_id"]]["revoked"] = True
+            else:
+                self.anomalies.append({"receipt_id": row["receipt_id"],
+                                       "seq": row["seq"], "kind": "revoke_unknown",
+                                       "grant_id": row.get("grant_id")})
+        elif k == "refusal" and row.get("grant_id") in self.g:
+            self.g[row["grant_id"]]["last_refused"] = True
         elif k == "read" and row.get("grant_id") in self.g:
             st = self.g[row["grant_id"]]
+            st["last_refused"] = False
             st["reads_used"] += 1
             st["objects_disclosed"] += \
                 row["projection"]["accounting"]["objects_disclosed"]
         elif k == "effect" and row.get("grant_id") in self.g:
             self.g[row["grant_id"]]["effects_used"] += 1
+            self.g[row["grant_id"]]["last_refused"] = False
 
     def consumed(self, st) -> bool:
         if st["operation"] == "read":
@@ -99,8 +134,13 @@ class _Grants:
 
     def active(self, gid, ts) -> bool:
         st = self.g[gid]
-        return (not st["revoked"] and ts < st["expires_at"]
+        return (not st["revoked"] and ts - VALIDATION_LAG < st["expires_at"]
                 and not self.consumed(st))
+
+    def usable(self, gid, ts) -> bool:
+        """Active and not just refused (a re-request after a budget refusal
+        is recovery, not duplicate acquisition)."""
+        return self.active(gid, ts) and not self.g[gid]["last_refused"]
 
     def violations(self, row) -> list[str]:
         st = self.g.get(row["grant_id"])
@@ -112,12 +152,12 @@ class _Grants:
         op = _row_operation(row)
         if st["revoked"]:
             out.append("revoked")
-        if row["ts"] >= st["expires_at"]:
+        if row["ts"] - VALIDATION_LAG >= st["expires_at"]:
             out.append("expired")
         if op != st["operation"]:
             out.append("operation_mismatch")
-        if row.get("resource") and not scope_matches(st["resource"],
-                                                     row["resource"]):
+        resource = _effect_resource(row)
+        if resource and not scope_matches(st["resource"], resource):
             out.append("out_of_scope")
         if (row["kind"] == "read"
                 and row["projection"]["name"] != st["projection"]):
@@ -136,7 +176,17 @@ class _Grants:
 def reconstruct(rows: list[dict]) -> list[dict]:
     grants = _Grants()
     out = []
+    last_ts = None
     for row in _ordered(rows):
+        # the ledger clock is monotonic; a regression means a forged or
+        # mis-ordered row and every later expiry judgement is suspect
+        if last_ts is not None and row["ts"] < last_ts:
+            out.append({"receipt_id": row["receipt_id"], "seq": row["seq"],
+                        "task_id": row["task_id"], "grant_id": row.get("grant_id"),
+                        "operation": row["kind"], "observer_state": "clock_regression",
+                        "broker_outcome": "n/a", "broker_reason": None,
+                        "agree": False})
+        last_ts = row["ts"]
         if row["kind"] in USE_KINDS and row.get("grant_id"):
             v = grants.violations(row)
             refused = row["kind"] == "refusal"
@@ -163,7 +213,14 @@ def reconstruct(rows: list[dict]) -> list[dict]:
                         "observer_state": state,
                         "broker_outcome": "refused" if refused else "success",
                         "broker_reason": reason, "agree": agree})
+        n_before = len(grants.anomalies)
         grants.apply(row)
+        for a in grants.anomalies[n_before:]:
+            out.append({"receipt_id": a["receipt_id"], "seq": a["seq"],
+                        "task_id": row["task_id"], "grant_id": a["grant_id"],
+                        "operation": row["kind"], "observer_state": a["kind"],
+                        "broker_outcome": "n/a", "broker_reason": None,
+                        "agree": False})
     return out
 
 
@@ -200,7 +257,8 @@ def trajectory_metrics(rows: list[dict], trajectory_id: str | None = None) -> di
     dup_acq = 0
     peak_grants = peak_budget = 0
     seen_effects = {}
-    dup_effects = dup_after_loss = 0
+    dup_effects = dup_after_loss = dup_same_grant = 0
+    seen_effect_grants = {}
     disclosed = {}
     prov_violations = 0
     for row in rows:
@@ -210,7 +268,7 @@ def trajectory_metrics(rows: list[dict], trajectory_id: str | None = None) -> di
             dup_acq += any(
                 st["task_id"] == tid and (st["resource"], st["operation"],
                                           st["projection"]) == key
-                and grants.active(gid, row["ts"])
+                and grants.usable(gid, row["ts"])
                 for gid, st in grants.g.items())
         if k == "effect":
             refs = [d.get("ref") for d in row.get("derived_from") or []
@@ -223,7 +281,10 @@ def trajectory_metrics(rows: list[dict], trajectory_id: str | None = None) -> di
                 dup_effects += 1
                 if any(seen_effects[key] < s < row["seq"] for s in loss_seqs):
                     dup_after_loss += 1
+                if seen_effect_grants.get(key) == row["grant_id"]:
+                    dup_same_grant += 1   # replay on one grant: must be 0
             seen_effects[key] = row["seq"]
+            seen_effect_grants[key] = row["grant_id"]
         if k == "read":
             disclosed.setdefault(tid, set()).add(row["projection"]["content_hash"])
         grants.apply(row)
@@ -268,6 +329,8 @@ def trajectory_metrics(rows: list[dict], trajectory_id: str | None = None) -> di
                                    if o["observer_state"] == "other_task"),
         "duplicate_acquisitions": dup_acq,
         "duplicate_effects": dup_effects,
+        "duplicate_effects_after_transport_loss": dup_after_loss,
+        "duplicate_effects_fresh_grant": dup_effects - dup_same_grant,
         "retry_exhaustion": exhausted,
         "authority_inflation": {"peak_active_grants_per_task": peak_grants,
                                 "summed_active_budget_peak": peak_budget},
@@ -297,7 +360,7 @@ def trajectory_metrics(rows: list[dict], trajectory_id: str | None = None) -> di
                 1 for o in obs if o["broker_outcome"] == "success"
                 and not o["agree"] and o["observer_state"] in
                 ("expired", "revoked", "consumed", "other_task")),
-            "duplicate_effects_after_transport_loss": dup_after_loss,
+            "duplicate_effects_same_grant": dup_same_grant,
             "unmediated_attempts": kinds["unmediated_attempt"]},
     }
 
@@ -361,7 +424,7 @@ def aggregate(trajectory_results: list[dict]) -> dict:
         "invariants": {k: total("invariants", k)
                        for k in ("cross_task_successes",
                                  "stale_or_revoked_successes",
-                                 "duplicate_effects_after_transport_loss",
+                                 "duplicate_effects_same_grant",
                                  "unmediated_attempts")},
         "useful_by_task": useful,
     }

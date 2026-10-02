@@ -72,6 +72,9 @@ class LifecycleHarness(Harness):
         self.trajectory_id = ""
         self.step = 0
         self.task_id = ""
+        # only the deterministic probe driver may emit a mid-task time jump;
+        # set by run_trajectory from the driver's type, never from a move
+        self.trusted_probe_driver = False
 
     # -- lifecycle receipts ----------------------------------------------
     def event(self, event: str, **detail) -> None:
@@ -86,10 +89,14 @@ class LifecycleHarness(Harness):
     def _execute(self, facade: ToolFacade, move: dict) -> dict:
         op = move.get("op")
         if op == "time_jump":
-            # scripted probes only (the LLM driver cannot emit this op: unknown
-            # tool names become unmediated attempts); trusted-side, receipted
-            self._clock.t += float(move.get("ticks", 700))
-            self.event("time_jump", ticks=move.get("ticks", 700))
+            # scripted probes only; a driver that is not the trusted probe
+            # driver gets the unmediated trap, and ticks must be positive
+            ticks = move.get("ticks", 700)
+            if (not self.trusted_probe_driver or not isinstance(ticks, (int, float))
+                    or isinstance(ticks, bool) or not ticks > 0):
+                return getattr(facade, "time_jump")(ticks)
+            self._clock.t += float(ticks)
+            self.event("time_jump", ticks=ticks)
             return {"ok": True, "lifecycle": "time_jump"}
         if op == "request_grant" and "duplicate_delivery" in self._pending:
             self._pending.pop("duplicate_delivery")
@@ -132,7 +139,14 @@ def run_trajectory(trajectory: Trajectory, driver_factory, *,
     harness = LifecycleHarness(broker, ledger, clock, discovery_mode=discovery_mode)
     harness.trajectory_id = trajectory.trajectory_id
     driver = driver_factory(trajectory)
+    harness.trusted_probe_driver = isinstance(driver, TrajectoryScriptedDriver)
     tasks = _tasks_by_id()
+    task_steps = [s.task_id for s in trajectory.steps if s.kind == "task"]
+    if len(task_steps) != len(set(task_steps)):
+        # the authority boundary is the task_id: a repeated task in one ledger
+        # would merge two executions into one task (documented limitation)
+        raise ValueError(f"{trajectory.trajectory_id}: a task id repeats; "
+                         "task identity is the isolation boundary")
 
     evaluations, answers, telemetry = {}, {}, {}
     ttl_cap_next: int | None = None
@@ -174,9 +188,6 @@ def run_trajectory(trajectory: Trajectory, driver_factory, *,
         # TTL cap for this task's read grants: a task-scoped approve rule
         # inserted ahead of the wildcard rules (same mechanism as the policy)
         if ttl_cap_next is not None:
-            capped = [PolicyRule(task_id=task.task_id, resource="*", operation="read",
-                                 projection="*", decision="approve",
-                                 ttl_cap=float(ttl_cap_next))]
             authority._rules = _with_cap(rules, task.task_id, ttl_cap_next)
         else:
             authority._rules = list(rules)
@@ -197,6 +208,12 @@ def run_trajectory(trajectory: Trajectory, driver_factory, *,
         mints = [r for r in ledger.by_task(task.task_id) if r.kind == "grant_mint"]
         if mints:
             last_grant_id, last_task = mints[-1].detail["grant_id"], task.task_id
+        # an armed injection that never fired is receipted as disarmed, so the
+        # chain never leaves an injection's fate open
+        for armed in list(harness._pending):
+            harness.task_id = task.task_id
+            harness.event("disarmed", armed=armed)
+        harness.task_id = ""
         harness._pending.clear()
     return {"trajectory_id": trajectory.trajectory_id,
             "rows": [r.to_dict() for r in ledger.all()],

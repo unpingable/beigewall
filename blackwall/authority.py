@@ -7,9 +7,12 @@ permanent authorization state — its output is always a bounded Grant or a
 denial reason.
 """
 
+import math
 from dataclasses import dataclass
 
 from .grants import Budget, Grant, scope_matches
+
+MAX_BUDGET = Budget(reads=8, objects=200)   # an agent cannot request more
 
 
 @dataclass(frozen=True)
@@ -42,10 +45,12 @@ def _matches(rule: PolicyRule, *, task_id, resource, operation, projection) -> b
 
 
 class PolicyAuthority:
-    def __init__(self, rules: list[PolicyRule], clock, max_ttl: float = 900.0):
+    def __init__(self, rules: list[PolicyRule], clock, max_ttl: float = 900.0,
+                 max_budget: Budget = MAX_BUDGET):
         self._rules = list(rules)
         self._clock = clock
         self._max_ttl = max_ttl
+        self._max_budget = max_budget
         self._grant_seq = 0
         self.authorization_events = 0
         self.grants_minted = 0
@@ -65,6 +70,19 @@ class PolicyAuthority:
                projection: str | None, ttl: float,
                budget: Budget) -> tuple[Grant | None, str]:
         self.authorization_events += 1
+        # fail-closed on request shape: a non-finite or non-positive TTL
+        # would defeat every cap (min(nan, cap) is nan); a budget above the
+        # ceiling is clamped, never granted as asked
+        if (isinstance(ttl, bool) or not isinstance(ttl, (int, float))
+                or not math.isfinite(ttl) or ttl <= 0):
+            self.grants_denied += 1
+            return None, "invalid ttl"
+        if (not isinstance(budget.reads, int) or not isinstance(budget.objects, int)
+                or budget.reads <= 0 or budget.objects <= 0):
+            self.grants_denied += 1
+            return None, "invalid budget"
+        budget = Budget(reads=min(budget.reads, self._max_budget.reads),
+                        objects=min(budget.objects, self._max_budget.objects))
         rule = next((r for r in self._rules
                      if _matches(r, task_id=task_id, resource=resource,
                                  operation=operation, projection=projection)),

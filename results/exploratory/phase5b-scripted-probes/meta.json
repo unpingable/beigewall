@@ -3,10 +3,10 @@
   "complete": true,
   "condition": "control",
   "driver": "scripted",
-  "finished": "2026-10-02T03:35:29.086000+00:00",
-  "git_revision": "58bb212b8f0fde15ab6dea69b49d42471bd28722",
+  "finished": "2026-10-02T03:46:10.926724+00:00",
+  "git_revision": "f72f1604ce25fd003fc4c86f0c057534767ed129",
   "label": "phase5b-scripted-probes",
   "model": "scripted",
-  "started": "2026-10-02T03:35:29.022925+00:00",
+  "started": "2026-10-02T03:46:10.883766+00:00",
   "trajectories": 7
 }

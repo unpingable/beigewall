@@ -145,6 +145,8 @@
     },
     "duplicate_acquisitions": 0,
     "duplicate_effects": 0,
+    "duplicate_effects_after_transport_loss": 0,
+    "duplicate_effects_fresh_grant": 0,
     "expired_attempts": 0,
     "forged_attempts": 0,
     "grants_denied": 0,
@@ -152,7 +154,7 @@
     "grants_requested": 2,
     "invariants": {
       "cross_task_successes": 0,
-      "duplicate_effects_after_transport_loss": 0,
+      "duplicate_effects_same_grant": 0,
       "stale_or_revoked_successes": 0,
       "unmediated_attempts": 0
     },

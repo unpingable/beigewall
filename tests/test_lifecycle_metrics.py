@@ -49,6 +49,8 @@ class B:
                         resource=resource, reason=reason)
 
     def life(self, event, **kw):
+        if event == "time_jump":
+            self.ts += float(kw.get("ticks", 0))   # the clock really moves
         return self.add("lifecycle", "", trajectory_id="tr-1", step=0,
                         event=event, **kw)
 
@@ -110,9 +112,8 @@ class ReconstructTest(unittest.TestCase):
             m = trajectory_metrics(b.rows)
             self.assertEqual(m["duplicate_effects"], 1)
             self.assertEqual(m["invariants"]["stale_or_revoked_successes"], 1)
-            self.assertEqual(
-                m["invariants"]["duplicate_effects_after_transport_loss"],
-                int(loss))
+            self.assertEqual(m["duplicate_effects_after_transport_loss"], int(loss))
+            self.assertEqual(m["invariants"]["duplicate_effects_same_grant"], 1)
             self.assertEqual(m["transport_losses"], int(loss))
 
     def test_other_task_use_is_cross_task_not_forged(self):
@@ -162,7 +163,8 @@ class TrajectoryTest(unittest.TestCase):
         self.assertEqual(m["grants_requested"], 2)
 
     def test_no_duplicate_acquisition_after_expiry(self):
-        b = B().mint("t1", "g-1", ttl=1.0).mint("t1", "g-2")
+        # g-1 expires before g-2 is validated (validation = receipt ts - 1)
+        b = B().mint("t1", "g-1", ttl=1.0).life("task_transition").mint("t1", "g-2")
         self.assertEqual(trajectory_metrics(b.rows)["duplicate_acquisitions"], 0)
 
     def test_recovery_success(self):

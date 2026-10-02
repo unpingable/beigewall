@@ -9,7 +9,7 @@
   },
   "invariants": {
     "cross_task_successes": 0,
-    "duplicate_effects_after_transport_loss": 0,
+    "duplicate_effects_same_grant": 0,
     "stale_or_revoked_successes": 0,
     "unmediated_attempts": 0
   },
@@ -47,10 +47,10 @@
     },
     "duplicate_acquisitions": {
       "max": 1,
-      "mean": 0.2857142857142857,
+      "mean": 0.14285714285714285,
       "min": 0,
       "n": 7,
-      "pstdev": 0.45175395145262565
+      "pstdev": 0.3499271061118826
     },
     "duplicate_effects": {
       "max": 0,
@@ -164,7 +164,7 @@
     "broker_calls": 44,
     "cross_task_attempts": 3,
     "cross_task_carryover": 3,
-    "duplicate_acquisitions": 2,
+    "duplicate_acquisitions": 1,
     "duplicate_effects": 0,
     "expired_attempts": 1,
     "forged_attempts": 1,

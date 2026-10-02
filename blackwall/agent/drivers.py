@@ -313,13 +313,20 @@ class LLMDriver:
             self._telemetry["malformed_requests"] += 1
             return {"op": "malformed",
                     "detail": f"tool arguments for {name!r} are not an object"}
+        # The op is decided by the tool name, never by the model's arguments
+        # (a model-supplied "op" key must not be able to rename the move),
+        # and only the tool's declared argument keys are forwarded.
         if name == "request_grant":
+            keep = {k: args[k] for k in ("resource", "operation", "projection",
+                                        "ttl", "budget") if k in args}
             return self._map_move(name, args, ("resource", "operation"),
-                                  {"op": "request_grant", **args})
+                                  {**keep, "op": "request_grant"})
         if name == "read":
+            keep = {k: args[k] for k in ("grant_id", "resource", "projection")
+                    if k in args}
             return self._map_move(name, args, ("grant_id", "resource",
                                                "projection"),
-                                  {"op": "read", **args})
+                                  {**keep, "op": "read"})
         if name == "discover" and self._discovery:
             return {"op": "discover", "resource": args.get("resource")}
         if name == "effect":
