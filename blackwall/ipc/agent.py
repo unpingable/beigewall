@@ -101,9 +101,26 @@ class RemoteHarness:
             self._broker.narrative(task_id, narrative.get("claims", []),
                                    narrative.get("declared_effects", []),
                                    narrative.get("summary", ""))
-            self._broker.task_end(task_id, answer, truncated)
         except TransportError:
+            # the narrative is lost, not resent: a resend could record it
+            # twice when the first delivery landed (result unknown)
             transport_failures += 1
+        # The task is ended independently of the narrative: an open task
+        # blocks every later begin_task (task_already_active), which is how
+        # a server-side idle timeout during a slow model turn crashed a
+        # whole run (phase 6B). A result-unknown failure is retried once
+        # over a fresh connection; task_closed on the retry means the
+        # first attempt landed.
+        for attempt in range(2):
+            try:
+                self._broker.task_end(task_id, answer, truncated)
+                break
+            except TransportError:
+                transport_failures += 1
+            except ProtocolError as exc:
+                if attempt and exc.reason == "task_closed":
+                    break
+                raise
         return {"task_id": task_id, "answer": answer, "truncated": truncated,
                 "transport_failures": transport_failures}
 
