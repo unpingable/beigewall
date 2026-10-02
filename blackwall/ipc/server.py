@@ -64,7 +64,7 @@ class TrustedServer:
     def __init__(self, socket_path: str, ledger_path: str, condition: str = "control",
                  run_id: str | None = None, tasks: list[str] | None = None,
                  resource_policy: ResourcePolicy | None = None, recover: bool = False,
-                 witness_path: str | None = None):
+                 witness_path: str | None = None, witness_retain: bool = False):
         if condition not in ("control", "global", "denial", "task"):
             raise ValueError(f"unknown condition {condition!r}")
         self.socket_path = socket_path
@@ -95,6 +95,9 @@ class TrustedServer:
         if witness_path is not None:
             self.witness = Witness.load(witness_path)
             self.witness._sink_path = witness_path
+            # phase 7C: retain canonical envelopes so omitted entries are
+            # reconstructable (a reloaded retain-witness stays in retain mode)
+            self.witness._retain = self.witness._retain or witness_retain
             if self.witness.records:
                 report = custody_classify(prior, self.witness.records,
                                           at_restart=True,
@@ -553,6 +556,9 @@ def main(argv=None) -> int:
                    help="phase 7B: independent witness sink path. With it, the "
                         "primary ledger is verified against the witness on restart "
                         "(fail-closed on divergence) and identities resume from it")
+    p.add_argument("--witness-retain", action="store_true",
+                   help="phase 7C: retain canonical envelopes in the witness so "
+                        "omitted/truncated entries can be reconstructed")
     a = p.parse_args(argv)
     if (a.socket is None) == (a.vsock_port is None):
         p.error("exactly one of --socket and --vsock-port")
@@ -566,7 +572,8 @@ def main(argv=None) -> int:
         return 2
     try:
         server = TrustedServer(a.socket, a.ledger, a.condition, a.run_id, tasks, policy,
-                               recover=a.recover, witness_path=a.witness)
+                               recover=a.recover, witness_path=a.witness,
+                               witness_retain=a.witness_retain)
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

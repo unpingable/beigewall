@@ -109,7 +109,7 @@ def start_server(run_dir, auth_port, guest_cid, condition, task_ids, run_id):
     proc = subprocess.Popen(
         [sys.executable, "-m", "blackwall.ipc.server",
          "--vsock-port", str(auth_port), "--vsock-peer-cid", str(guest_cid),
-         "--ledger", ledger, "--witness", witness,
+         "--ledger", ledger, "--witness", witness, "--witness-retain",
          "--condition", condition, "--run-id", run_id,
          "--tasks", ",".join(task_ids)],
         cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
@@ -183,10 +183,25 @@ def host_custody_check(ledger_path, witness_path):
                 "ledger_rows": len(rows)}
     report = classify(rows, w.records)
     dec = recovery_decision(report, safety_dependent=True)
-    return {"health": report["health"], "detected": report["detected"],
-            "fail_closed": dec["fail_closed"], "witness_records": len(w.records),
-            "ledger_rows": len(rows), "missing": report["missing"][:8],
-            "fabricated": report["fabricated"][:8]}
+    out = {"health": report["health"], "detected": report["detected"],
+           "fail_closed": dec["fail_closed"], "witness_records": len(w.records),
+           "ledger_rows": len(rows), "missing": report["missing"][:8],
+           "fabricated": report["fabricated"][:8], "retain": w._retain}
+    # phase 7C: live reconstruction demonstration. On a COPY of the real ledger
+    # (never the real one), simulate a compromised writer truncating its tail,
+    # then reconstruct the canonical history from the retained witness.
+    if w._retain and rows:
+        from blackwall.witness import reconstruct
+        truncated = rows[:max(1, len(rows) - 3)]
+        rec = reconstruct(truncated, w.records)
+        out["reconstruction_demo"] = {
+            "simulated": "writer truncated last 3 rows (on a copy)",
+            "recoverable": rec["recoverable"], "health": rec["health"],
+            "recovered_count": rec.get("recovered_count"),
+            "full_history_rebuilt":
+                rec["recoverable"] and
+                len(rec["reconstructed"]) == len(w.records)}
+    return out
 
 
 def host_same_user_control(ledger_path):

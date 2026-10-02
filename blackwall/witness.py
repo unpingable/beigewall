@@ -70,12 +70,20 @@ class Witness:
     """Independent custody of the canonical receipt stream. Fed by the
     producer, one `observe` per minted receipt, in production order."""
 
-    def __init__(self, sink_path: str | None = None, epoch: int = 1):
+    def __init__(self, sink_path: str | None = None, epoch: int = 1,
+                 retain: bool = False):
         self.records: list[dict] = []
         self.epoch = epoch
         self._chain = GENESIS
         self._last_seq = 0
         self._sink_path = sink_path
+        # phase 7C: retain the canonical receipt envelope (the full row) so an
+        # omitted/truncated/rolled-back primary entry can be RECONSTRUCTED, not
+        # just detected. Opt-in: hash-only mode (default) keeps the 7B record
+        # shape and the "minimal, not a second copy" property. In retain mode
+        # the witness holds canonical content and is a second EVIDENCE store —
+        # still observational (it never authorizes); see docs/EVIDENCE-CUSTODY.
+        self._retain = retain
 
     @classmethod
     def load(cls, path: str) -> "Witness":
@@ -96,6 +104,7 @@ class Witness:
                 w._chain = w.records[-1]["chain_hash"]
                 w._last_seq = w.records[-1]["seq"]
                 w.epoch = max(r["epoch"] for r in w.records) + 1
+                w._retain = any("envelope" in r for r in w.records)
         return w
 
     @property
@@ -114,6 +123,10 @@ class Witness:
         rec = {"epoch": self.epoch, "seq": seq,
                "occurrence_id": row["receipt_id"], "content_hash": chash,
                "chain_hash": self._chain}
+        if self._retain:
+            # the canonical row exactly as minted; its hash is `chash`, so a
+            # tampered envelope self-detects on reconstruction
+            rec["envelope"] = dict(row)
         self.records.append(rec)
         self._last_seq = seq
         if self._sink_path is not None:
@@ -252,6 +265,107 @@ def classify_equivocation(snapshot_a, snapshot_b, witness_records) -> dict:
         if a[seq] != b[seq]:
             return {"forked": True, "health": FORKED, "fork_seq": seq}
     return {"forked": False, "health": HEALTHY}
+
+
+# health states from which missing canonical material can be reconstructed
+# (pure omission of entries, not active rewriting of surviving ones)
+RECOVERABLE_HEALTH = frozenset({OMITTED, TRUNCATED, ROLLED_BACK})
+
+
+def verify_chain(witness_records) -> dict:
+    """Re-derive the hash chain from the witness records' own content hashes
+    and check it against the stored chain_hash of each record. Detects
+    internal corruption of the witness store itself (defence in depth; the
+    witness's primary protection is the out-of-custody boundary). Also checks
+    any retained envelope hashes to its record's content_hash."""
+    chain = GENESIS
+    last = 0
+    for r in witness_records:
+        if r["seq"] <= last:
+            return {"ok": False, "reason": "non-monotonic witness seq", "seq": r["seq"]}
+        if "envelope" in r and content_hash(r["envelope"]) != r["content_hash"]:
+            return {"ok": False, "reason": "envelope does not match its hash",
+                    "seq": r["seq"]}
+        chain = chain_step(chain, r["seq"], r["content_hash"])
+        if chain != r["chain_hash"]:
+            return {"ok": False, "reason": "broken chain", "seq": r["seq"]}
+        last = r["seq"]
+    return {"ok": True, "head_chain": chain, "head_seq": last}
+
+
+def reconstruct(primary_rows, witness_records) -> dict:
+    """Phase 7C: where the primary ledger is merely MISSING canonical entries
+    (OMITTED / TRUNCATED / ROLLED_BACK), rebuild the full canonical event list
+    from the witness's retained envelopes, with every entry tagged by
+    provenance ("original" = survived in the primary; "recovered" = supplied by
+    the witness). The reconstruction is re-verified against the attested chain,
+    so it is exactly the producer's history — not an invented one.
+
+    Recovery is refused (recoverable=False) when:
+      * surviving entries were actively rewritten (ALTERED/DUPLICATED/REPLAYED/
+        REORDERED/FABRICATED/FORKED) — detect and fail closed, never "fix";
+      * the witness is unavailable, its chain is broken, or it retained hashes
+        only (detectable but not reconstructable → INDETERMINATE).
+
+    This returns EVIDENCE only. It mints no authority, restores no budget,
+    authorizes no effect, and never claims the writer persisted the recovered
+    rows."""
+    report = classify(primary_rows, witness_records)
+    health = report["health"]
+    if not witness_records:
+        return {"recoverable": False, "health": WITNESS_UNAVAILABLE,
+                "reason": "no witness", "reconstructed": None}
+    chain_ok = verify_chain(witness_records)
+    if not chain_ok["ok"]:
+        return {"recoverable": False, "health": INDETERMINATE,
+                "reason": "witness integrity: " + chain_ok["reason"],
+                "reconstructed": None}
+    if health == HEALTHY:
+        recon = [{"seq": r["seq"], "provenance": "original",
+                  "row": _primary_by_seq(primary_rows)[r["seq"]]}
+                 for r in witness_records]
+        return {"recoverable": True, "health": HEALTHY, "reason": "intact",
+                "reconstructed": recon, "recovered_count": 0}
+    if health not in RECOVERABLE_HEALTH:
+        return {"recoverable": False, "health": health,
+                "reason": f"{health} is active tampering, not recoverable omission",
+                "reconstructed": None}
+    if not all("envelope" in r for r in witness_records):
+        return {"recoverable": False, "health": INDETERMINATE,
+                "reason": "witness retained hashes only; detectable, not "
+                          "reconstructable", "reconstructed": None}
+    primary = _primary_by_seq(primary_rows)
+    recon = []
+    rebuilt_chain = GENESIS
+    for r in witness_records:
+        seq = r["seq"]
+        if seq in primary and content_hash(primary[seq]) == r["content_hash"]:
+            row, prov = primary[seq], "original"
+        else:
+            row, prov = dict(r["envelope"]), "recovered"
+        # every entry re-verified against the witness content hash
+        if content_hash(row) != r["content_hash"]:
+            return {"recoverable": False, "health": INDETERMINATE,
+                    "reason": f"reconstruction hash mismatch at seq {seq}",
+                    "reconstructed": None}
+        rebuilt_chain = chain_step(rebuilt_chain, seq, r["content_hash"])
+        recon.append({"seq": seq, "provenance": prov, "row": row})
+    if rebuilt_chain != witness_records[-1]["chain_hash"]:
+        return {"recoverable": False, "health": INDETERMINATE,
+                "reason": "reconstructed chain does not match the witness head",
+                "reconstructed": None}
+    return {"recoverable": True, "health": health,
+            "reason": f"reconstructed {sum(1 for x in recon if x['provenance']=='recovered')} "
+                      "missing entries from witness custody",
+            "reconstructed": recon,
+            "recovered_count": sum(1 for x in recon if x["provenance"] == "recovered")}
+
+
+def _primary_by_seq(primary_rows):
+    out = {}
+    for row in primary_rows:
+        out.setdefault(row.get("seq"), row)   # first occurrence wins
+    return out
 
 
 def recovery_decision(report: dict, *, safety_dependent: bool = True) -> dict:
