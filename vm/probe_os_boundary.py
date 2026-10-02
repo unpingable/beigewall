@@ -402,10 +402,41 @@ class Probes:
                 self.add("confusion:frame_to_relay", "confusion", True, False,
                          errno=_errname(exc))
 
+    # -- witness custody (phase 7B) --------------------------------------
+    # The independent witness lives on the host. A compromised ledger WRITER
+    # running in this guest must be unable to read OR modify it. We attempt
+    # every mutation a writer could want (write, append, truncate, unlink,
+    # rename) against the real host witness and ledger paths; each must fail
+    # because the host filesystem is unreachable across the VM boundary.
+    def witness_custody(self):
+        for label, path in (("witness", self.cfg.get("witness_path")),
+                            ("ledger", self.cfg.get("ledger_path"))):
+            if not path:
+                continue
+            attempts = {
+                "read": lambda p: open(p, "rb").read(16),
+                "overwrite": lambda p: open(p, "wb"),
+                "append": lambda p: open(p, "ab"),
+                "truncate": lambda p: os.truncate(p, 0),
+                "unlink": lambda p: os.unlink(p),
+                "rename": lambda p: os.rename(p, p + ".moved"),
+            }
+            for op, fn in attempts.items():
+                try:
+                    r = fn(path)
+                    if hasattr(r, "close"):
+                        r.close()
+                    # any success = the guest reached host custody state
+                    self.add(f"witness_custody:{label}:{op}", "witness_custody",
+                             True, True, note="REACHED host evidence custody")
+                except OSError as exc:
+                    self.add(f"witness_custody:{label}:{op}", "witness_custody",
+                             True, False, errno=_errname(exc))
+
     def run(self):
         for fn in (self.filesystem, self.modules, self.devices, self.transport,
                    self.protocol, self.model_relay, self.confusion,
-                   self.inherited, self.network):
+                   self.witness_custody, self.inherited, self.network):
             try:
                 fn()
             except Exception as exc:   # a probe crash must not hide the rest

@@ -82,6 +82,9 @@ def probe_config(cfg: dict) -> dict:
             "scan_ports": sorted({auth, relay, 22, 1024, 5000, 11434,
                                   auth + 1, relay + 1, auth - 1}),
             "scan_cids": [0, 1, 3, VSOCK_HOST_CID + 1],
+            # phase 7B: the compromised writer must not reach the host witness
+            "witness_path": cfg.get("witness_path"),
+            "ledger_path": cfg["ledger_path"],
         },
     }
 
@@ -101,14 +104,16 @@ def guest_config(cfg: dict, probe: bool, driver: str) -> dict:
 
 def start_server(run_dir, auth_port, guest_cid, condition, task_ids, run_id):
     ledger = os.path.join(run_dir, "receipts.jsonl")
+    witness = os.path.join(run_dir, "witness.jsonl")
     log = open(os.path.join(run_dir, "server.log"), "w")
     proc = subprocess.Popen(
         [sys.executable, "-m", "blackwall.ipc.server",
          "--vsock-port", str(auth_port), "--vsock-peer-cid", str(guest_cid),
-         "--ledger", ledger, "--condition", condition, "--run-id", run_id,
+         "--ledger", ledger, "--witness", witness,
+         "--condition", condition, "--run-id", run_id,
          "--tasks", ",".join(task_ids)],
         cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
-    return proc, log, ledger
+    return proc, log, ledger, witness
 
 
 def start_relay(run_dir, relay_port, guest_cid, upstream, model):
@@ -162,6 +167,26 @@ def parse_console(console_path):
                     except json.JSONDecodeError:
                         pass
     return probe_result, telemetry, guest_lines
+
+
+def host_custody_check(ledger_path, witness_path):
+    """Observer over the live run: primary ledger vs independent witness."""
+    import json as _json
+    from blackwall.witness import Witness, classify, recovery_decision
+    try:
+        rows = [_json.loads(x) for x in open(ledger_path) if x.strip()]
+    except OSError:
+        rows = []
+    w = Witness.load(witness_path) if witness_path and os.path.exists(witness_path) else None
+    if not w or not w.records:
+        return {"health": "WITNESS_UNAVAILABLE", "witness_records": 0,
+                "ledger_rows": len(rows)}
+    report = classify(rows, w.records)
+    dec = recovery_decision(report, safety_dependent=True)
+    return {"health": report["health"], "detected": report["detected"],
+            "fail_closed": dec["fail_closed"], "witness_records": len(w.records),
+            "ledger_rows": len(rows), "missing": report["missing"][:8],
+            "fabricated": report["fabricated"][:8]}
 
 
 def host_same_user_control(ledger_path):
@@ -226,9 +251,10 @@ def main(argv=None):
            "condition": a.condition, "tasks": task_ids, "model": a.model,
            "max_steps": a.max_steps, "mem": a.mem, "smp": a.smp}
 
-    server, slog, ledger = start_server(out, auth_port, a.guest_cid,
-                                        a.condition, task_ids, run_id)
+    server, slog, ledger, witness = start_server(out, auth_port, a.guest_cid,
+                                                 a.condition, task_ids, run_id)
     cfg["ledger_path"] = ledger
+    cfg["witness_path"] = witness
     relay = relay_log = None
     if a.driver == "llm" or a.probe:
         relay, relay_log = start_relay(out, relay_port, a.guest_cid,
@@ -264,6 +290,11 @@ def main(argv=None):
               "relay_rc": relay.returncode if relay else None,
               "same_user_control": host_same_user_control(ledger),
               "architecture": "vm-separated", "vm": "qemu/kvm vhost-vsock"}
+
+    # phase 7B: the host observer checks the live primary ledger against the
+    # host witness (both produced during this run). Healthy = the writer did
+    # not diverge; this is the custody layer operating in the real pipeline.
+    result["custody"] = host_custody_check(ledger, witness)
 
     if probe_result is not None:
         _write_json(os.path.join(out, "probe_result.json"), probe_result)
