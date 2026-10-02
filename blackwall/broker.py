@@ -31,6 +31,12 @@ class RefusalError(Exception):
         self.hint = hint   # denial-triggered capability hint (receipted)
 
 
+def effect_resource(effect_name: str, params: dict) -> str:
+    """Public alias of the effect→resource mapping (used by the resource
+    ledger's rebuild and by observers)."""
+    return _effect_resource(effect_name, params)
+
+
 def _effect_resource(effect_name: str, params: dict) -> str:
     """Map an effect call to the resource scope it must be granted on."""
     if effect_name not in EFFECTS:
@@ -46,9 +52,13 @@ def _effect_resource(effect_name: str, params: dict) -> str:
 
 class CapabilityBroker:
     def __init__(self, corpus: Corpus, authority: PolicyAuthority,
-                 ledger: Ledger, clock, discovery_mode: str | None = None):
+                 ledger: Ledger, clock, discovery_mode: str | None = None,
+                 resources=None):
         if discovery_mode not in DISCOVERY_MODES:
             raise ValueError(f"unknown discovery mode {discovery_mode!r}")
+        # phase 6B: optional trusted resource ledger constraining consumption
+        # of already-authorized effects; None (default) = unbounded, as before
+        self._resources = resources
         self._corpus = corpus
         self._authority = authority
         self._ledger = ledger
@@ -189,6 +199,16 @@ class CapabilityBroker:
             self._validate_provenance(task_id, derived_from)
         except GrantError as exc:
             raise self._refuse(task_id, effect_name, grant_id, resource, str(exc))
+        if self._resources is not None:
+            # resource budget: checked after authorization and provenance,
+            # before the world changes; a budget refusal never widens or
+            # narrows authority and does not consume the grant
+            over = self._resources.check(task_id, effect_name, resource)
+            if over is not None:
+                receipt = self._ledger.record("refusal", task_id, operation=effect_name,
+                                              grant_id=grant_id, resource=resource,
+                                              reason=over["reason"], budget=over["budget"])
+                raise RefusalError(over["reason"], receipt.receipt_id)
         handler = EFFECTS[effect_name]
         try:
             summary = handler(self._corpus, params)
@@ -196,6 +216,8 @@ class CapabilityBroker:
             # unknown target and wrong-typed target are indistinguishable
             raise self._refuse(task_id, effect_name, grant_id, resource,
                                "effect target not available")
+        if self._resources is not None:
+            self._resources.consume(task_id, effect_name, resource)
         grant.effects_used += 1
         receipt = self._ledger.record("effect", task_id, grant_id=grant_id,
                                       effect={"name": effect_name, "params": params},

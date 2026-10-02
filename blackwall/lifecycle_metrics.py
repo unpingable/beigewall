@@ -40,6 +40,20 @@ _PROVENANCE = ("never disclosed", "malformed derived_from", "prompt hash",
 # something this projection or effect can act on (never a grant-state matter)
 _TARGET = ("unknown resource", "is not available for", "effect target not available",
            "does not match", "does not handle", "is not a ")
+_BUDGET = ("effect budget exhausted", "task effect budget exhausted")
+_RATE = ("effect rate exceeded",)
+
+
+def _effect_target(name: str, params: dict) -> str:
+    """Observer's own copy of the effect→resource mapping (phase 6B)."""
+    params = params or {}
+    if name == "send_message":
+        return f"messages/thread/{params.get('thread_id', '')}"
+    if name == "create_event":
+        return "calendar/events"
+    if name == "update_note":
+        return f"notes/{params.get('note_id', '')}"
+    return ""
 _STALE = ("expired", "revoked")
 _REPLAY = ("read budget exhausted", "effect grant consumed")
 _SCOPE = ("outside scope", "projection mismatch", "operation mismatch")
@@ -96,6 +110,9 @@ class _Grants:
     def __init__(self):
         self.g = {}
         self.anomalies = []    # duplicate mint ids, unknown revokes
+        self.policy = None     # resource_policy row (phase 6B), if any
+        self.effects_by_key: dict = {}   # (task, effect, resource) -> successes
+        self.task_total: dict = {}
 
     def apply(self, row) -> None:
         k = row["kind"]
@@ -140,6 +157,13 @@ class _Grants:
         elif k == "effect" and row.get("grant_id") in self.g:
             self.g[row["grant_id"]]["effects_used"] += 1
             self.g[row["grant_id"]]["last_refused"] = False
+        if k == "effect":
+            eff = row.get("effect", {})
+            key = (row["task_id"], eff.get("name"), _effect_target(eff.get("name"), eff.get("params")))
+            self.effects_by_key[key] = self.effects_by_key.get(key, 0) + 1
+            self.task_total[row["task_id"]] = self.task_total.get(row["task_id"], 0) + 1
+        elif k == "resource_policy":
+            self.policy = row
 
     def consumed(self, st) -> bool:
         if st["operation"] == "read":
@@ -213,7 +237,23 @@ def reconstruct(rows: list[dict]) -> list[dict]:
             else:
                 stated = [s for n, s in _STATED_ONLY.items() if n in reason]
                 st = grants.g.get(row["grant_id"])
-                if ("read budget exhausted" in reason and st is not None
+                if _has(reason, _BUDGET):
+                    # resource budget refusal: verifiable against the policy row
+                    # and the effects counted so far (phase 6B)
+                    state = "budget_exhausted"
+                    pol = grants.policy or {}
+                    eff = _row_operation(row)
+                    key = (row["task_id"], eff, row.get("resource", ""))
+                    used = grants.effects_by_key.get(key, 0)
+                    total = grants.task_total.get(row["task_id"], 0)
+                    cap_e, cap_t = pol.get("effect_count"), pol.get("task_effects")
+                    agree = bool(pol) and (
+                        (cap_e is not None and used >= cap_e)
+                        or (cap_t is not None and total >= cap_t))
+                elif _has(reason, _RATE):
+                    pol = grants.policy or {}
+                    state, agree = "rate_limited", bool(pol.get("rate"))
+                elif ("read budget exhausted" in reason and st is not None
                         and st["reads_charged"] >= st["budget"]["reads"]):
                     state, agree = "consumed", True   # explained by charged refusals
                 elif stated:

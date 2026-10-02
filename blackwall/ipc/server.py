@@ -28,6 +28,7 @@ from ..authority import PolicyAuthority
 from ..broker import CapabilityBroker, RefusalError
 from ..corpus import build_demo_corpus
 from ..receipts import Ledger, canonical_hash
+from ..resources import ResourceConfigError, ResourceLedger, ResourcePolicy
 from ..tasks import LogicalClock, experiment_policy, task_suite
 from . import protocol as P
 
@@ -40,7 +41,8 @@ def task_id_of(req: dict) -> str:
 
 class TrustedServer:
     def __init__(self, socket_path: str, ledger_path: str, condition: str = "control",
-                 run_id: str | None = None, tasks: list[str] | None = None):
+                 run_id: str | None = None, tasks: list[str] | None = None,
+                 resource_policy: ResourcePolicy | None = None):
         if condition not in ("control", "global", "denial", "task"):
             raise ValueError(f"unknown condition {condition!r}")
         self.socket_path = socket_path
@@ -65,8 +67,17 @@ class TrustedServer:
             self.clock.t = max((r["ts"] for r in prior), default=1000.0) + 1.0
         self.corpus = build_demo_corpus()
         self.authority = PolicyAuthority(experiment_policy(), clock=self.clock.now)
+        self.resource_policy = resource_policy or ResourcePolicy()
+        self.resources = None
+        if self.resource_policy.bounded:
+            from ..broker import effect_resource
+            self.resources = ResourceLedger(self.resource_policy)
+            if prior:
+                # consumption never resets on restart: rebuilt from receipts
+                self.resources.rebuild(prior, effect_resource)
         self.broker = CapabilityBroker(self.corpus, self.authority, self.ledger,
-                                       clock=self.clock.now, discovery_mode=self.mode)
+                                       clock=self.clock.now, discovery_mode=self.mode,
+                                       resources=self.resources)
         if prior:
             # grant identities must not collide across a restart either:
             # continue the authority's counter after the highest minted id
@@ -91,6 +102,9 @@ class TrustedServer:
             if tid not in self.tasks:
                 raise ValueError(f"unknown task {tid!r}")
         self.active: str | None = None
+        if self.resource_policy.bounded:
+            self.ledger.record("resource_policy", "", **self.resource_policy.to_dict(),
+                               rebuilt_consumed=(self.resources.snapshot() if prior else None))
         # only rows the server attributed to a task close it; rejected
         # frames carry no task attribution (a client could otherwise lock a
         # task out by claiming its id in a bad frame)
@@ -314,9 +328,19 @@ def main(argv=None) -> int:
     p.add_argument("--tasks", default=None,
                    help="comma-separated tasks designated for this run "
                         "(default: the full suite)")
+    p.add_argument("--effect-count", type=int, default=None,
+                   help="max successful effects per (task, effect, target resource)")
+    p.add_argument("--task-effects", type=int, default=None,
+                   help="max successful effects per task")
+    p.add_argument("--rate", default=None, help="n/seconds per (task, effect)")
     a = p.parse_args(argv)
     tasks = [t for t in a.tasks.split(",") if t] if a.tasks else None
-    TrustedServer(a.socket, a.ledger, a.condition, a.run_id, tasks).serve_forever()
+    try:
+        policy = ResourcePolicy.parse(a.effect_count, a.task_effects, a.rate)
+    except ResourceConfigError as exc:
+        print(f"error: invalid resource policy: {exc}", file=sys.stderr)
+        return 2
+    TrustedServer(a.socket, a.ledger, a.condition, a.run_id, tasks, policy).serve_forever()
     return 0
 
 
