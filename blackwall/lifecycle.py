@@ -40,7 +40,7 @@ from .receipts import Ledger
 from .tasks import LogicalClock, experiment_policy, task_suite
 
 INJECT_EVENTS = ("time_jump", "ttl_cap", "revoke", "transport_loss",
-                 "duplicate_delivery", "session_restart")
+                 "duplicate_delivery", "session_restart", "expire_after_first_use")
 
 
 @dataclass(frozen=True)
@@ -115,6 +115,20 @@ class LifecycleHarness(Harness):
             self._broker.revoke(self.task_id, result["grant_id"],
                                 reason=inj.get("reason", "lifecycle injection"))
             self.event("revoke", grant_id=result["grant_id"])
+        if (op == "read" and result.get("ok")
+                and "expire_after_first_use" in self._pending):
+            # harness-controlled mid-task expiry (phase 5C-B): after the first
+            # successful read, advance the trusted clock past every TTL so
+            # each grant minted before this point is expired; the agent is
+            # not told, and cannot trigger or undo this
+            inj = self._pending.pop("expire_after_first_use")
+            ticks = float(inj.get("ticks", 700))
+            live = [g for g in self._broker._grants.values()
+                    if g.task_id == self.task_id and self._clock.t < g.expires_at]
+            self._clock.t += ticks
+            self.event("expire_after_first_use", ticks=ticks,
+                       after_receipt_id=result.get("receipt_id"),
+                       expired_grant_ids=sorted(g.grant_id for g in live))
         if (op == "effect" and result.get("ok")
                 and "transport_loss" in self._pending):
             self._pending.pop("transport_loss")
@@ -176,7 +190,8 @@ def run_trajectory(trajectory: Trajectory, driver_factory, *,
                         harness.event("revoke", grant_id=last_grant_id)
                     except RefusalError:
                         harness.event("revoke", grant_id=last_grant_id, refused=True)
-            elif ev in ("revoke", "transport_loss", "duplicate_delivery"):
+            elif ev in ("revoke", "transport_loss", "duplicate_delivery",
+                        "expire_after_first_use"):
                 harness.arm(inj)
                 harness.event("armed", armed=ev)
             else:

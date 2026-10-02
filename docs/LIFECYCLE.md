@@ -167,3 +167,68 @@ effect consumption is a bound on an existing grant.
   {event: disarmed}` at task end. Provenance means "disclosed in this
   task" regardless of the disclosing grant's later state (expired or
   revoked grants do not retract what they disclosed); this is intended.
+
+## Phase 5C
+
+### A. Per-task context reset (driver side)
+
+`run_lifecycle.py --context reset` builds the LLM driver with
+`session=False`: the agent-facing conversation is reset at every task
+transition while the broker, ledger, authority and corpus continue
+unchanged across the trajectory. Nothing on the trusted side differs from
+phase 5B. This does not delete anything from the model; it removes prior
+task turns from the interaction. Measured against the sealed 5B batch on
+the identical trajectory suite (same seed).
+
+### B. Harness-controlled mid-task expiry
+
+Injection `expire_after_first_use {ticks}` is armed before a task. After
+that task's first *successful read*, the harness advances the trusted clock
+by `ticks` (700 > every TTL), so every grant minted before that point is
+expired; grants minted afterwards are fresh. The agent is not told and
+cannot trigger, undo or detect the jump other than by using a pre-jump
+grant and receiving "expired". The `lifecycle` receipt names the read after
+which it fired and the grant ids it expired. Suite
+`lifecycle_suite.expiry_trajectories`: 20 trajectories, one injection each,
+on tasks where a grant minted before the first read is likely to be needed
+after it (t8, t11, t4, t3, t2); no other injections, so recovery is
+attributable. Encounter is not guaranteed: in phase 5B the model never
+used one grant twice, so the encounter channel is a pre-minted grant
+(typically the effect grant); the encounter rate is reported as a result.
+
+### Refusal-reason oracle: analysis
+
+What a holder of a `messages/*` `conversation@1` grant learns from refusal
+reasons today (zero budget cost; `reads_used` unchanged by refusals):
+
+| probe | reason today | leaks |
+|---|---|---|
+| `messages/thread/thr-nobody` | `unknown resource: 'thr-nobody'` | **non-existence** of an id |
+| `messages/thread/ct-bob` (a contact) | `ct-bob is not a thread` | **existence and type** of an object outside the grant's class |
+| `messages/attachment/att-1` | `resource … does not match messages/thread/<id>` | interface shape only (fine) |
+| `contacts/ct-alice` | `resource outside scope: grant=… attempted=…` | scope (interface) only (fine) |
+| wrong projection | `projection mismatch: grant=… attempted=…` | interface only (fine) |
+| object budget | `object budget would be exceeded: 13 > 5` | **object count** of an in-scope resource, beyond the approved budget |
+| expired / revoked / consumed | grant state | the holder's own grant state (fine) |
+| effect on non-thread id under a thread grant | `resource outside scope` (scope check first) | interface only (fine) |
+| effect on an in-scope but unknown id | `unknown resource or invalid effect target: 'x'` | **non-existence** |
+| grant request for a nonexistent id | minted (pattern rule) | nothing (policy is name-based) |
+
+Distinction adopted: the agent is entitled to learn about **the interface
+and its own authority** (scope patterns, projection names, grant state,
+budget *limits*), and to learn the content a projection *discloses* under
+budget. It is not entitled to learn **protected resource state** —
+whether an id exists, what type it has, how many objects it contains —
+through a refusal.
+
+Minimum fail-closed repair: (1) the read path collapses "unknown
+resource" and "not a <type>" into one reason, `"<projection> is not
+available for <resource>"` (the agent can still choose another resource or
+projection: recovery preserved); (2) the effect path likewise collapses
+unknown-target and wrong-type into `"effect target not available"`; (3)
+every refused read is charged one read against the grant's budget, so
+probing is bounded by the budget the authority approved; (4) the object
+budget reason keeps its sealed wording (the count) because changing it
+would alter the canonical t6 receipts — the residual channel is now
+budget-bounded by (3) and is recorded as a known, bounded disclosure to be
+closed with a documented canonical re-seal.

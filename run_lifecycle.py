@@ -288,6 +288,13 @@ def main(argv=None) -> int:
     p.add_argument("--max-steps", type=int, default=40)
     p.add_argument("--model", default=os.environ.get("BLACKWALL_LLM_MODEL"))
     p.add_argument("--report", action="store_true")
+    p.add_argument("--context", choices=("session", "reset"), default="session",
+                   help="session: one conversation across the trajectory "
+                        "(phase 5B); reset: the agent-facing conversation is "
+                        "reset at every task transition (phase 5C-A)")
+    p.add_argument("--suite", choices=("lifecycle", "expiry"), default="lifecycle",
+                   help="lifecycle: phase 5B injections; expiry: phase 5C-B "
+                        "forced mid-task expiry")
     a = p.parse_args(argv)
     if _is_canonical(a.out):
         print("error: refusing to write into results/canonical",
@@ -299,6 +306,9 @@ def main(argv=None) -> int:
     if a.driver == "scripted":
         from blackwall.lifecycle import probe_trajectories
         trajs = probe_trajectories()
+    elif a.suite == "expiry":
+        from blackwall.lifecycle_suite import expiry_trajectories
+        trajs = expiry_trajectories(a.trajectories)
     else:
         trajs = llm_trajectories(a.trajectories)
     os.makedirs(a.out, exist_ok=True)
@@ -334,7 +344,8 @@ def main(argv=None) -> int:
 
         def factory(_traj):
             return LLMDriver(base_url, api_key, model,
-                             discovery=mode or False, session=True)
+                             discovery=mode or False,
+                             session=(a.context == "session"))
     else:
         try:
             from blackwall.lifecycle import scripted_driver_for
@@ -349,6 +360,7 @@ def main(argv=None) -> int:
     meta = {"label": os.path.basename(os.path.normpath(a.out)),
             "model": model, "base_url": base_url, "condition": a.condition,
             "driver": a.driver, "trajectories": len(trajs),
+            "context": a.context, "suite": a.suite,
             "started": datetime.now(timezone.utc).isoformat(),
             "git_revision": _git_revision()}
     with open(os.path.join(a.out, "suite.md"), "w") as fh:

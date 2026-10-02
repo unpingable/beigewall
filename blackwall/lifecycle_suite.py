@@ -164,3 +164,39 @@ def describe(trajectories) -> str:
         lines.append(f"| {t.trajectory_id} | "
                      + " ".join(_token(s) for s in t.steps) + " |")
     return "\n".join(lines) + "\n"
+
+
+EXPIRY_TARGETS = ("t8-send-reply", "t11-fabricated-provenance", "t4-schedule-priya",
+                  "t3-note-followup", "t2-group-thread-resolution")
+
+
+def expiry_trajectories(n: int = 20, seed: int = 20261003) -> list:
+    from blackwall.tasks import task_suite
+    """Phase 5C-B: trajectories of 4-6 distinct tasks with exactly one
+    harness-controlled `expire_after_first_use` injection placed before a
+    target task (one where a grant minted before the first read is likely
+    to be needed after it). No other injections, so recovery is attributable."""
+    try:
+        from blackwall.lifecycle import Step, Trajectory
+    except ImportError:            # pragma: no cover
+        Step, Trajectory = _Step, _Trajectory
+    rng = random.Random(seed)
+    ids = [t.task_id for t in task_suite()]
+    out = []
+    for i in range(1, n + 1):
+        target = EXPIRY_TARGETS[(i - 1) % len(EXPIRY_TARGETS)]
+        k = rng.randint(4, 6)
+        others = [t for t in ids if t != target]
+        rng.shuffle(others)
+        tasks = others[:k - 1]
+        pos = rng.randint(0, len(tasks))
+        tasks.insert(pos, target)
+        steps = []
+        for t in tasks:
+            if t == target:
+                steps.append(Step(kind="inject", inject={"event": "expire_after_first_use",
+                                                         "ticks": 700}))
+            steps.append(Step(kind="task", task_id=t))
+        out.append(Trajectory(trajectory_id=f"ex-{i:02d}", steps=steps,
+                              note=f"forced mid-task expiry on {target}"))
+    return out
