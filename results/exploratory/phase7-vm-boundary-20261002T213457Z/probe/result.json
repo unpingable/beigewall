@@ -1,0 +1,69 @@
+{
+  "architecture": "vm-separated",
+  "auth_port": 9101,
+  "condition": "control",
+  "driver": "none",
+  "guest_cid": 61,
+  "guest_lines": [
+    "BW-GUEST: booted 6.8.0-146-generic; running guest_main",
+    "BW-GUEST: mode=probe host_cid=2 auth_port=9101 relay_port=9201",
+    "BW-GUEST: guest_main exited rc=0"
+  ],
+  "probe": true,
+  "probe_summary": {
+    "by_category": {
+      "confusion": {
+        "n": 2,
+        "reached": 0
+      },
+      "devices": {
+        "n": 9,
+        "reached": 0
+      },
+      "filesystem": {
+        "n": 14,
+        "reached": 0
+      },
+      "inherited": {
+        "n": 2,
+        "reached": 0
+      },
+      "model_relay": {
+        "n": 7,
+        "reached": 0
+      },
+      "modules": {
+        "n": 4,
+        "reached": 0
+      },
+      "network": {
+        "n": 4,
+        "reached": 0
+      },
+      "protocol": {
+        "n": 8,
+        "reached": 0
+      },
+      "transport": {
+        "n": 13,
+        "reached": 0
+      }
+    },
+    "mechanism_ok": true,
+    "reached_names": [],
+    "reached_trusted_state": 0,
+    "total": 63
+  },
+  "qemu_killed": false,
+  "qemu_rc": 0,
+  "relay_port": 9201,
+  "relay_rc": 0,
+  "run_id": "phase7-20261002T213314Z",
+  "same_user_control": {
+    "bytes": 3628,
+    "host_can_read_ledger": true,
+    "sha256": "5a06d7632c033995101812d0d3757632f7e2b9fcbab2bee2aff0f06ed9e738e2"
+  },
+  "server_rc": 0,
+  "vm": "qemu/kvm vhost-vsock"
+}

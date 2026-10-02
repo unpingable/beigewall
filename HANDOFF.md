@@ -164,6 +164,29 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   documented (`tests/test_review_6c.py`). In-process canonical semantics
   unchanged. Assumes an honest ledger file — the same-UID gap phase 7
   exists for. `FINDINGS_PHASE6C.md`, `docs/EVIDENCE_DURABILITY.md`.
+- **Phase 7 sealed (2026-10-02)**: VM / OS boundary. The untrusted agent
+  runs inside a QEMU/KVM guest (initramfs-only, no disk, no NIC, no shared
+  FS) joined to the host only by two vsock channels — the unchanged
+  `blackwall-ipc/1` authority server (`server.serve_vsock`, accepts one
+  guest CID) and a transport-only model relay (`blackwall/model_relay.py`,
+  one chat-completion verb, one model, upstream rebuilt). The OS-boundary
+  probe suite (`vm/probe_os_boundary.py`) made 63 genuine attempts from the
+  compromised guest across 9 categories (filesystem, modules, devices,
+  transport, protocol, model_relay, confusion, inherited, network):
+  `reached_trusted_state = 0`, with a guest-local control read succeeding
+  (so the host-path ENOENTs are isolation, not a broken probe). The phase-6
+  same-user gaps (ledger/socket secrecy) are now OS/hypervisor-enforced. The
+  scripted suite over vsock reproduces the canonical receipt-grounded verdict
+  for all 12 tasks (ALL MATCH). One exploratory real-model run (gpt-oss:20b)
+  through the relay: useful 5/12 (within phase-6 per-run variance),
+  0 unmediated / 0 transport failures / 0 forbidden effects; authority-call
+  latency median ≈ 5 ms over vsock vs 0.33 ms over AF_UNIX. QEMU/KVM is
+  trusted (not audited for escape). Guest built by `vm/build_guest.py`;
+  orchestrated by `run_vm_experiment.py`; 25 transport unit tests in
+  `tests/test_vm_transport.py`. `FINDINGS_PHASE7.md`, `docs/VM_BOUNDARY.md`.
+  Next (only on request): evidence integrity against a compromised ledger
+  *writer* (the real continuation of the 6C honest-ledger gap), not more VM
+  hardening.
 - **Next (not started)**: OS enforcement of the boundary — user or
   namespace separation — as its own experiment. Carry forward unchanged:
   the budget-count wording re-seal; multi-use grants for real-model expiry;
