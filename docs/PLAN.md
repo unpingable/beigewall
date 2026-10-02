@@ -275,9 +275,13 @@ authority? Design and receipt-schema gaps: `docs/LIFECYCLE.md`; results:
 - [x] Hostile review: 2 pre-existing defects (forgeable move op; NaN TTL),
       1 design defect (task repeats), observer blind spots — fixed with
       regression tests; canonical byte-identical. 256 tests.
-- [ ] Real-model suite: 20 trajectories, control condition, under
-      `results/exploratory/phase5b-gpt-oss-20b-control/`.
-- [ ] `FINDINGS_PHASE5B.md` results; HANDOFF updated.
+- [x] Real-model suite: 20 trajectories / 130 task steps, control
+      condition, `results/exploratory/phase5b-gpt-oss-20b-control/`;
+      all invariants zero; observer 150/150; agent-behaviour analysis.
+- [x] `FINDINGS_PHASE5B.md`; HANDOFF updated. Result: membrane holds;
+      agent carries content, not authority, across tasks (15 pure-bleed
+      inadmissible executions) and usefulness decays with session length.
+      Next architectural question (OS/process boundary) is earned.
 
 ## Handoff protocol for a resuming agent
 

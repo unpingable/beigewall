@@ -1,0 +1,12 @@
+{
+  "base_url": "http://localhost:11434/v1",
+  "complete": true,
+  "condition": "control",
+  "driver": "llm",
+  "finished": "2026-10-02T04:44:13.722605+00:00",
+  "git_revision": "e5fbace794e59441ea2604150f7457e3bb5abdeb",
+  "label": "phase5b-gpt-oss-20b-control",
+  "model": "gpt-oss:20b",
+  "started": "2026-10-02T03:46:28.921055+00:00",
+  "trajectories": 20
+}

@@ -3,7 +3,7 @@
 Date: 2026-10-02. Status: **spike complete + real-model exploratory experiment
 complete + receipt-grounded evaluator (phase 3) complete + capability
 negotiation experiment (phase 4) complete + task-conditioned negotiation
-(phase 5) complete**. All milestones in `docs/PLAN.md`
+(phase 5) complete + long-horizon authority lifecycle (phase 5B) complete**. All milestones in `docs/PLAN.md`
 (phases 1–4) are checked. Phase 4 result: the discovery mechanism is sound
 and halved negotiation overhead, but did **not** convert the
 honest-but-useless class (0 conversions, 8 regressions); see
@@ -16,7 +16,7 @@ recorded and unchanged; the real-model exploratory result is recorded in
 
 ```
 cd /data/git/blackwall
-python3 -m unittest discover -s tests    # expect: Ran 256 tests ... OK (expected failures=1)
+python3 -m unittest discover -s tests    # expect: Ran 259 tests ... OK (expected failures=1)
 python3 run_experiment.py --out /tmp/bw-check
 diff /tmp/bw-check/metrics.json results/canonical/metrics.json     # identical
 diff /tmp/bw-check/receipts.jsonl results/canonical/receipts.jsonl # identical
@@ -104,14 +104,17 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   empty completions), t2/t4 never convert in 480 executions, and the task
   view induced 8 unrequested effects (t1 posted its summary into the
   thread). Global and denial effects are inside batch-to-batch drift.
-- **Phase 5B in progress (2026-10-02)**: lifecycle harness, probes,
-  observer and review fixes sealed at `e5fbace` (all probe invariants zero);
-  real-model suite running under
-  `results/exploratory/phase5b-gpt-oss-20b-control/` (resume with the same
-  `run_lifecycle.py` command; `--report` for the summary). Two pre-existing
-  defects were found and fixed this phase: a model-supplied `op` argument
-  could rename a move, and a NaN TTL minted a never-expiring grant. An
-  effect grant also had no use bound (fixed: consumed on first success).
+- **Phase 5B sealed (2026-10-02)**: 7 probes + 20 real-model trajectories
+  (130 task steps); every critical invariant zero; the observer
+  reconstructed all 150 uses from receipts; no authority inflation.
+  Defects fixed this phase: unbounded effect grants (duplicate on retry),
+  forgeable move `op`, NaN TTL, unbounded requested budget. Agent findings:
+  content bleeds across tasks (prior disclosure used as present authority
+  to speak; 15 pure-bleed inadmissible executions), usefulness decays with
+  session position (50% → ~20%), 40% empty answers. `FINDINGS_PHASE5B.md`.
+- **Next**: the OS/process-boundary question is earned. Cheap first:
+  driver-side per-task disclosure reset (is bleed prompt-fixable?) and a
+  real-model mid-task expiry injection.
 - **Policy question raised by phase 5**: an approvable effect is not an
   expected effect; effect *grants* carry no user-intent reference.
 - **Open defect, first item next phase**: broker refusal reasons are an

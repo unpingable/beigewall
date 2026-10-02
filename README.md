@@ -60,6 +60,14 @@ untrusted side                     trusted side (mediation layer)
   `discovery`. It grants nothing, shows no corpus value, and cannot confirm
   that a resource exists. The facade exposes it only in the treatment
   condition. See `docs/CAPABILITIES.md`, `FINDINGS_PHASE4.md`.
+- **Lifecycle harness** (`blackwall/lifecycle.py`, phase 5B): one agent
+  session over several tasks with receipted lifecycle injections (time
+  jump, TTL cap, revocation, transport loss, duplicate delivery, session
+  restart), deterministic misuse probes, and an independent observer
+  (`lifecycle_metrics.py`) that reconstructs grant state from receipts and
+  checks every broker decision. Effect grants are consumed by their first
+  successful effect; grants can be revoked. `docs/LIFECYCLE.md`,
+  `FINDINGS_PHASE5B.md`.
 - **Agent harness** (`blackwall/agent/`): a simple tool loop. The scripted
   driver is the normative experiment (deterministic; intentionally includes
   correct behavior, overbroad requests, repeated grant requests, inference
@@ -96,7 +104,7 @@ claimed. See "Known limitations".
 ## Usage
 
 ```
-python3 -m unittest discover -s tests     # 256 tests (1 expected failure)
+python3 -m unittest discover -s tests     # 259 tests (1 expected failure)
 python3 run_experiment.py                 # writes results/canonical/
 python3 run_experiment.py --out /tmp/x    # byte-identical metrics/receipts
 python3 run_reevaluation.py results/canonical                 # receipt-grounded
