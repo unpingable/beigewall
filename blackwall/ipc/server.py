@@ -419,6 +419,39 @@ class TrustedServer:
         except (OSError, P.ProtocolError):
             return False
 
+    def serve_vsock(self, port: int, peer_cid: int) -> None:
+        """Phase 7 transport: listen on a host vsock port and accept only
+        the designated guest CID. The protocol, dispatch and ledger are the
+        same as over the Unix socket; only the listener differs. A peer
+        with any other CID is closed before a byte is read and receipted."""
+        srv = socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM)
+        srv.bind((socket.VMADDR_CID_ANY, port))
+        srv.listen(8)
+        srv.settimeout(0.5)
+        signal.signal(signal.SIGTERM, lambda *_: setattr(self, "_stop", True))
+        self.ledger.record("transport", "", kind_detail="vsock", port=port,
+                           peer_cid=peer_cid)
+        try:
+            while not self._stop:
+                try:
+                    conn, (cid, _peer_port) = srv.accept()
+                except socket.timeout:
+                    continue
+                if cid != peer_cid:
+                    with self._lock:
+                        self._reject_record(reason="peer_cid", peer_cid=cid)
+                    conn.close()
+                    continue
+                threading.Thread(target=self.serve_connection, args=(conn,),
+                                 daemon=True).start()
+        finally:
+            srv.close()
+            try:
+                fcntl.flock(self._lock_fh, fcntl.LOCK_UN)
+                self._lock_fh.close()
+            except OSError:
+                pass
+
     def serve_forever(self) -> None:
         if os.path.exists(self.socket_path):
             # never take over a live socket: probe it first
@@ -465,7 +498,11 @@ class TrustedServer:
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--socket", required=True)
+    p.add_argument("--socket", default=None, help="Unix-domain socket path")
+    p.add_argument("--vsock-port", type=int, default=None,
+                   help="listen on this host vsock port instead of a Unix socket (phase 7)")
+    p.add_argument("--vsock-peer-cid", type=int, default=None,
+                   help="the only guest CID accepted on --vsock-port")
     p.add_argument("--ledger", required=True)
     p.add_argument("--condition", default="control",
                    choices=("control", "global", "denial", "task"))
@@ -482,6 +519,10 @@ def main(argv=None) -> int:
                    help="drop a torn last ledger line left by a crash during a write "
                         "(receipted as torn_tail_recovered); otherwise refuse to start")
     a = p.parse_args(argv)
+    if (a.socket is None) == (a.vsock_port is None):
+        p.error("exactly one of --socket and --vsock-port")
+    if a.vsock_port is not None and (a.vsock_peer_cid is None or a.vsock_peer_cid < 3):
+        p.error("--vsock-port needs --vsock-peer-cid (a guest CID >= 3)")
     tasks = [t for t in a.tasks.split(",") if t] if a.tasks else None
     try:
         policy = ResourcePolicy.parse(a.effect_count, a.task_effects, a.rate)
@@ -494,7 +535,10 @@ def main(argv=None) -> int:
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    server.serve_forever()
+    if a.vsock_port is not None:
+        server.serve_vsock(a.vsock_port, a.vsock_peer_cid)
+    else:
+        server.serve_forever()
     return 0
 
 

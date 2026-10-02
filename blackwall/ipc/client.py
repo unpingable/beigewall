@@ -61,9 +61,16 @@ class RemoteBroker:
         delay = 0.05
         while True:
             try:
-                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                s.settimeout(self._timeout)
-                s.connect(self._path)
+                if self._path.startswith("vsock:"):
+                    # phase 7: "vsock:CID:PORT" (the host is CID 2)
+                    _, cid, port = self._path.split(":")
+                    s = socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM)
+                    s.settimeout(self._timeout)
+                    s.connect((int(cid), int(port)))
+                else:
+                    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    s.settimeout(self._timeout)
+                    s.connect(self._path)
                 self._sock = s
                 self._telemetry["connects"] += 1
                 if not initial:
