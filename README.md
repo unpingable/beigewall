@@ -6,9 +6,16 @@ A research spike testing one question:
 > actually a mediated projection with no ambient authority?
 
 The deliverable is an experimental result, not a production framework. All code
-is throwaway-grade. There is deliberately **no** OS sandboxing: no namespaces,
-containers, FUSE, seccomp, network policy, or real desktop integrations. The
-spike validates the authority/provenance model in-process.
+is throwaway-grade. The spike first validated the authority/provenance model
+**in-process** (phases 1–5C) with deliberately no OS sandboxing; later phases
+separated the untrusted agent across a **process** boundary (phase 6), added
+server-enforced **resource bounds** (6B) and **evidence durability** (6C), moved
+the agent into a **VM/KVM** boundary (phase 7), and established **evidence
+custody** against a compromised ledger writer, including recovery (7B/7C). What
+each phase demonstrates — and explicitly does not — is summarised under
+"Boundaries and claims" and detailed in the per-phase findings. There is still
+no containers/namespaces/seccomp/FUSE/network-policy layer and no real desktop
+integration.
 
 Where BeigeWall sits relative to Constellation, Jev, ABSD, atproto-ACL and
 the formal work: `docs/ECOSYSTEM-ROLE.md` (positioning only).
@@ -112,7 +119,7 @@ claimed. See "Known limitations".
 ## Usage
 
 ```
-python3 -m unittest discover -s tests     # 405 tests
+python3 -m unittest discover -s tests     # 468 tests
 python3 run_experiment.py                 # writes results/canonical/
 python3 run_experiment.py --out /tmp/x    # byte-identical metrics/receipts
 python3 run_reevaluation.py results/canonical                 # receipt-grounded
@@ -136,6 +143,35 @@ python3 run_llm_experiment.py --runs 5 --label gpt-oss-20b
 ```
 
 Exploratory artifacts and interpretation: `FINDINGS_REALMODEL.md`.
+
+## Requirements
+
+- **Core experiment + tests**: Python 3.12, **standard library only** — no
+  third-party packages, no `requirements.txt`. Deterministic and offline.
+- **VM experiments** (`run_vm_experiment.py`, `vm/build_guest.py`): a Linux host
+  with `qemu-system-x86_64` + KVM (`/dev/kvm`), `vhost_vsock`
+  (`/dev/vhost-vsock`), and `fakeroot`, `cpio`, `gzip`, `zstd` to build the
+  initramfs; plus a guest kernel image and its `vmw_vsock_*` modules
+  (an ordinary Ubuntu `linux-image`/`linux-modules` pair works). No root
+  required if the invoking user is in the `kvm` group. See `docs/VM_BOUNDARY.md`.
+- **Real-model runs** (opt-in, exploratory): an OpenAI-compatible chat endpoint
+  (e.g. a local Ollama) via `BEIGEWALL_LLM_BASE_URL` / `BEIGEWALL_LLM_MODEL`
+  (`BEIGEWALL_LLM_API_KEY` only for non-loopback). Never touches
+  `results/canonical/`.
+
+## Boundaries and claims
+
+Each layer is reported separately; a guarantee at one layer is not a guarantee
+at another. Demonstrated (D) vs explicit nonclaim (N):
+
+| layer | D — demonstrated | N — not claimed | ref |
+|---|---|---|---|
+| protocol boundary | logical authority/disclosure/provenance survive a strict `beigewall-ipc/1` wire | — | phase 6 |
+| process boundary | all logical guarantees hold across a real process split, at protocol strength | OS secrecy of ledger/socket (same uid) | `docs/PROCESS_BOUNDARY.md` |
+| resource bounds | server-enforced per-task/-resource effect budgets, hostile client held to the cap | — | `docs/RESOURCE_BOUNDS.md` |
+| VM boundary | compromised guest reaches host only via two vsock endpoints; 63-check probe finds no host-state path | QEMU/KVM soundness (trusted, not audited); no escape-CVE/side-channel analysis | `docs/VM_BOUNDARY.md` |
+| evidence custody | independent witness detects all 18 corruption classes, fails closed; omitted/truncated/rolled-back entries reconstructable (7C) | tamper-**proof**; signing; consensus; recovery of actively-rewritten entries | `docs/EVIDENCE-CUSTODY.md` |
+| agent behaviour | real-model telemetry (gpt-oss:20b) with invariants held | that a model navigates grants competently in general (n small) | `FINDINGS_REALMODEL.md` |
 
 ## Known limitations
 
