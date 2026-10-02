@@ -192,10 +192,14 @@ class LLMDriver:
     BACKOFF = (2.0, 5.0, 10.0)  # seconds before retries 1..3
 
     def __init__(self, base_url: str, api_key: str, model: str,
-                 discovery: bool | str = False):
+                 discovery: bool | str = False, session: bool = False):
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
         self._model = model
+        # session=True (phase 5B): the conversation persists across tasks of
+        # one trajectory; restart() forgets it (the broker never does)
+        self._session = session
+        self._session_started = False
         # discovery: False | True/"global" | "denial" | "task"
         mode = {False: None, True: "global", None: None}.get(
             discovery, discovery) if not isinstance(discovery, str) else discovery
@@ -238,15 +242,34 @@ class LLMDriver:
     def begin(self, task_view: dict) -> None:
         user = (f"Task {task_view['task_id']}: {task_view['prompt']}\n"
                 f"prompt_hash={task_view['prompt_hash']}")
+        if getattr(self, "_system_prompt_restart_note", False):
+            user = self.session_restarted_note() + "\n" + user
+            self._system_prompt_restart_note = False
         if task_view.get("capabilities") is not None:
             user += ("\n\nCapability view for this task (grants nothing; "
                      "shows no content):\n"
                      + json.dumps(task_view["capabilities"], sort_keys=True))
-        self._messages = [
-            {"role": "system", "content": self._system_prompt},
-            {"role": "user", "content": user},
-        ]
+        if self._session and self._session_started:
+            self._messages.append({"role": "user", "content":
+                                   "Next task in the same session.\n" + user})
+        else:
+            self._messages = [
+                {"role": "system", "content": self._system_prompt},
+                {"role": "user", "content": user},
+            ]
+            self._session_started = True
         self._pending_tool_call = None
+
+    def restart(self) -> None:
+        """Session restart: the agent's conversation is lost; the next task
+        begins a fresh conversation that is told so. Broker state persists."""
+        self._messages = []
+        self._session_started = False
+        self._system_prompt_restart_note = True
+
+    def session_restarted_note(self) -> str:
+        return ("Note: your session was restarted; any earlier conversation, "
+                "grant ids or results you held are no longer in context.")
 
     def act(self, observations: list[dict]) -> dict:
         if observations and self._pending_tool_call is not None:

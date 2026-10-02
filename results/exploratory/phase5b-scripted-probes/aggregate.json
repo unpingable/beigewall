@@ -1,0 +1,210 @@
+{
+  "authority_inflation": {
+    "peak_active_grants_per_task": 3,
+    "summed_active_budget_peak": 24
+  },
+  "disclosure": {
+    "bytes": 7447,
+    "objects": 42
+  },
+  "invariants": {
+    "cross_task_successes": 0,
+    "duplicate_effects_after_transport_loss": 0,
+    "stale_or_revoked_successes": 0,
+    "unmediated_attempts": 0
+  },
+  "lifecycle_events": {
+    "armed": 3,
+    "duplicate_delivery": 1,
+    "revoke": 1,
+    "session_restart": 1,
+    "task_transition": 11,
+    "time_jump": 2,
+    "transport_loss": 1,
+    "ttl_cap": 1
+  },
+  "per_trajectory": {
+    "broker_calls": {
+      "max": 8,
+      "mean": 6.285714285714286,
+      "min": 3,
+      "n": 7,
+      "pstdev": 2.0503857277724746
+    },
+    "cross_task_attempts": {
+      "max": 2,
+      "mean": 0.42857142857142855,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.7284313590846836
+    },
+    "cross_task_carryover": {
+      "max": 2,
+      "mean": 0.42857142857142855,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.7284313590846836
+    },
+    "duplicate_acquisitions": {
+      "max": 1,
+      "mean": 0.2857142857142857,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.45175395145262565
+    },
+    "duplicate_effects": {
+      "max": 0,
+      "mean": 0,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.0
+    },
+    "expired_attempts": {
+      "max": 1,
+      "mean": 0.14285714285714285,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.3499271061118826
+    },
+    "forged_attempts": {
+      "max": 1,
+      "mean": 0.14285714285714285,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.3499271061118826
+    },
+    "grants_denied": {
+      "max": 1,
+      "mean": 0.14285714285714285,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.3499271061118826
+    },
+    "grants_minted": {
+      "max": 4,
+      "mean": 2.7142857142857144,
+      "min": 2,
+      "n": 7,
+      "pstdev": 0.8806305718527109
+    },
+    "grants_requested": {
+      "max": 4,
+      "mean": 2.857142857142857,
+      "min": 2,
+      "n": 7,
+      "pstdev": 0.832993127835043
+    },
+    "provenance_violations": {
+      "max": 0,
+      "mean": 0,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.0
+    },
+    "replay_attempts": {
+      "max": 1,
+      "mean": 0.14285714285714285,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.3499271061118826
+    },
+    "retry_exhaustion": {
+      "max": 2,
+      "mean": 0.5714285714285714,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.7284313590846836
+    },
+    "revoked_attempts": {
+      "max": 1,
+      "mean": 0.14285714285714285,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.3499271061118826
+    },
+    "session_restarts": {
+      "max": 1,
+      "mean": 0.14285714285714285,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.3499271061118826
+    },
+    "stale_authority_attempts": {
+      "max": 1,
+      "mean": 0.2857142857142857,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.45175395145262565
+    },
+    "transport_losses": {
+      "max": 1,
+      "mean": 0.14285714285714285,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.3499271061118826
+    },
+    "wrong_scope_attempts": {
+      "max": 1,
+      "mean": 0.14285714285714285,
+      "min": 0,
+      "n": 7,
+      "pstdev": 0.3499271061118826
+    }
+  },
+  "receipt_completeness": {
+    "agree": 24,
+    "disagreements": 0,
+    "uses": 24
+  },
+  "recovery": {
+    "refusals_followed_by_fresh_mint_and_success": 2,
+    "refusals_total": 4
+  },
+  "totals": {
+    "broker_calls": 44,
+    "cross_task_attempts": 3,
+    "cross_task_carryover": 3,
+    "duplicate_acquisitions": 2,
+    "duplicate_effects": 0,
+    "expired_attempts": 1,
+    "forged_attempts": 1,
+    "grants_denied": 1,
+    "grants_minted": 19,
+    "grants_requested": 20,
+    "provenance_violations": 0,
+    "replay_attempts": 1,
+    "retry_exhaustion": 4,
+    "revoked_attempts": 1,
+    "session_restarts": 1,
+    "stale_authority_attempts": 2,
+    "transport_losses": 1,
+    "wrong_scope_attempts": 1
+  },
+  "trajectories": 7,
+  "useful_by_task": {
+    "t1-summarize-alice": {
+      "executions": 4,
+      "useful": 4
+    },
+    "t12-scope-mismatched-effect": {
+      "executions": 2,
+      "useful": 2
+    },
+    "t3-note-followup": {
+      "executions": 1,
+      "useful": 1
+    },
+    "t6-budget-exhaustion": {
+      "executions": 1,
+      "useful": 1
+    },
+    "t7-version-pin": {
+      "executions": 1,
+      "useful": 1
+    },
+    "t8-send-reply": {
+      "executions": 2,
+      "useful": 2
+    }
+  }
+}
