@@ -62,6 +62,18 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
     tasks = tasks if tasks is not None else task_suite()
     os.makedirs(out_dir, exist_ok=True)
     started = datetime.now(timezone.utc).isoformat()
+    revision_at_start = _git_revision()
+    # resuming into a directory sealed under a different condition or model
+    # would silently pool conditions: refuse
+    meta_path = os.path.join(out_dir, "meta.json")
+    if os.path.exists(meta_path):
+        with open(meta_path) as fh:
+            prior = json.load(fh)
+        for key, value in (("condition", condition), ("model", model)):
+            if prior.get(key) not in (None, value):
+                raise ValueError(
+                    f"refusing to resume {out_dir}: existing {key}="
+                    f"{prior.get(key)!r} differs from requested {value!r}")
 
     run_records = []
     runs_reused: list[int] = []
@@ -71,10 +83,13 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
         run_dir = os.path.join(out_dir, f"run-{i}")
         os.makedirs(run_dir, exist_ok=True)
         sealed = os.path.join(run_dir, "metrics.json")
-        if os.path.exists(sealed):
+        prior_record = _load_sealed(sealed, len(tasks))
+        if prior_record is not None:
             # sealed run from an earlier invocation: reuse, never rerun
-            with open(sealed) as fh:
-                run_records.append(json.load(fh))
+            if prior_record.get("condition", condition) != condition:
+                raise ValueError(f"refusing to resume: {sealed} was sealed "
+                                 f"under condition {prior_record['condition']!r}")
+            run_records.append(prior_record)
             runs_reused.append(i)
             continue
         runs_executed.append(i)
@@ -131,10 +146,16 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
                 == "INADMISSIBLE"),
         }
         run_record = {"run_id": run_id, "model": model, "label": label,
+                      "condition": condition, "discovery_mode": mode,
+                      "blackwall_revision": revision_at_start,
                       "per_task": per_task, "suite": suite}
-        with open(os.path.join(run_dir, "metrics.json"), "w") as fh:
+        # seal atomically: a crash mid-write must not leave a half file that
+        # a resume would mistake for a sealed run
+        tmp = os.path.join(run_dir, "metrics.json.tmp")
+        with open(tmp, "w") as fh:
             json.dump(run_record, fh, indent=2, sort_keys=True)
             fh.write("\n")
+        os.replace(tmp, os.path.join(run_dir, "metrics.json"))
         run_records.append(run_record)
 
     aggregate = aggregate_runs(run_records)
@@ -152,6 +173,7 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
         "runs_executed": runs_executed,
         "started_utc": started, "finished_utc": finished,
         "blackwall_revision": _git_revision(),
+        "blackwall_revision_at_start": revision_at_start,
         "note": "exploratory real-model telemetry; not part of the normative "
                 "evaluation; no credentials recorded",
     }
@@ -164,6 +186,21 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
     with open(os.path.join(out_dir, "report.md"), "w") as fh:
         fh.write(_render_report(meta, aggregate, run_records))
     return {"meta": meta, "runs": run_records, "aggregate": aggregate}
+
+
+def _load_sealed(path: str, n_tasks: int) -> dict | None:
+    """A sealed run is a parseable metrics.json with every task present;
+    anything else is treated as unsealed and re-executed."""
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path) as fh:
+            rec = json.load(fh)
+    except (json.JSONDecodeError, OSError):
+        return None
+    if len(rec.get("per_task", {})) != n_tasks:
+        return None
+    return rec
 
 
 def _git_revision() -> str:

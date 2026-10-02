@@ -90,3 +90,66 @@ queries, unmatched (unknown-class) queries; grant requests classified as
 obtainable / unavailable / overbroad / unknown-class / repeated; breadth
 escalations (a later request strictly broader than an earlier one);
 successful narrowing after a denied overbroad request.
+
+## Phase 5 shapes: denial-triggered hint and task-conditioned view
+
+Both reuse the catalog machinery and the `discovery` receipt kind; each
+receipt carries `trigger` (`global` | `denial` | `initial`), `scope` (the
+resource classes shown), `schema`, `policy_version`, `catalog_hash`, and
+`rules_shown`. Neither adds a tool: in these conditions a call to
+`discover` is still an unmediated attempt.
+
+### `capability-hint@1` (discovery mode `denial`)
+
+Attached as `capability_hint` to the result of a denied grant request or a
+refused read/effect, after the `grant_deny`/`refusal` receipt. Scoped to the
+*class* of the denied resource (first path segment: `messages`, `notes`,
+`contacts`, `calendar`): the task-applicable rules for that class, the
+projections whose resource shape is in that class, the effects granted on
+that class, grant defaults, `denied: {resource, operation, reason}`. No
+request schema, no other classes. The hint for `messages/thread/thr-nobody`
+is byte-identical to the hint for `messages/thread/thr-group` except for
+the echoed `denied.resource` (asserted in tests): it cannot confirm
+existence.
+
+### `capability-view@1` (discovery mode `task`)
+
+Built once per task at start by `CapabilityBroker.task_view(task_id,
+prompt)` and placed in the task message by the driver. Scope = the resource
+classes the prompt grounds to via `GROUNDING_LEXICON` (a fixed word list per
+class) plus one generic rule (a capitalised non-sentence-initial token that
+is not a weekday/month is a person reference → `contacts`). Task-specific
+policy rules are always included. Content: rules, projections and effects
+for those classes, grant defaults, the grounding itself. Grounding per task
+(mechanism output, not hand-authored):
+
+| task | classes (terms) |
+|---|---|
+| t1 | contacts (Alice), messages (thread) |
+| t2 | contacts (Who, person), messages (thread) |
+| t3 | contacts (Alice), messages (draft, sent), notes |
+| t4 | calendar (Schedule, coffee), contacts (Priya), notes |
+| t5 | contacts (Alice's, address, email) |
+| t6 | messages |
+| t7 | contacts (Alice, addresses, email), messages |
+| t8 | contacts (Alice's), messages (Reply, thread) |
+| t9 | notes |
+| t10 | calendar (meetings), messages (thread) |
+| t11 | contacts (Alice's), messages (Reply, thread) |
+| t12 | messages (Post, thread) |
+
+The lexicon was written with knowledge of the task wording (limitation);
+it is identical for every task and contains no object ids or values.
+
+### Condition matrix (phase 5)
+
+| condition | discovery mode | tool | prompt delta | when shown |
+|---|---|---|---|---|
+| control | none | — | — | never |
+| global | `global` | `discover` | `DISCOVERY_PROMPT_ADDENDUM` | on call |
+| denial | `denial` | — | `DENIAL_PROMPT_ADDENDUM` | with each deny/refusal |
+| task | `task` | — | `TASK_VIEW_PROMPT_ADDENDUM` | in the task message |
+
+Task wording, `prompt_hash`, policy, projections, effects, receipts and the
+evaluator are identical across conditions (asserted in
+`tests/test_phase5_discovery.py`).

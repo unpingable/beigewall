@@ -25,13 +25,17 @@ import time
 CONDITIONS = ("control", "global", "denial", "task")
 
 
-def sealed_runs(cond_dir: str) -> int:
+def sealed_runs(cond_dir: str, runs: int = 10 ** 6) -> int:
+    """Sealed runs run-1..run-<runs> with a parseable, complete metrics.json."""
     n = 0
-    if not os.path.isdir(cond_dir):
-        return 0
-    for name in os.listdir(cond_dir):
-        if name.startswith("run-") and os.path.exists(
-                os.path.join(cond_dir, name, "metrics.json")):
+    for i in range(1, runs + 1):
+        path = os.path.join(cond_dir, f"run-{i}", "metrics.json")
+        try:
+            with open(path) as fh:
+                rec = json.load(fh)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if len(rec.get("per_task", {})) == 12:
             n += 1
     return n
 
@@ -40,10 +44,10 @@ def run_condition(root: str, condition: str, runs: int, attempts: int,
                   label: str) -> bool:
     out = os.path.join(root, condition)
     for attempt in range(1, attempts + 1):
-        if sealed_runs(out) >= runs and os.path.exists(os.path.join(out, "aggregate.json")):
+        if sealed_runs(out, runs) >= runs and os.path.exists(os.path.join(out, "aggregate.json")):
             print(f"[{condition}] sealed ({runs} runs)")
             return True
-        print(f"[{condition}] attempt {attempt}: {sealed_runs(out)}/{runs} sealed")
+        print(f"[{condition}] attempt {attempt}: {sealed_runs(out, runs)}/{runs} sealed")
         cmd = [sys.executable, "run_llm_experiment.py", "--runs", str(runs),
                "--label", f"{label}-{condition}", "--condition", condition,
                "--out", out]
@@ -52,7 +56,7 @@ def run_condition(root: str, condition: str, runs: int, attempts: int,
             return True
         time.sleep(30)
     print(f"[{condition}] INCOMPLETE after {attempts} attempts: "
-          f"{sealed_runs(out)}/{runs} runs sealed", file=sys.stderr)
+          f"{sealed_runs(out, runs)}/{runs} runs sealed", file=sys.stderr)
     return False
 
 

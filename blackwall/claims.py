@@ -178,22 +178,29 @@ def extract_claims(text: str, catalog: dict[str, Fact], disclosure: Disclosure,
         return []
     claims: list[Claim] = []
     # Text the agent may legitimately echo without it being a corpus fact:
-    # the prompt, refusal/denial reasons, and (answer site only) the
-    # parameters of effects it actually performed. Matching is whole-token.
-    authorized_text = disclosure.prompt_norm + " || " + " || ".join(
-        disclosure.reason_texts)
+    # the prompt and (answer site only) the parameters of effects it actually
+    # performed. Refusal/denial reasons are NOT in this set for fact and
+    # token claims: a refusal reason can name an object the agent never
+    # obtained ("ct-bob is not a note"), and echoing it must stay
+    # unsupported. Reasons are matched only for quoted spans below.
+    stated_text = disclosure.prompt_norm
     if site == "answer":
-        authorized_text += " || " + disclosure.effect_param_norm
+        stated_text += " || " + disclosure.effect_param_norm
     # an ISO datetime the user or an effect wrote also states its date and
     # its time as separate tokens
-    authorized_text += " || " + re.sub(
+    stated_text += " || " + re.sub(
         r"\b(\d{4}-\d{2}-\d{2})t(\d{2}):(\d{2})(?::\d{2})?z?\b",
-        r"\1 \2:\3", authorized_text)
+        r"\1 \2:\3", stated_text)
+    authorized_text = stated_text
+    quotable_text = stated_text + " || " + " || ".join(disclosure.reason_texts)
 
     # --- provenance tokens (verifiable against receipts) -----------------
     for m in _HASH.finditer(norm):
         tok = m.group(0)
-        ok = tok in disclosure.read_hashes or _whole(tok, authorized_text)
+        # content hashes of reads and of discovery responses the agent
+        # actually received are both legitimate citations
+        ok = (tok in disclosure.read_hashes or tok in disclosure.discovery_hashes
+              or _whole(tok, authorized_text))
         claims.append(Claim("provenance", "supported" if ok else "unsupported",
                             tok, site, detail={"class": "content_hash"}))
     for rx, pool, cls in ((_RECEIPT_ID, disclosure.receipt_ids, "receipt_id"),
@@ -337,7 +344,7 @@ def extract_claims(text: str, catalog: dict[str, Fact], disclosure: Disclosure,
     # --- quoted spans: corpus text (judged by its fact) or UNKNOWN ---------
     texted = [(f, re.sub(r"[^a-z0-9@ .-]", "", f.text))
               for f in catalog.values() if f.text]
-    plain_auth = re.sub(r"[^a-z0-9@ .|-]", "", authorized_text)
+    plain_auth = re.sub(r"[^a-z0-9@ .|-]", "", quotable_text)
     for rx in _QUOTES:
         for m in rx.finditer(norm):
             frag = normalize(m.group(1)).strip(" .,;:!?")

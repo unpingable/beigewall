@@ -41,8 +41,14 @@ _NOT_NAMES = {"monday", "tuesday", "wednesday", "thursday", "friday",
               "november", "december", "i"}
 
 
+KNOWN_CLASSES = ("messages", "notes", "contacts", "calendar")
+
+
 def resource_class(resource: str) -> str:
-    return resource.split("/", 1)[0]
+    """First path segment, clamped to the known classes so arbitrary input
+    never reaches a receipt as a 'class'."""
+    cls = (resource or "").split("/", 1)[0]
+    return cls if cls in KNOWN_CLASSES else "other"
 
 
 def ground_prompt(prompt: str) -> dict:
@@ -54,7 +60,7 @@ def ground_prompt(prompt: str) -> dict:
         if raw in ".!?":
             sentence_start = True
             continue
-        tok = raw.lower().rstrip("'s") if raw.lower().endswith("'s") else raw.lower()
+        tok = raw.lower().removesuffix("'s")
         for cls, words in GROUNDING_LEXICON.items():
             if tok in words:
                 classes.setdefault(cls, []).append(raw)
@@ -217,8 +223,11 @@ class CapabilityCatalog:
             "policy_version": self.policy_version,
             "task_id": task_id,
             "trigger": "denial",
-            "denied": {"resource": resource, "operation": operation,
-                       "reason": reason},
+            # the refusal/denial reason is already in the result's error
+            # field; it is deliberately not repeated in the hint so the hint
+            # itself stays policy-only (see FINDINGS_PHASE5 open defect on
+            # refusal-reason oracles)
+            "denied": {"resource": resource, "operation": operation},
             "scope": [cls],
             "default_decision": "deny",
             **self._class_scoped(task_id, [cls]),

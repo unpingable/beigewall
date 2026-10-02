@@ -227,6 +227,27 @@ and canonical artifacts unchanged. Design: `docs/CAPABILITIES.md`; results:
       under `results/reevaluation/phase4-gpt-oss-20b/`.
 - [x] `FINDINGS_PHASE4.md`; README/HANDOFF updated.
 
+## Phase 5 milestones / status (task-conditioned negotiation, 2026-10-02)
+
+Locked: everything phase 4 locked, plus the global discovery semantics.
+Design: `docs/CAPABILITIES.md` (phase 5 shapes); results:
+`FINDINGS_PHASE5.md`.
+
+- [x] Denial-triggered hint (`capability-hint@1`, class-scoped, attached to
+      deny/refusal results, receipted `trigger=denial`).
+- [x] Task-conditioned view (`capability-view@1`, lexicon-grounded,
+      delivered in the task message, receipted `trigger=initial`).
+- [x] Driver reasoning-field metadata telemetry (presence/size/
+      reasoning-only; never content).
+- [x] Acquisition-timing telemetry; over-deference diagnostic
+      (`blackwall/deference.py`); four-condition comparison
+      (`blackwall/phase5.py`); resumable matrix runner (`run_phase5.py`).
+- [x] Tests: 197 green; canonical byte-identical.
+- [ ] Adversarial review; defects fixed with regression tests.
+- [ ] Real-model matrix: 10 × 12 per condition (control, global, denial,
+      task) under `results/exploratory/phase5-gpt-oss-20b/`.
+- [ ] `FINDINGS_PHASE5.md`; HANDOFF updated.
+
 ## Handoff protocol for a resuming agent
 
 1. Read `PLAN.md` (this file), `HANDOFF.md`, and `git log --oneline`.

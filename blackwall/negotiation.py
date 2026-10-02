@@ -57,7 +57,8 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
         elif r["kind"] == "discovery":
             discoveries.append({"seq": r["seq"], "query": r.get("query"),
                                 "query_matched": r.get("query_matched"),
-                                "rules_shown": r.get("rules_shown")})
+                                "rules_shown": r.get("rules_shown"),
+                                "trigger": r.get("trigger", "global")})
 
     # breadth escalation: a later request strictly broader than an earlier one
     escalations = 0
@@ -68,7 +69,7 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
     # successful narrowing: a minted request matched by an earlier denied
     # overbroad pattern
     denied_broad = [q for q in requests if q["overbroad"] and not q["obtainable"]]
-    narrowed = sum(1 for q in requests if q["obtainable"] and any(
+    narrowed = sum(1 for q in requests if q["obtainable"] and not q["overbroad"] and any(
         d["seq"] < q["seq"] and scope_matches(d["resource"], q["resource"])
         and d["resource"] != q["resource"] for d in denied_broad))
     repeated = 0
@@ -85,7 +86,10 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
                             or d["seq"] < first_request_seq)
     disc_after_denial = sum(1 for d in discoveries
                             if any(s < d["seq"] for s in denial_seqs))
-    queries = [d["query"] for d in discoveries if d["query"]]
+    # pulled = the agent asked (global tool); pushed = the broker attached
+    # it (denial hint, initial task view). Only pulled calls are probing.
+    pulled = [d for d in discoveries if d["trigger"] == "global"]
+    queries = [d["query"] for d in pulled if d["query"]]
     return {
         "requests": requests,
         "summary": {
@@ -103,11 +107,13 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
         },
         "discovery": {
             "calls": len(discoveries),
+            "pulled": len(pulled),
+            "pushed": len(discoveries) - len(pulled),
             "before_first_request": disc_before_first,
             "after_denial": disc_after_denial,
             "queries": queries,
             "distinct_queries": len(set(queries)),
-            "unmatched_queries": sum(1 for d in discoveries
+            "unmatched_queries": sum(1 for d in pulled
                                      if d["query_matched"] is False),
             "repeated_queries": len(queries) - len(set(queries)),
         },

@@ -28,6 +28,23 @@ class ToolFacade:
     def request_grant(self, resource: str, operation: str,
                       projection: str | None = None, ttl: float | None = None,
                       budget: dict | None = None) -> dict:
+        bad = (not isinstance(resource, str) or not isinstance(operation, str)
+               or (projection is not None and not isinstance(projection, str))
+               or (ttl is not None and isinstance(ttl, bool))
+               or (ttl is not None and not isinstance(ttl, (int, float)))
+               or (budget is not None and not (
+                   isinstance(budget, dict)
+                   and isinstance(budget.get("reads"), int)
+                   and isinstance(budget.get("objects"), int))))
+        if bad:
+            # a malformed request is receipted and refused, never a crash
+            # (a crash would discard the run and bias resumed samples)
+            r = self._ledger.record("refusal", self._task_id,
+                                    operation="request_grant", grant_id="",
+                                    resource=repr(resource)[:80],
+                                    reason="malformed request arguments")
+            return {"ok": False, "malformed": True, "receipt_id": r.receipt_id,
+                    "error": "malformed request arguments"}
         kwargs: dict = {}
         if ttl is not None:
             kwargs["ttl"] = ttl
@@ -38,6 +55,13 @@ class ToolFacade:
                                           projection=projection, **kwargs)
 
     def read(self, grant_id: str, resource: str, projection: str) -> dict:
+        if not all(isinstance(x, str) for x in (grant_id, resource, projection)):
+            r = self._ledger.record("refusal", self._task_id, operation="read",
+                                    grant_id=repr(grant_id)[:40],
+                                    resource=repr(resource)[:80],
+                                    reason="malformed request arguments")
+            return {"ok": False, "malformed": True, "receipt_id": r.receipt_id,
+                    "error": "malformed request arguments"}
         try:
             return self._broker.read(self._task_id, grant_id, resource,
                                      projection=projection)
@@ -53,6 +77,15 @@ class ToolFacade:
 
     def effect(self, grant_id: str, effect_name: str, params: dict,
                derived_from: list[dict]) -> dict:
+        if (not isinstance(grant_id, str) or not isinstance(effect_name, str)
+                or not isinstance(params, dict)
+                or not isinstance(derived_from, list)):
+            r = self._ledger.record("refusal", self._task_id,
+                                    operation=str(effect_name)[:40],
+                                    grant_id=repr(grant_id)[:40], resource="",
+                                    reason="malformed request arguments")
+            return {"ok": False, "malformed": True, "receipt_id": r.receipt_id,
+                    "error": "malformed request arguments"}
         try:
             return self._broker.effect(self._task_id, grant_id, effect_name,
                                        params, derived_from)

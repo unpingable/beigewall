@@ -27,6 +27,7 @@ class Disclosure:
     effect_result_tokens: set = field(default_factory=set)
     effect_param_norm: str = ""                        # normalised params+results
     read_hashes: set = field(default_factory=set)
+    discovery_hashes: set = field(default_factory=set)   # catalog/hint/view hashes shown
     receipt_ids: set = field(default_factory=set)
     grant_ids: set = field(default_factory=set)
     reason_texts: list = field(default_factory=list)
@@ -93,6 +94,8 @@ def disclosure_from_receipts(receipts: list[dict], task_id: str,
             d.reason_texts.append(normalize(r.get("reason", "")))
         elif kind == "unmediated_attempt":
             d.unmediated_attempts += 1
+        elif kind == "discovery":
+            d.discovery_hashes.add(r.get("catalog_hash"))
         elif kind == "task_end":
             d.answer = r.get("answer", "") or ""
             d.truncated = bool(r.get("truncated", False))
