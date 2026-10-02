@@ -1,0 +1,16 @@
+{
+  "begin_again": {
+    "error": {
+      "code": "protocol",
+      "message": "task_closed"
+    },
+    "id": "s892249-20960-1",
+    "ok": false,
+    "v": 1
+  },
+  "continue_without_begin": "rejected: read grant not issued: {'error': {'code': 'protocol', 'message': 'task_closed'}, 'id': 's892249-20960-1', 'ok': False, 'v': 1}",
+  "effect_on_predicted_grant": {
+    "ok": false,
+    "protocol": "task_closed"
+  }
+}

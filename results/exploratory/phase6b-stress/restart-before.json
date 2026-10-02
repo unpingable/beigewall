@@ -1,0 +1,55 @@
+{
+  "attack": "sequential",
+  "attacks": [
+    {
+      "attack": "sequential",
+      "attempts": 2,
+      "budget_refusals_delta": 0,
+      "client_successes": 2,
+      "elapsed_s": 0.0012,
+      "expected": "<= cap, then 'budget exhausted'",
+      "grant_denials": {},
+      "landed_delta": 2,
+      "landed_total_after": 2,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": true,
+            "receipt_id": "r-8"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0
+        },
+        {
+          "effect": {
+            "ok": true,
+            "receipt_id": "r-11"
+          },
+          "grant_id": "g-3",
+          "grant_ok": true,
+          "i": 1
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {},
+      "transport_failures": {}
+    }
+  ],
+  "budget_refusals_total": 0,
+  "double_consumed_grants": 0,
+  "harness": "run_effect_stress.py",
+  "landed_total": 2,
+  "n": 2,
+  "note": null,
+  "resource_policy": [
+    {
+      "effect_count": 3,
+      "rate": null,
+      "task_effects": 4
+    }
+  ],
+  "started_at": 1790966926.7015035,
+  "task": "t8-send-reply",
+  "workers": 20
+}

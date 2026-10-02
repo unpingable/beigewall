@@ -1,0 +1,3210 @@
+{
+  "attack": "matrix",
+  "attacks": [
+    {
+      "attack": "same_grant",
+      "attempts": 50,
+      "budget_refusals_delta": 0,
+      "client_successes": 1,
+      "elapsed_s": 0.0076,
+      "expected": "1 effect, then 'effect grant consumed'",
+      "grant_denials": {},
+      "landed_delta": 1,
+      "landed_total_after": 1,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": true,
+            "receipt_id": "r-8"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 1
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 2
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 3
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 4
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 5
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 6
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 7
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 8
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 9
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 10
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 11
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 12
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 13
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 14
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 15
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 16
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 17
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 18
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 19
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 20
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 21
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 22
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 23
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 24
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 25
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 26
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 27
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 28
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 29
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 30
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 31
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 32
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 33
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 34
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 35
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 36
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 37
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 38
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 39
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 40
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 41
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 42
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 43
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 44
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 45
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 46
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 47
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 48
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 49
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {
+        "grant g-N effect grant consumed": 49
+      },
+      "transport_failures": {}
+    },
+    {
+      "attack": "sequential",
+      "attempts": 50,
+      "budget_refusals_delta": 48,
+      "client_successes": 2,
+      "elapsed_s": 0.0145,
+      "expected": "<= cap, then 'budget exhausted'",
+      "grant_denials": {},
+      "landed_delta": 2,
+      "landed_total_after": 3,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": true,
+            "receipt_id": "r-60"
+          },
+          "grant_id": "g-3",
+          "grant_ok": true,
+          "i": 50
+        },
+        {
+          "effect": {
+            "ok": true,
+            "receipt_id": "r-63"
+          },
+          "grant_id": "g-4",
+          "grant_ok": true,
+          "i": 51
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-5",
+          "grant_ok": true,
+          "i": 52
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-6",
+          "grant_ok": true,
+          "i": 53
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-7",
+          "grant_ok": true,
+          "i": 54
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-8",
+          "grant_ok": true,
+          "i": 55
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-9",
+          "grant_ok": true,
+          "i": 56
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-10",
+          "grant_ok": true,
+          "i": 57
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-11",
+          "grant_ok": true,
+          "i": 58
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-12",
+          "grant_ok": true,
+          "i": 59
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-13",
+          "grant_ok": true,
+          "i": 60
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-14",
+          "grant_ok": true,
+          "i": 61
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-15",
+          "grant_ok": true,
+          "i": 62
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-16",
+          "grant_ok": true,
+          "i": 63
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-17",
+          "grant_ok": true,
+          "i": 64
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-18",
+          "grant_ok": true,
+          "i": 65
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-19",
+          "grant_ok": true,
+          "i": 66
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-20",
+          "grant_ok": true,
+          "i": 67
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-21",
+          "grant_ok": true,
+          "i": 68
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-22",
+          "grant_ok": true,
+          "i": 69
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-23",
+          "grant_ok": true,
+          "i": 70
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-24",
+          "grant_ok": true,
+          "i": 71
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-25",
+          "grant_ok": true,
+          "i": 72
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-26",
+          "grant_ok": true,
+          "i": 73
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-27",
+          "grant_ok": true,
+          "i": 74
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-28",
+          "grant_ok": true,
+          "i": 75
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-29",
+          "grant_ok": true,
+          "i": 76
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-30",
+          "grant_ok": true,
+          "i": 77
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-31",
+          "grant_ok": true,
+          "i": 78
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-32",
+          "grant_ok": true,
+          "i": 79
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-33",
+          "grant_ok": true,
+          "i": 80
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-34",
+          "grant_ok": true,
+          "i": 81
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-35",
+          "grant_ok": true,
+          "i": 82
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-36",
+          "grant_ok": true,
+          "i": 83
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-37",
+          "grant_ok": true,
+          "i": 84
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-38",
+          "grant_ok": true,
+          "i": 85
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-39",
+          "grant_ok": true,
+          "i": 86
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-40",
+          "grant_ok": true,
+          "i": 87
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-41",
+          "grant_ok": true,
+          "i": 88
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-42",
+          "grant_ok": true,
+          "i": 89
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-43",
+          "grant_ok": true,
+          "i": 90
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-44",
+          "grant_ok": true,
+          "i": 91
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-45",
+          "grant_ok": true,
+          "i": 92
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-46",
+          "grant_ok": true,
+          "i": 93
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-47",
+          "grant_ok": true,
+          "i": 94
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-48",
+          "grant_ok": true,
+          "i": 95
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-49",
+          "grant_ok": true,
+          "i": 96
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-50",
+          "grant_ok": true,
+          "i": 97
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-51",
+          "grant_ok": true,
+          "i": 98
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-52",
+          "grant_ok": true,
+          "i": 99
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {
+        "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)": 48
+      },
+      "transport_failures": {}
+    },
+    {
+      "attack": "reconnect",
+      "attempts": 50,
+      "budget_refusals_delta": 50,
+      "client_successes": 0,
+      "elapsed_s": 0.0309,
+      "expected": "counters unchanged",
+      "grant_denials": {},
+      "landed_delta": 0,
+      "landed_total_after": 3,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-53",
+          "grant_ok": true,
+          "i": 100
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-54",
+          "grant_ok": true,
+          "i": 101
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-55",
+          "grant_ok": true,
+          "i": 102
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-56",
+          "grant_ok": true,
+          "i": 103
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-57",
+          "grant_ok": true,
+          "i": 104
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-58",
+          "grant_ok": true,
+          "i": 105
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-59",
+          "grant_ok": true,
+          "i": 106
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-60",
+          "grant_ok": true,
+          "i": 107
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-61",
+          "grant_ok": true,
+          "i": 108
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-62",
+          "grant_ok": true,
+          "i": 109
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-63",
+          "grant_ok": true,
+          "i": 110
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-64",
+          "grant_ok": true,
+          "i": 111
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-65",
+          "grant_ok": true,
+          "i": 112
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-66",
+          "grant_ok": true,
+          "i": 113
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-67",
+          "grant_ok": true,
+          "i": 114
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-68",
+          "grant_ok": true,
+          "i": 115
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-69",
+          "grant_ok": true,
+          "i": 116
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-70",
+          "grant_ok": true,
+          "i": 117
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-71",
+          "grant_ok": true,
+          "i": 118
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-72",
+          "grant_ok": true,
+          "i": 119
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-73",
+          "grant_ok": true,
+          "i": 120
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-74",
+          "grant_ok": true,
+          "i": 121
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-75",
+          "grant_ok": true,
+          "i": 122
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-76",
+          "grant_ok": true,
+          "i": 123
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-77",
+          "grant_ok": true,
+          "i": 124
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-78",
+          "grant_ok": true,
+          "i": 125
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-79",
+          "grant_ok": true,
+          "i": 126
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-80",
+          "grant_ok": true,
+          "i": 127
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-81",
+          "grant_ok": true,
+          "i": 128
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-82",
+          "grant_ok": true,
+          "i": 129
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-83",
+          "grant_ok": true,
+          "i": 130
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-84",
+          "grant_ok": true,
+          "i": 131
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-85",
+          "grant_ok": true,
+          "i": 132
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-86",
+          "grant_ok": true,
+          "i": 133
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-87",
+          "grant_ok": true,
+          "i": 134
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-88",
+          "grant_ok": true,
+          "i": 135
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-89",
+          "grant_ok": true,
+          "i": 136
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-90",
+          "grant_ok": true,
+          "i": 137
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-91",
+          "grant_ok": true,
+          "i": 138
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-92",
+          "grant_ok": true,
+          "i": 139
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-93",
+          "grant_ok": true,
+          "i": 140
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-94",
+          "grant_ok": true,
+          "i": 141
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-95",
+          "grant_ok": true,
+          "i": 142
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-96",
+          "grant_ok": true,
+          "i": 143
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-97",
+          "grant_ok": true,
+          "i": 144
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-98",
+          "grant_ok": true,
+          "i": 145
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-99",
+          "grant_ok": true,
+          "i": 146
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-100",
+          "grant_ok": true,
+          "i": 147
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-101",
+          "grant_ok": true,
+          "i": 148
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-102",
+          "grant_ok": true,
+          "i": 149
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {
+        "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)": 50
+      },
+      "transport_failures": {}
+    },
+    {
+      "attack": "second_process",
+      "attempts": 50,
+      "budget_refusals_delta": 50,
+      "client_successes": 0,
+      "elapsed_s": 0.0516,
+      "expected": "counters unchanged",
+      "grant_denials": {},
+      "landed_delta": 0,
+      "landed_total_after": 3,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-104",
+          "grant_ok": true,
+          "i": 0
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-105",
+          "grant_ok": true,
+          "i": 1
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-106",
+          "grant_ok": true,
+          "i": 2
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-107",
+          "grant_ok": true,
+          "i": 3
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-108",
+          "grant_ok": true,
+          "i": 4
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-109",
+          "grant_ok": true,
+          "i": 5
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-110",
+          "grant_ok": true,
+          "i": 6
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-111",
+          "grant_ok": true,
+          "i": 7
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-112",
+          "grant_ok": true,
+          "i": 8
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-113",
+          "grant_ok": true,
+          "i": 9
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-114",
+          "grant_ok": true,
+          "i": 10
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-115",
+          "grant_ok": true,
+          "i": 11
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-116",
+          "grant_ok": true,
+          "i": 12
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-117",
+          "grant_ok": true,
+          "i": 13
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-118",
+          "grant_ok": true,
+          "i": 14
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-119",
+          "grant_ok": true,
+          "i": 15
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-120",
+          "grant_ok": true,
+          "i": 16
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-121",
+          "grant_ok": true,
+          "i": 17
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-122",
+          "grant_ok": true,
+          "i": 18
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-123",
+          "grant_ok": true,
+          "i": 19
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-124",
+          "grant_ok": true,
+          "i": 20
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-125",
+          "grant_ok": true,
+          "i": 21
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-126",
+          "grant_ok": true,
+          "i": 22
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-127",
+          "grant_ok": true,
+          "i": 23
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-128",
+          "grant_ok": true,
+          "i": 24
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-129",
+          "grant_ok": true,
+          "i": 25
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-130",
+          "grant_ok": true,
+          "i": 26
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-131",
+          "grant_ok": true,
+          "i": 27
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-132",
+          "grant_ok": true,
+          "i": 28
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-133",
+          "grant_ok": true,
+          "i": 29
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-134",
+          "grant_ok": true,
+          "i": 30
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-135",
+          "grant_ok": true,
+          "i": 31
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-136",
+          "grant_ok": true,
+          "i": 32
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-137",
+          "grant_ok": true,
+          "i": 33
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-138",
+          "grant_ok": true,
+          "i": 34
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-139",
+          "grant_ok": true,
+          "i": 35
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-140",
+          "grant_ok": true,
+          "i": 36
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-141",
+          "grant_ok": true,
+          "i": 37
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-142",
+          "grant_ok": true,
+          "i": 38
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-143",
+          "grant_ok": true,
+          "i": 39
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-144",
+          "grant_ok": true,
+          "i": 40
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-145",
+          "grant_ok": true,
+          "i": 41
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-146",
+          "grant_ok": true,
+          "i": 42
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-147",
+          "grant_ok": true,
+          "i": 43
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-148",
+          "grant_ok": true,
+          "i": 44
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-149",
+          "grant_ok": true,
+          "i": 45
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-150",
+          "grant_ok": true,
+          "i": 46
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-151",
+          "grant_ok": true,
+          "i": 47
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-152",
+          "grant_ok": true,
+          "i": 48
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-153",
+          "grant_ok": true,
+          "i": 49
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {
+        "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)": 50
+      },
+      "returncode": 0,
+      "transport_failures": {}
+    },
+    {
+      "attack": "concurrent",
+      "attempts": 50,
+      "budget_refusals_delta": 50,
+      "client_successes": 0,
+      "connect_errors": [],
+      "elapsed_s": 0.0271,
+      "expected": "<= cap, no double consumption",
+      "grant_denials": {},
+      "landed_delta": 0,
+      "landed_total_after": 3,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-175",
+          "grant_ok": true,
+          "i": 150
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-156",
+          "grant_ok": true,
+          "i": 151
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-154",
+          "grant_ok": true,
+          "i": 152
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-155",
+          "grant_ok": true,
+          "i": 153
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-157",
+          "grant_ok": true,
+          "i": 154
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-169",
+          "grant_ok": true,
+          "i": 155
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-158",
+          "grant_ok": true,
+          "i": 156
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-171",
+          "grant_ok": true,
+          "i": 157
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-159",
+          "grant_ok": true,
+          "i": 158
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-172",
+          "grant_ok": true,
+          "i": 159
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-160",
+          "grant_ok": true,
+          "i": 160
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-162",
+          "grant_ok": true,
+          "i": 161
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-164",
+          "grant_ok": true,
+          "i": 162
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-168",
+          "grant_ok": true,
+          "i": 163
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-165",
+          "grant_ok": true,
+          "i": 164
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-161",
+          "grant_ok": true,
+          "i": 165
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-166",
+          "grant_ok": true,
+          "i": 166
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-163",
+          "grant_ok": true,
+          "i": 167
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-167",
+          "grant_ok": true,
+          "i": 168
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-173",
+          "grant_ok": true,
+          "i": 169
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-174",
+          "grant_ok": true,
+          "i": 170
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-176",
+          "grant_ok": true,
+          "i": 171
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-177",
+          "grant_ok": true,
+          "i": 172
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-178",
+          "grant_ok": true,
+          "i": 173
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-181",
+          "grant_ok": true,
+          "i": 174
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-180",
+          "grant_ok": true,
+          "i": 175
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-179",
+          "grant_ok": true,
+          "i": 176
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-182",
+          "grant_ok": true,
+          "i": 177
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-183",
+          "grant_ok": true,
+          "i": 178
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-170",
+          "grant_ok": true,
+          "i": 179
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-184",
+          "grant_ok": true,
+          "i": 180
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-185",
+          "grant_ok": true,
+          "i": 181
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-186",
+          "grant_ok": true,
+          "i": 182
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-187",
+          "grant_ok": true,
+          "i": 183
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-188",
+          "grant_ok": true,
+          "i": 184
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-189",
+          "grant_ok": true,
+          "i": 185
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-190",
+          "grant_ok": true,
+          "i": 186
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-191",
+          "grant_ok": true,
+          "i": 187
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-203",
+          "grant_ok": true,
+          "i": 188
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-192",
+          "grant_ok": true,
+          "i": 189
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-193",
+          "grant_ok": true,
+          "i": 190
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-194",
+          "grant_ok": true,
+          "i": 191
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-195",
+          "grant_ok": true,
+          "i": 192
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-196",
+          "grant_ok": true,
+          "i": 193
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-197",
+          "grant_ok": true,
+          "i": 194
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-200",
+          "grant_ok": true,
+          "i": 195
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-198",
+          "grant_ok": true,
+          "i": 196
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-199",
+          "grant_ok": true,
+          "i": 197
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-201",
+          "grant_ok": true,
+          "i": 198
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-202",
+          "grant_ok": true,
+          "i": 199
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {
+        "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)": 50
+      },
+      "transport_failures": {},
+      "workers": 20
+    },
+    {
+      "attack": "replay",
+      "attempts": 51,
+      "budget_refusals_delta": 51,
+      "captured_from_success": false,
+      "client_successes": 0,
+      "elapsed_s": 0.0079,
+      "expected": "'effect grant consumed'",
+      "frame_bytes": 393,
+      "grant_denials": {},
+      "landed_delta": 0,
+      "landed_total_after": 3,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "original": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-204",
+          "grant_ok": true,
+          "i": 200,
+          "replay": true
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {
+        "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)": 51
+      },
+      "transport_failures": {}
+    },
+    {
+      "attack": "forged_counter",
+      "attempts": 4,
+      "budget_refusals_delta": 0,
+      "client_successes": 0,
+      "elapsed_s": 0.0012,
+      "expected": "protocol unknown_arg",
+      "grant_denials": {},
+      "landed_delta": 0,
+      "landed_total_after": 3,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "unknown_arg"
+          },
+          "forged": [
+            "consumed"
+          ],
+          "grant_id": "g-205",
+          "grant_ok": true,
+          "i": 201
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "unknown_arg"
+          },
+          "forged": [
+            "budget"
+          ],
+          "grant_id": "g-206",
+          "grant_ok": true,
+          "i": 202
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "unknown_arg"
+          },
+          "forged": [
+            "effects_used"
+          ],
+          "grant_id": "g-207",
+          "grant_ok": true,
+          "i": 203
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "unknown_arg"
+          },
+          "forged": [
+            "budget",
+            "consumed",
+            "effects_used"
+          ],
+          "grant_id": "g-208",
+          "grant_ok": true,
+          "i": 204
+        }
+      ],
+      "protocol_rejections": {
+        "unknown_arg": 4
+      },
+      "refusals": {},
+      "transport_failures": {}
+    },
+    {
+      "attack": "forged_task",
+      "attempts": 9,
+      "budget_refusals_delta": 0,
+      "client_successes": 0,
+      "elapsed_s": 0.0022,
+      "expected": "task_not_active / task_closed",
+      "grant_denials": {},
+      "landed_delta": 0,
+      "landed_total_after": 3,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "task_not_active"
+          },
+          "framed_as": "t1-summarize-alice",
+          "grant_id": "g-209",
+          "grant_ok": true,
+          "i": 205
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "task_not_active"
+          },
+          "framed_as": "t3-note-followup",
+          "grant_id": "g-209",
+          "grant_ok": true,
+          "i": 206
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "task_not_active"
+          },
+          "framed_as": "t-never-defined",
+          "grant_id": "g-209",
+          "grant_ok": true,
+          "i": 207
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "task_not_active"
+          },
+          "framed_as": "T8-SEND-REPLY",
+          "grant_id": "g-209",
+          "grant_ok": true,
+          "i": 208
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "task_not_active"
+          },
+          "framed_as": "t8-send-reply ",
+          "grant_id": "g-209",
+          "grant_ok": true,
+          "i": 209
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "task_not_active"
+          },
+          "framed_as": "t8-send-reply-2",
+          "grant_id": "g-209",
+          "grant_ok": true,
+          "i": 210
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "task_not_active"
+          },
+          "framed_as": "*",
+          "grant_id": "g-209",
+          "grant_ok": true,
+          "i": 211
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "task_not_active"
+          },
+          "framed_as": "-",
+          "grant_id": "g-209",
+          "grant_ok": true,
+          "i": 212
+        },
+        {
+          "effect": {
+            "ok": false,
+            "protocol": "task_already_active"
+          },
+          "grant_ok": null,
+          "i": null,
+          "op": "begin_task"
+        }
+      ],
+      "protocol_rejections": {
+        "task_already_active": 1,
+        "task_not_active": 8
+      },
+      "refusals": {},
+      "transport_failures": {}
+    },
+    {
+      "attack": "forged_grant",
+      "attempts": 7,
+      "budget_refusals_delta": 0,
+      "client_successes": 0,
+      "elapsed_s": 0.0015,
+      "expected": "'unknown grant'",
+      "grant_denials": {},
+      "landed_delta": 0,
+      "landed_total_after": 3,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "unknown grant 'g-999'"
+          },
+          "grant_id": "g-999",
+          "grant_ok": false,
+          "i": 213
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "unknown grant 'g-0'"
+          },
+          "grant_id": "g-0",
+          "grant_ok": false,
+          "i": 214
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "unknown grant 'g--1'"
+          },
+          "grant_id": "g--1",
+          "grant_ok": false,
+          "i": 215
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "unknown grant 't1-summarize-alice'"
+          },
+          "grant_id": "t1-summarize-alice",
+          "grant_ok": false,
+          "i": 216
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "unknown grant 'g-1/../g-2'"
+          },
+          "grant_id": "g-1/../g-2",
+          "grant_ok": false,
+          "i": 217
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "unknown grant 'G-1'"
+          },
+          "grant_id": "G-1",
+          "grant_ok": false,
+          "i": 218
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "unknown grant ''"
+          },
+          "grant_id": "",
+          "grant_ok": false,
+          "i": 219
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {
+        "unknown grant ''": 1,
+        "unknown grant 'G-1'": 1,
+        "unknown grant 'g--1'": 1,
+        "unknown grant 'g-N'": 2,
+        "unknown grant 'g-N/../g-N'": 1,
+        "unknown grant 't1-summarize-alice'": 1
+      },
+      "transport_failures": {}
+    },
+    {
+      "attack": "reordered",
+      "attempts": 2,
+      "budget_refusals_delta": 1,
+      "client_successes": 0,
+      "elapsed_s": 0.001,
+      "expected": "'unknown grant' before the grant",
+      "grant_denials": {},
+      "landed_delta": 0,
+      "landed_total_after": 3,
+      "outcomes": [
+        {
+          "effect": null,
+          "grant_id": "g-210",
+          "grant_ok": true,
+          "i": null,
+          "step": "probe_grant"
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "unknown grant 'g-211'"
+          },
+          "grant_id": "g-211",
+          "grant_ok": false,
+          "i": 220,
+          "step": "effect_before_grant"
+        },
+        {
+          "effect": null,
+          "grant_id": "g-211",
+          "grant_ok": true,
+          "i": null,
+          "predicted_matched": true,
+          "step": "grant"
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)"
+          },
+          "grant_id": "g-211",
+          "grant_ok": true,
+          "i": 221,
+          "step": "effect_after_grant"
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {
+        "effect budget exhausted: send_message on messages/thread/thr-alice (3/3)": 1,
+        "unknown grant 'g-N'": 1
+      },
+      "transport_failures": {}
+    }
+  ],
+  "budget_refusals_total": 250,
+  "double_consumed_grants": 0,
+  "harness": "run_effect_stress.py",
+  "landed_total": 3,
+  "n": 50,
+  "note": "matrix: all attacks run in sequence against one server and one task; task-scoped budgets accumulate across attacks, so later rows see the budget already consumed by earlier ones. 'landed_delta' counts effect receipts in the trusted ledger during each attack.",
+  "resource_policy": [
+    {
+      "effect_count": 3,
+      "rate": null,
+      "task_effects": 4
+    }
+  ],
+  "started_at": 1790966923.0789135,
+  "task": "t8-send-reply",
+  "workers": 20
+}
