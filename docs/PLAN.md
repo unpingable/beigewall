@@ -243,10 +243,29 @@ Design: `docs/CAPABILITIES.md` (phase 5 shapes); results:
       (`blackwall/deference.py`); four-condition comparison
       (`blackwall/phase5.py`); resumable matrix runner (`run_phase5.py`).
 - [x] Tests: 197 green; canonical byte-identical.
-- [ ] Adversarial review; defects fixed with regression tests.
-- [ ] Real-model matrix: 10 × 12 per condition (control, global, denial,
-      task) under `results/exploratory/phase5-gpt-oss-20b/`.
-- [ ] `FINDINGS_PHASE5.md`; HANDOFF updated.
+- [x] Adversarial review; 10 defects fixed with regression tests; one
+      pre-existing broker oracle pinned as an expected failure (open).
+- [x] Real-model matrix: 10 × 12 per condition (control, global, denial,
+      task) under `results/exploratory/phase5-gpt-oss-20b/`; comparison
+      with exact permutation tests in `.../comparison/`.
+- [x] Two evaluator false positives found in the data and fixed (day-first
+      dates with year; runtime-created event facts); phase 3 verdicts
+      unchanged, phase 4 erratum recorded.
+- [x] `FINDINGS_PHASE5.md`; HANDOFF updated. Result: task-scoped view
+      converts 18/47 (p≈0.03) mostly via fewer empty completions; t2/t4
+      never convert; 8 unrequested effects under the task view.
+
+## Phase 5B (queued): long-horizon authority lifecycle
+
+Research question: does BLACKWALL preserve authority isolation and
+provenance correctness over a long-lived session with retries, task
+transitions, expiration, revocation, restart, duplicate delivery and stale
+authority? Trajectory suite derived from the existing tasks (4–8 transitions
+each, ≈20 trajectories), lifecycle injections, cross-task isolation checks,
+recovery semantics, receipt-chain invariants, hostile review. No change to
+grant/projection/effect/receipt/evaluator semantics or to the 12 tasks.
+Starts only with phase 5 sealed (done) and its invariants resolved (all
+zero; one open pre-existing oracle documented).
 
 ## Handoff protocol for a resuming agent
 

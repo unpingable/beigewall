@@ -1,0 +1,44 @@
+{
+  "base_url": "http://localhost:11434/v1",
+  "blackwall_revision": "fe9dc9ae75093ac03931d7264d4420f704b8209c",
+  "blackwall_revision_at_start": "fe9dc9ae75093ac03931d7264d4420f704b8209c",
+  "capability_discovery": false,
+  "condition": "control",
+  "discovery_mode": null,
+  "driver": "llm-adapter",
+  "exploratory": true,
+  "finished_utc": "2026-10-02T01:27:50.820078+00:00",
+  "label": "p5-control",
+  "max_steps": 40,
+  "model": "gpt-oss:20b",
+  "note": "exploratory real-model telemetry; not part of the normative evaluation; no credentials recorded",
+  "policy_version": "391354e7f6524dc02d5bdd1f133e14cb892c50a1e3a80cff2bed0c95a7bb9859",
+  "runs": 10,
+  "runs_completed": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "runs_executed": [
+    10
+  ],
+  "runs_reused": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "started_utc": "2026-10-02T01:22:35.005984+00:00"
+}

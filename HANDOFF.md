@@ -2,7 +2,8 @@
 
 Date: 2026-10-02. Status: **spike complete + real-model exploratory experiment
 complete + receipt-grounded evaluator (phase 3) complete + capability
-negotiation experiment (phase 4) complete**. All milestones in `docs/PLAN.md`
+negotiation experiment (phase 4) complete + task-conditioned negotiation
+(phase 5) complete**. All milestones in `docs/PLAN.md`
 (phases 1–4) are checked. Phase 4 result: the discovery mechanism is sound
 and halved negotiation overhead, but did **not** convert the
 honest-but-useless class (0 conversions, 8 regressions); see
@@ -15,7 +16,7 @@ recorded and unchanged; the real-model exploratory result is recorded in
 
 ```
 cd /data/git/blackwall
-python3 -m unittest discover -s tests    # expect: Ran 183 tests ... OK
+python3 -m unittest discover -s tests    # expect: Ran 210 tests ... OK (expected failures=1)
 python3 run_experiment.py --out /tmp/bw-check
 diff /tmp/bw-check/metrics.json results/canonical/metrics.json     # identical
 diff /tmp/bw-check/receipts.jsonl results/canonical/receipts.jsonl # identical
@@ -96,12 +97,16 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
 
 ## Open items (none blocking)
 
-- **Phase 5 in progress (2026-10-02)**: control (10 runs) sealed at
-  `3f59855`; global/denial/task queued at `bf0c07f` under
-  `results/exploratory/phase5-gpt-oss-20b/<condition>/`; resume with
-  `python3 run_phase5.py --root results/exploratory/phase5-gpt-oss-20b
-  --runs 10 --conditions global denial task`; report with `--report
-  --anchor baseline=results/exploratory/gpt-oss-20b-20261001T185916Z`.
+- **Phase 5 sealed (2026-10-02)**: 4 conditions × 10 runs × 12 tasks under
+  `results/exploratory/phase5-gpt-oss-20b/`; findings in
+  `FINDINGS_PHASE5.md`. Headline: the task-scoped view converts 18/47
+  honest-but-useless executions (p≈0.03, mostly by removing reasoning-only
+  empty completions), t2/t4 never convert in 480 executions, and the task
+  view induced 8 unrequested effects (t1 posted its summary into the
+  thread). Global and denial effects are inside batch-to-batch drift.
+- **Phase 5B queued**: long-horizon authority lifecycle (see docs/PLAN.md).
+- **Policy question raised by phase 5**: an approvable effect is not an
+  expected effect; effect *grants* carry no user-intent reference.
 - **Open defect, first item next phase**: broker refusal reasons are an
   existence/type/count oracle at zero budget cost (pinned as an expected
   failure in `tests/test_phase5_review_fixes.py`). Fixing it changes the
