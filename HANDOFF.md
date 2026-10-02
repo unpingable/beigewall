@@ -27,6 +27,8 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
 
 ## Where things are
 
+- `docs/ECOSYSTEM-ROLE.md` — architectural positioning relative to the
+  surrounding research (Constellation, Jev, ABSD, atproto-ACL, formal work)
 - `docs/PLAN.md` — durable plan, contracts, decisions, milestones (phase 1 + 2,
   all done)
 - `README.md` — architecture, threat model, known limitations, usage

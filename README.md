@@ -10,6 +10,9 @@ is throwaway-grade. There is deliberately **no** OS sandboxing: no namespaces,
 containers, FUSE, seccomp, network policy, or real desktop integrations. The
 spike validates the authority/provenance model in-process.
 
+Where BLACKWALL sits relative to Constellation, Jev, ABSD, atproto-ACL and
+the formal work: `docs/ECOSYSTEM-ROLE.md` (positioning only).
+
 ## Architecture
 
 ```
