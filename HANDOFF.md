@@ -4,7 +4,8 @@ Date: 2026-10-02. Status: **spike complete + real-model exploratory experiment
 complete + receipt-grounded evaluator (phase 3) complete + capability
 negotiation experiment (phase 4) complete + task-conditioned negotiation
 (phase 5) complete + long-horizon authority lifecycle (phase 5B) complete +
-context reset / forced expiry / refusal-oracle repair (phase 5C) complete**. All milestones in `docs/PLAN.md`
+context reset / forced expiry / refusal-oracle repair (phase 5C) complete +
+process boundary (phase 6) complete**. All milestones in `docs/PLAN.md`
 (phases 1–4) are checked. Phase 4 result: the discovery mechanism is sound
 and halved negotiation overhead, but did **not** convert the
 honest-but-useless class (0 conversions, 8 regressions); see
@@ -122,19 +123,22 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   encountered it (it mints just in time and never reuses a grant), so
   real-model expiry recovery remains unobserved (deterministic coverage
   exists); refusal-reason oracle repaired. `FINDINGS_PHASE5C.md`.
-- **Phase 6 in progress (2026-10-02)**: process boundary built and reviewed
-  (`a757097`): trusted membrane server (`python3 -m blackwall.ipc.server`)
-  and untrusted agent process (`run_agent_process.py`) joined only by
-  `blackwall-ipc/1` over a Unix socket; 21+2 adversarial probes, 7
-  lifecycle tests, equivalence and import-graph tests; scripted suite
-  across processes == canonical ledger. Real-model run under
-  `results/exploratory/phase6-ipc-gpt-oss-20b/` (orchestrator
-  `run_ipc_experiment.py`; benchmark `python3 -m blackwall.ipc_bench`).
-  Same-user limitation: no OS enforcement of the storage/socket boundary
-  (documented in `docs/PROCESS_BOUNDARY.md`). Carry forward unchanged: the
-  budget-count wording re-seal; multi-use grants for real-model expiry;
-  the "approvable ≠ expected" effect policy question, now quantified
-  (unbounded grants/effects per task).
+- **Phase 6 sealed (2026-10-02)**: the membrane as a separate trusted
+  process (`python3 -m blackwall.ipc.server`) and the agent as an untrusted
+  process (`run_agent_process.py`) joined only by `blackwall-ipc/1`; 23
+  adversarial probes, 7 lifecycle tests, equivalence and import-graph
+  tests; hostile review's 11 findings fixed. Real model across the boundary:
+  indistinguishable from in-process (useful 55% vs 53%, p ≈ 1.0), all
+  invariants zero, observer 517/517, ≈0.3 ms per call. `FINDINGS_PHASE6.md`.
+  **Established at protocol strength only**: both processes are one OS
+  user, so storage and socket secrecy are not OS-enforced
+  (`docs/PROCESS_BOUNDARY.md`). Stopped here, as specified.
+- **Next (not started)**: OS enforcement of the boundary — user or
+  namespace separation — as its own experiment. Carry forward unchanged:
+  the budget-count wording re-seal; multi-use grants for real-model expiry;
+  per-task authority quotas / "approvable ≠ expected" (quantified: 200
+  correctly-authorised sends in 0.09 s by a compromised client); corpus
+  persistence across trusted restart.
 - **Policy question raised by phase 5**: an approvable effect is not an
   expected effect; effect *grants* carry no user-intent reference.
 - **Refusal-reason oracle (phase 5C): repaired for existence/type.**

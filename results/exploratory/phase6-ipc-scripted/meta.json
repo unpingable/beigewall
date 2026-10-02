@@ -1,0 +1,27 @@
+{
+  "agent_crashes": [],
+  "architecture": "process-separated",
+  "blackwall_revision_at_start": "a75709774b82f11b85f965fbe75b68b3166023eb",
+  "condition": "control",
+  "driver": "scripted",
+  "exploratory": true,
+  "finished_utc": "2026-10-02T17:34:59.661428+00:00",
+  "label": "scripted",
+  "max_steps": 40,
+  "model": "scripted-driver",
+  "note": "exploratory; agent telemetry is advisory across the process boundary; no credentials recorded",
+  "runs": 3,
+  "runs_crashed": [],
+  "runs_executed": [
+    1,
+    2,
+    3
+  ],
+  "runs_reused": [],
+  "server_exit_codes": {
+    "1": 0,
+    "2": 0,
+    "3": 0
+  },
+  "started_utc": "2026-10-02T17:34:57.532253+00:00"
+}

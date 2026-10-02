@@ -321,9 +321,14 @@ data. Design: `docs/PROCESS_BOUNDARY.md`; results: `FINDINGS_PHASE6.md`.
       records crashing evaluation), 5 medium, several low — all fixed with
       reproducers and regression tests; quantified limitations documented
       (unbounded grants/effects per task; same-user visibility). 318 tests.
-- [ ] Scripted + real-model runs under `results/exploratory/phase6-ipc-*`;
-      IPC overhead vs in-process.
-- [ ] `FINDINGS_PHASE6.md` results; HANDOFF updated.
+- [x] Scripted (3 runs, canonical profile) and real-model (5 × 12) runs
+      under `results/exploratory/phase6-ipc-*`; behaviour indistinguishable
+      from in-process (p ≈ 1.0); all invariants zero; observer 517/517;
+      IPC ≈ 0.2–0.3 ms per call.
+- [x] `FINDINGS_PHASE6.md`; HANDOFF updated. Established: the logical
+      membrane survives separation at protocol strength under a hostile
+      client; OS enforcement (user/namespace separation) not demonstrated.
+      Stop.
 
 ## Handoff protocol for a resuming agent
 

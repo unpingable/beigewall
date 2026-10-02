@@ -1,0 +1,31 @@
+{
+  "agent_crashes": [],
+  "architecture": "process-separated",
+  "blackwall_revision_at_start": "a75709774b82f11b85f965fbe75b68b3166023eb",
+  "condition": "control",
+  "driver": "llm",
+  "exploratory": true,
+  "finished_utc": "2026-10-02T18:00:13.822976+00:00",
+  "label": "gpt-oss-20b",
+  "max_steps": 40,
+  "model": "gpt-oss:20b",
+  "note": "exploratory; agent telemetry is advisory across the process boundary; no credentials recorded",
+  "runs": 5,
+  "runs_crashed": [],
+  "runs_executed": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "runs_reused": [],
+  "server_exit_codes": {
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0
+  },
+  "started_utc": "2026-10-02T17:35:00.595133+00:00"
+}

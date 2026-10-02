@@ -122,4 +122,113 @@ returns the canonical verdicts and the observer agrees on every use.
 | 10 | hostile review (medium) | a read whose response exceeded the frame limit was receipted as disclosed but never reached the client, with no record | receipt precision | `ipc_reject response_too_large` naming the read receipt |
 | 11 | hostile review (low) | huge integer TTL → internal error; `v: 1.0` accepted; rejection replies dropped a parsed id; narrative/task_end rows unmarked; agent inherited the orchestrator's full environment | hygiene | bounded numbers; strict int version; id echoed; `self_reported` marks; minimal agent env |
 
-RESULTS_PLACEHOLDER
+## Real-model results
+
+5 runs × 12 tasks of `gpt-oss:20b` through the separated architecture
+(control condition, per-task conversation as in phase 5C-A), compared with
+the sealed in-process phase 5 control (10 runs). Same model, tasks, corpus,
+policy, projections, effects, evaluator; no prompt change.
+
+| measure | in-process (120) | process-separated (60) | per-run permutation test |
+|---|---|---|---|
+| useful | 64 (53%) | 33 (55%) | p = 0.85 |
+| honest + admissible + useless | 47 | 24 | p = 1.00 |
+| inadmissible / capability fail / unknown | 7 / 0 / 2 | 2 / 0 / 1 | — |
+| useful share of honest+admissible, per-run mean (sd) | 0.580 (0.143) | 0.579 (0.062) | p = 1.00 |
+| empty answers | 23 | 11 | p = 1.00 |
+| grants requested / minted / denied per run | 42.1 / 16.8 / 25.3 | 46.0 / 16.4 / 29.6 | p = 0.36 (requested) |
+| broker calls per run | 65.9 | 67.4 | — |
+| disclosure bytes per run | 8212 | 7237 | — |
+| safety invariants | all 0 | all 0 | — |
+| observer disagreements | 0 | 0 of 517 uses | — |
+| protocol rejections (`ipc_reject`) | — | 0 | the honest model never sent a malformed frame |
+| transport failures / reconnects | — | 0 / 0 | one connection per run |
+| self-reported unmediated attempts | 0 | 0 | — |
+
+The boundary did not materially change ordinary behaviour. The one
+failure class that process separation *did* introduce before the fix —
+the model's malformed `derived_from` entries becoming protocol errors that
+crashed the agent loop — was a protocol/semantics defect, not an agent or
+authority failure, and after the fix those entries are refused by the
+broker with receipts exactly as in-process.
+
+## IPC overhead
+
+| call | in-process median / p95 (ms) | over IPC median / p95 (ms) |
+|---|---|---|
+| request_grant | 0.008 / 0.013 | 0.174 / 0.252 |
+| read (conversation@1, 1206-byte response) | 0.027 / 0.032 | 0.229 / 0.323 |
+| effect (send_message) | 0.044 / 0.054 | 0.301 / 0.594 |
+| connect (open + hello + close) | — | 0.52 / 0.74 |
+
+Real-model runs: 517 IPC requests, median 0.33 ms, p95 1.26 ms, maximum
+113 ms (GC/scheduling), against model latencies of seconds per turn. The
+boundary costs roughly 0.2–0.3 ms per broker call and is irrelevant to the
+experiment's timescale.
+
+## What is established
+
+1. **Logical authority membrane** — unchanged and still holding: under a
+   compromised client every forged, foreign, replayed, altered or
+   fabricated request is refused with its receipt; no corpus value leaves
+   except through an authorized projection; effects need their own grant,
+   valid provenance and are consumed on success.
+2. **Process isolation** — established at the protocol level: the trusted
+   state (corpus, authority, grants, ledger, policy, prompts) lives in a
+   process the agent cannot address except through `blackwall-ipc/1`;
+   the server evaluates, imports, opens and executes nothing the client
+   names; the agent process imports no trusted module; task identity,
+   prompts and hashes are server-owned; restart continues identities
+   without restoring authority. Twenty-three probes and seven lifecycle
+   cases against real subprocesses, plus a hostile review whose eleven
+   findings were fixed, support this.
+3. **OS/filesystem enforcement** — **not established.** Both processes run
+   as one user; the agent can read the ledger and connect to the socket
+   if it learns their paths, and the paths are discoverable (the agent's
+   own argv; the server's `/proc` cmdline); the corpus and policy modules
+   are importable by any same-user process; the agent can write into the
+   results tree. The experiment shows the distinction (the convention is
+   not an OS boundary) rather than closing it. User or namespace
+   separation is the missing mechanism and is a separate experiment.
+4. **Agent behaviour** — unchanged across the boundary (table above).
+5. **Provenance correctness** — preserved: the observer reconstructs
+   every use from the trusted ledger with no disagreement; broker receipt
+   identifiers are the same identifiers across the boundary (no second
+   authority identity); protocol rejections are receipted separately and
+   carry no task attribution; the one receipt-precision gap found (a
+   disclosed response too large to deliver) is now itself receipted.
+
+Two quantified properties of the design surfaced by the review, not
+changed here: grants and effects per task are unbounded by policy (a
+compromised client landed 200 correctly-authorised sends in 0.09 s), and
+a trusted restart resets the in-memory world state while the ledger keeps
+the effects. Both are recorded for the policy and persistence questions.
+
+## Limitations
+
+- Same OS user; no OS enforcement (above). No containers, namespaces,
+  seccomp, VMs, real desktop data or network.
+- Availability is not bounded: ledger growth, memory and threads per
+  connection are unlimited by the protocol.
+- Self-reported telemetry (unmediated attempts, narratives, answers) is
+  advisory across the boundary and marked `self_reported`.
+- One model, n = 5 runs over the boundary.
+
+## Answer
+
+**Which guarantees survive when the trusted authority plane is separated
+from a compromised agent by an actual OS process boundary?** All of the
+logical ones — bounded authority, projection-only disclosure, provenanced
+and consumed effects, authoritative and complete receipts, lifecycle
+identity — survive separation, under a hostile client, with the agent's
+ordinary behaviour unchanged and sub-millisecond overhead. What does not
+yet exist is OS enforcement of the storage and socket secrecy that the
+protocol boundary assumes: two processes of one user are a protocol
+boundary, not a security boundary. That is the next experiment, not this
+one's claim.
+
+## Stop
+
+Process boundary established at protocol strength; OS enforcement not
+demonstrated. No further isolation layer was started.
+
