@@ -114,8 +114,11 @@ def evaluate_ledger(receipts_path: str, telemetry: dict[str, dict], tasks,
         per_task[task.task_id] = record
         for k in ("requests", "bytes_in", "bytes_out", "reconnects",
                   "transport_failures"):
-            ipc_total[k] += int(ipc.get(k, 0) or 0)
-        latencies.extend(float(x) for x in ipc.get("latency_ms") or [])
+            v = ipc.get(k, 0)
+            ipc_total[k] += v if isinstance(v, int) and not isinstance(v, bool) else 0
+        lat = ipc.get("latency_ms") or []
+        latencies.extend(float(x) for x in (lat if isinstance(lat, list) else [])
+                         if isinstance(x, (int, float)) and not isinstance(x, bool))
     suite = suite_metrics(per_task, success)
     suite["receipt_grounded"] = {
         "succeeded": sum(1 for r in per_task.values()
@@ -160,7 +163,8 @@ def execute_run(run_dir: str, *, condition: str, driver: str, task_ids: list[str
     server_log = open(os.path.join(run_dir, "server.log"), "w")
     server = subprocess.Popen(
         [sys.executable, "-m", "blackwall.ipc.server", "--socket", sock,
-         "--ledger", receipts, "--condition", condition, "--run-id", run_id],
+         "--ledger", receipts, "--condition", condition, "--run-id", run_id,
+         "--tasks", ",".join(task_ids)],
         cwd=ROOT, stdout=server_log, stderr=subprocess.STDOUT)
     try:
         deadline = time.time() + SOCKET_WAIT
@@ -177,8 +181,13 @@ def execute_run(run_dir: str, *, condition: str, driver: str, task_ids: list[str
                      "--max-steps", str(max_steps)]
         with open(os.path.join(run_dir, "agent_telemetry.jsonl"), "w") as tele, \
                 open(os.path.join(run_dir, "agent_stderr.log"), "w") as err:
+            # the agent process inherits only what it needs, not the
+            # orchestrator's environment (credentials, agent sockets, ...)
+            agent_env = {k: v for k, v in os.environ.items()
+                         if k.startswith("BLACKWALL_LLM_") or k in ("PATH", "HOME", "LANG",
+                                                                     "LC_ALL", "PYTHONPATH")}
             agent = subprocess.Popen(agent_cmd, cwd=ROOT, stdout=tele,
-                                     stderr=err)
+                                     stderr=err, env=agent_env)
             try:
                 info["agent_rc"] = agent.wait(timeout=agent_timeout)
             except subprocess.TimeoutExpired:
@@ -325,10 +334,15 @@ def main(argv=None) -> int:
             continue
         telemetry = _read_telemetry(os.path.join(run_dir,
                                                  "agent_telemetry.jsonl"))
-        rec = evaluate_ledger(receipts, telemetry, tasks, run_id=run_id,
-                              label=a.label, model=model,
-                              condition=a.condition, driver=a.driver,
-                              revision=revision)
+        try:
+            rec = evaluate_ledger(receipts, telemetry, tasks, run_id=run_id,
+                                  label=a.label, model=model,
+                                  condition=a.condition, driver=a.driver,
+                                  revision=revision)
+        except Exception as exc:   # an agent can shape its records; never lose the run silently
+            crashes.append({"run": i, "error": f"evaluation failed: {type(exc).__name__}: {exc}"})
+            print(f"run {i}: evaluation failed ({exc})", flush=True)
+            continue
         _write_json(sealed, rec)
         rec["_index"] = i
         records.append(rec)

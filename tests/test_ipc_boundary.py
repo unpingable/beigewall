@@ -21,11 +21,15 @@ AGENT_SRC = os.path.join(ROOT, "run_agent_process.py")
 MAX_FRAME = 262144
 ALICE = "messages/thread/thr-alice"
 GROUP = "messages/thread/thr-group"
-TASKS = ["t1-summarize-alice", "t2-group-thread-resolution", "t3-note-followup",
-         "t4-schedule-priya", "t5-alice-personal-email", "t6-budget-exhaustion",
-         "t7-version-pin", "t8-send-reply", "t9-unmediated-access",
-         "t10-calendar-crossref", "t11-fabricated-provenance",
-         "t12-scope-mismatched-effect"]
+def _t8_prompt_hash():
+    # computed test-side only to fabricate a *real other-task* hash
+    from blackwall.receipts import canonical_hash
+    from blackwall.tasks import task_suite
+    t8 = next(t for t in task_suite() if t.task_id == "t8-send-reply")
+    return canonical_hash({"prompt": t8.prompt})
+
+
+T8_PROMPT_HASH = _t8_prompt_hash()
 BROKER_KINDS = {"grant_request", "grant_mint", "grant_deny", "read", "effect",
                 "refusal", "discovery"}
 
@@ -113,13 +117,9 @@ class ServerCase(unittest.TestCase):
                 cls._stop()
                 raise RuntimeError("ipc server did not create its socket")
             time.sleep(0.05)
-        cls.prompt_hash = {}
-        c = Conn(cls.sock)
-        for t in TASKS:
-            r = c.request(req("begin_task", t, rid="bt"))
-            assert r["ok"], r
-            cls.prompt_hash[t] = r["result"]["prompt_hash"]
-        c.close()
+        # the server owns task identity: each task is begun at most once,
+        # one at a time, so every probe uses tasks no other probe touches
+        cls.prompt_hash, cls.begun, cls.active = {}, {}, None
 
     @classmethod
     def _stop(cls):
@@ -144,6 +144,22 @@ class ServerCase(unittest.TestCase):
         c = self._cur = Conn(self.sock)
         self.addCleanup(c.close)
         return c
+
+    def activate(self, c, task):
+        """End the active task (if another), then begin `task` once."""
+        cls = type(self)
+        if cls.active == task:
+            return cls.begun[task]
+        if cls.active is not None:
+            r = c.request(req("task_end", cls.active, rid="te", answer="",
+                              truncated=False))
+            self.assertTrue(r["ok"], r)
+            cls.active = None
+        r = c.request(req("begin_task", task, rid="bt"))
+        self.assertTrue(r["ok"], r)
+        cls.active, cls.begun[task] = task, r
+        cls.prompt_hash[task] = r["result"]["prompt_hash"]
+        return r
 
     def ledger_rows(self):
         rows = []
@@ -210,7 +226,9 @@ class ServerCase(unittest.TestCase):
 class TestIpcBoundaryProbes(ServerCase):
     def test_01_forged_grant_id(self):
         c = self.conn()
-        other = self.grant(c, "t3-note-followup")["grant_id"]
+        self.activate(c, "t12-scope-mismatched-effect")
+        other = self.grant(c, "t12-scope-mismatched-effect")["grant_id"]
+        self.activate(c, "t1-summarize-alice")
         for gid in ("g-999", other):
             r = self.read(c, "t1-summarize-alice", gid)
             row = self.assertRefusal(r, "unknown grant")
@@ -219,11 +237,13 @@ class TestIpcBoundaryProbes(ServerCase):
 
     def test_02_forged_receipt_and_cross_task_hash(self):
         c = self.conn()
+        self.activate(c, "t10-calendar-crossref")
         ga = self.grant(c, "t10-calendar-crossref")["grant_id"]
         ra = self.read(c, "t10-calendar-crossref", ga)
         self.assertTrue(ra["ok"] and ra["result"]["ok"], ra)
         real = ra["result"]["projection_meta"]["content_hash"]
         task = "t11-fabricated-provenance"
+        self.activate(c, task)
         gs = self.grant(c, task, operation="send_message", projection=None)["grant_id"]
         for ref in ("ab" * 32, real):
             r = c.request(req("effect", task, rid="e", grant_id=gs,
@@ -239,8 +259,9 @@ class TestIpcBoundaryProbes(ServerCase):
     def test_03_fabricated_provenance_and_server_owned_prompt_hash(self):
         c = self.conn()
         task = "t4-schedule-priya"
+        self.activate(c, task)
         gs = self.grant(c, task, operation="send_message", projection=None)["grant_id"]
-        for ref in ("0" * 64, self.prompt_hash["t8-send-reply"]):
+        for ref in ("0" * 64, T8_PROMPT_HASH):
             r = c.request(req("effect", task, rid="e", grant_id=gs,
                               effect_name="send_message",
                               params={"thread_id": "thr-alice", "body": "x"},
@@ -256,6 +277,7 @@ class TestIpcBoundaryProbes(ServerCase):
     def test_04_altered_projection_id(self):
         c = self.conn()
         task = "t5-alice-personal-email"
+        self.activate(c, task)
         gid = self.grant(c, task)["grant_id"]
         self.assertRefusal(self.read(c, task, gid, projection="conversation@2"),
                            "projection mismatch")
@@ -268,6 +290,7 @@ class TestIpcBoundaryProbes(ServerCase):
 
     def test_05_altered_resource(self):
         c = self.conn()
+        self.activate(c, "t9-unmediated-access")
         gid = self.grant(c, "t9-unmediated-access")["grant_id"]
         self.assertRefusal(self.read(c, "t9-unmediated-access", gid, resource=GROUP),
                            "outside scope")
@@ -276,6 +299,7 @@ class TestIpcBoundaryProbes(ServerCase):
     def test_06_altered_operation(self):
         c = self.conn()
         task = "t3-note-followup"
+        self.activate(c, task)
         gid = self.grant(c, task)["grant_id"]
         r = c.request(req("effect", task, rid="e", grant_id=gid,
                           effect_name="send_message",
@@ -287,6 +311,7 @@ class TestIpcBoundaryProbes(ServerCase):
     def test_07_altered_scope_at_request_time(self):
         c = self.conn()
         task = "t2-group-thread-resolution"
+        self.activate(c, task)
         for res in ("messages/*", "*", "../../etc/passwd"):
             r = c.request(req("request_grant", task, rid="g", resource=res,
                               operation="read", projection="conversation@1"))
@@ -301,6 +326,7 @@ class TestIpcBoundaryProbes(ServerCase):
     def test_08_replayed_read_is_budgeted(self):
         c = self.conn()
         task = "t7-version-pin"
+        self.activate(c, task)
         gid = self.grant(c, task, budget={"reads": 8, "objects": 200})["grant_id"]
         frame = json.dumps(req("read", task, rid="same", grant_id=gid,
                                resource=ALICE, projection="conversation@1")).encode()
@@ -319,6 +345,7 @@ class TestIpcBoundaryProbes(ServerCase):
     def test_09_replayed_effect_refused(self):
         c = self.conn()
         task = "t8-send-reply"
+        self.activate(c, task)
         gid = self.grant(c, task)["grant_id"]
         h = self.read(c, task, gid)["result"]["projection_meta"]["content_hash"]
         gs = self.grant(c, task, operation="send_message", projection=None)["grant_id"]
@@ -436,8 +463,13 @@ class TestIpcBoundaryProbes(ServerCase):
                    "read_file", "discover", ""):
             with self.subTest(op=op):
                 n = len(self.ledger_rows())
-                r = self.conn().request(req(op, rid="o", grant_id="g-1", reason="x")
-                                        if op == "revoke" else req(op, rid="o"))
+                if op == "discover" and type(self).active is None:
+                    self.skipTest("discover needs an active task (run the class)")
+                # discover is a known op: send it as the active task so the
+                # rejection is the control-condition trap, not task identity
+                tid = type(self).active if op == "discover" else "t1-summarize-alice"
+                r = self.conn().request(req(op, tid, rid="o", grant_id="g-1", reason="x")
+                                        if op == "revoke" else req(op, tid, rid="o"))
                 rej = self.assertProtocol(r, n)
                 if op:  # "" fails the non-empty op check first (bad_op)
                     self.assertTrue(any(x.get("reason") == "unknown_op" for x in rej))
@@ -448,12 +480,9 @@ class TestIpcBoundaryProbes(ServerCase):
         """DOCUMENTED LIMITATION, not a boundary property: this same-user
         process can read the ledger because it was told the path. Separately
         asserted boundary property: no response discloses a filesystem path."""
-        with open(self.ledger, encoding="utf-8") as fh:
-            self.assertTrue(fh.readline())
         c = self.conn()
-        task = "t1-summarize-alice"
-        resps = [c.request(req("hello", task, rid="h")),
-                 c.request(req("begin_task", "t12-scope-mismatched-effect", rid="b"))]
+        task = "t6-budget-exhaustion"
+        resps = [c.request(req("hello", task, rid="h")), self.activate(c, task)]
         g = c.request(req("request_grant", task, rid="g", resource=ALICE,
                           operation="read", projection="conversation@1"))
         resps += [g, self.read(c, task, g["result"]["grant_id"]),
@@ -473,6 +502,8 @@ class TestIpcBoundaryProbes(ServerCase):
             self.assertFalse(s.startswith("/"), s)
             self.assertNotIn("receipts.jsonl", s)
             self.assertNotIn(self.tmp, s)
+        with open(self.ledger, encoding="utf-8") as fh:
+            self.assertTrue(fh.readline())
 
     def test_20_unintended_interface(self):
         n = len(self.ledger_rows())
@@ -518,6 +549,52 @@ class TestIpcBoundaryProbes(ServerCase):
             self.assertTrue(r["reason"], r)
         self.assertFalse([r for r in rows if r["kind"] == "grant_revoke"])
         self.assertIsNone(self.proc.poll())
+
+
+class TestTaskIdentity(ServerCase):
+    """Separate server: these probes need tasks the main class consumes."""
+
+    def test_21_task_relabelling_refused(self):
+        c = self.conn()
+        t5, t10, t12 = ("t5-alice-personal-email", "t10-calendar-crossref",
+                        "t12-scope-mismatched-effect")
+        self.activate(c, t5)
+        r = c.request(req("request_grant", t5, rid="g", resource="contacts/*",
+                          operation="read", projection="contact-directory@1"))
+        self.assertTrue(r["ok"], r)
+        self.assertFalse(r["result"]["ok"])
+        self.assertIn("personal contact data", r["result"]["reason"])
+        n = len(self.ledger_rows())
+        self.assertProtocol(c.request(req("begin_task", t10, rid="b")), n,
+                            "task_already_active")
+        self.activate(c, t10)           # ends t5, begins t10
+        for tid, reason in ((t5, "task_closed"), (t12, "task_not_active")):
+            n = len(self.ledger_rows())
+            r = c.request(req("read", tid, rid="x", grant_id="g-1",
+                              resource=ALICE, projection="conversation@1"))
+            self.assertProtocol(r, n, reason)
+            self.assertFalse(BROKER_KINDS & {x["kind"] for x in self.rows_since(n)})
+        rows = self.ledger_rows()
+        self.assertFalse([x for x in rows if x["kind"] == "read"])
+        # the reject row is labelled with the *claimed* task id; nothing else
+        # rejected frames carry no task attribution: nothing is filed under
+        # t12, and the claimed id is recorded separately
+        self.assertEqual({x["kind"] for x in rows if x["task_id"] == t12}, set())
+        self.assertTrue(any(x["kind"] == "ipc_reject" and x.get("claimed_task") == t12
+                            for x in rows))
+
+    def test_22_task_cannot_be_rebegun(self):
+        c = self.conn()
+        task = "t1-summarize-alice"
+        self.activate(c, task)
+        r = c.request(req("task_end", task, rid="te", answer="", truncated=False))
+        self.assertTrue(r["ok"], r)
+        type(self).active = None
+        n = len(self.ledger_rows())
+        self.assertProtocol(c.request(req("begin_task", task, rid="b")), n,
+                            "task_closed")
+        self.assertEqual(sum(x["kind"] == "task_end" and x["task_id"] == task
+                             for x in self.ledger_rows()), 1)
 
 
 class TestAgentImportGraph(unittest.TestCase):

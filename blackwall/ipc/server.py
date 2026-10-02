@@ -14,6 +14,7 @@ clock continue, authority state does not).
 """
 
 import argparse
+import fcntl
 import os
 import re
 import signal
@@ -33,13 +34,24 @@ from . import protocol as P
 READ_TIMEOUT = 30.0
 
 
+def task_id_of(req: dict) -> str:
+    return req.get("task_id", "") if isinstance(req, dict) else ""
+
+
 class TrustedServer:
     def __init__(self, socket_path: str, ledger_path: str, condition: str = "control",
-                 run_id: str | None = None):
+                 run_id: str | None = None, tasks: list[str] | None = None):
         if condition not in ("control", "global", "denial", "task"):
             raise ValueError(f"unknown condition {condition!r}")
         self.socket_path = socket_path
         self.ledger_path = ledger_path
+        # exclusive ownership of the ledger: a second server on the same
+        # ledger (or socket) must not start (identity corruption otherwise)
+        self._lock_fh = open(ledger_path + ".lock", "w")
+        try:
+            fcntl.flock(self._lock_fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            raise SystemExit(f"ledger {ledger_path} is owned by another server")
         self.condition = condition
         self.mode = {"control": None, "global": "global", "denial": "denial",
                      "task": "task"}[condition]
@@ -68,8 +80,28 @@ class TrustedServer:
             self.authority._grant_seq = highest
             self.ledger.record("trusted_restart", "", run_id=self.run_id,
                                prior_receipts=len(prior), grant_seq_resumed=highest)
-        self.begun: set[str] = set()
+        # The server owns task identity: the client may begin only tasks the
+        # orchestrator designated for this run, each at most once, one at a
+        # time; ops are accepted only for the active task; a closed task is
+        # never reopened, and closure survives a restart (derived from the
+        # ledger). Without this a client could relabel itself as any task
+        # (hostile review). Order is not enforced: it adds no authority.
+        self.designated = set(tasks) if tasks else set(self.tasks)
+        for tid in self.designated:
+            if tid not in self.tasks:
+                raise ValueError(f"unknown task {tid!r}")
+        self.active: str | None = None
+        # only rows the server attributed to a task close it; rejected
+        # frames carry no task attribution (a client could otherwise lock a
+        # task out by claiming its id in a bad frame)
+        self.closed: set[str] = {r["task_id"] for r in prior
+                                 if r.get("task_id") in self.tasks
+                                 and not r.get("kind", "").startswith("ipc_")}
         self._lock = threading.Lock()   # the broker is single-threaded by design
+        try:
+            os.chmod(ledger_path, 0o600)
+        except OSError:
+            pass
         self.started_at = time.time()
         self._conn_serial = 0
         self._stop = False
@@ -84,13 +116,22 @@ class TrustedServer:
         if op == "begin_task":
             task = self.tasks.get(task_id)
             if task is None:
-                return P.error_response(rid, "protocol", "unknown task")
+                raise P.ProtocolError("unknown_task")
+            if self.active is not None:
+                raise P.ProtocolError("task_already_active")
+            if task_id not in self.designated:
+                raise P.ProtocolError("task_not_designated")
+            if task_id in self.closed:
+                raise P.ProtocolError("task_closed")
             prompt_hash = canonical_hash({"prompt": task.prompt})
             self.broker.begin_task(task_id, prompt_hash)
-            self.begun.add(task_id)
-            return P.ok_response(rid, {"prompt": task.prompt, "prompt_hash": prompt_hash})
-        if task_id not in self.begun:
-            return P.error_response(rid, "protocol", "task not begun")
+            self.active = task_id
+            result = {"prompt": task.prompt, "prompt_hash": prompt_hash}
+            if self.mode == "task":
+                result["capabilities"] = self.broker.task_view(task_id, task.prompt)["view"]
+            return P.ok_response(rid, result)
+        if task_id != self.active:
+            raise P.ProtocolError("task_closed" if task_id in self.closed else "task_not_active")
         try:
             if op == "request_grant":
                 kwargs = {}
@@ -125,12 +166,15 @@ class TrustedServer:
                              "declared_effects": args["declared_effects"],
                              "summary": args["summary"]}
                 r = self.ledger.record("narrative", task_id, **narrative,
-                                       narrative_hash=canonical_hash(narrative))
+                                       narrative_hash=canonical_hash(narrative),
+                                       self_reported=True)
                 return P.ok_response(rid, {"receipt_id": r.receipt_id})
             if op == "task_end":
                 r = self.ledger.record("task_end", task_id, answer=args["answer"],
                                        answer_hash=canonical_hash({"answer": args["answer"]}),
-                                       truncated=args["truncated"])
+                                       truncated=args["truncated"], self_reported=True)
+                self.closed.add(task_id)
+                self.active = None
                 return P.ok_response(rid, {"receipt_id": r.receipt_id})
         except RefusalError as exc:
             err = P.error_response(rid, "refusal", str(exc), exc.receipt_id)
@@ -167,23 +211,36 @@ class TrustedServer:
                     with self._lock:
                         self.ledger.record("ipc_reject", "", reason=exc.reason, conn=serial,
                                            bytes=len(body))
-                    self._try_send(conn, P.error_response(None, "protocol", exc.reason))
+                    self._try_send(conn, P.error_response(exc.req_id, "protocol", exc.reason))
                     if exc.close:
                         return
                     continue
                 try:
                     with self._lock:
                         resp = self.handle(req)
+                        try:
+                            P.encode_frame(resp)
+                        except P.ProtocolError:
+                            # the broker already receipted the operation; the
+                            # client must learn the result did not reach it
+                            rr = resp.get("result") or {}
+                            self.ledger.record("ipc_reject", "",
+                                               reason="response_too_large", conn=serial,
+                                               op=req.get("op"), claimed_task=task_id_of(req),
+                                               receipt_id=rr.get("receipt_id"))
+                            resp = P.error_response(req["id"], "protocol",
+                                                    "response_too_large")
                 except P.ProtocolError as exc:
                     with self._lock:
-                        self.ledger.record("ipc_reject", req.get("task_id", ""),
-                                           reason=exc.reason, conn=serial, op=req.get("op"))
+                        self.ledger.record("ipc_reject", "", reason=exc.reason, conn=serial,
+                                           op=req.get("op"), claimed_task=task_id_of(req))
                     resp = P.error_response(req["id"], "protocol", exc.reason)
                 except Exception as exc:   # fail closed, never crash the membrane
                     with self._lock:
-                        self.ledger.record("ipc_reject", req.get("task_id", ""),
+                        self.ledger.record("ipc_reject", "",
                                            reason=f"internal:{type(exc).__name__}",
-                                           conn=serial, op=req.get("op"))
+                                           conn=serial, op=req.get("op"),
+                                           claimed_task=task_id_of(req))
                     resp = P.error_response(req["id"], "protocol", "internal error")
                 if not self._try_send(conn, resp):
                     return
@@ -205,10 +262,21 @@ class TrustedServer:
 
     def serve_forever(self) -> None:
         if os.path.exists(self.socket_path):
+            # never take over a live socket: probe it first
+            probe = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            try:
+                probe.settimeout(0.5)
+                probe.connect(self.socket_path)
+                probe.close()
+                raise SystemExit(f"socket {self.socket_path} is live")
+            except (ConnectionRefusedError, FileNotFoundError, socket.timeout, OSError) as exc:
+                if isinstance(exc, SystemExit):
+                    raise
             os.unlink(self.socket_path)
         srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         srv.bind(self.socket_path)
         os.chmod(self.socket_path, 0o600)
+        self._socket_ino = os.stat(self.socket_path).st_ino
         srv.listen(8)
         srv.settimeout(0.5)
         signal.signal(signal.SIGTERM, lambda *_: setattr(self, "_stop", True))
@@ -224,7 +292,14 @@ class TrustedServer:
         finally:
             srv.close()
             try:
-                os.unlink(self.socket_path)
+                # unlink only the socket this server created
+                if os.stat(self.socket_path).st_ino == self._socket_ino:
+                    os.unlink(self.socket_path)
+            except OSError:
+                pass
+            try:
+                fcntl.flock(self._lock_fh, fcntl.LOCK_UN)
+                self._lock_fh.close()
             except OSError:
                 pass
 
@@ -236,8 +311,12 @@ def main(argv=None) -> int:
     p.add_argument("--condition", default="control",
                    choices=("control", "global", "denial", "task"))
     p.add_argument("--run-id", default=None)
+    p.add_argument("--tasks", default=None,
+                   help="comma-separated tasks designated for this run "
+                        "(default: the full suite)")
     a = p.parse_args(argv)
-    TrustedServer(a.socket, a.ledger, a.condition, a.run_id).serve_forever()
+    tasks = [t for t in a.tasks.split(",") if t] if a.tasks else None
+    TrustedServer(a.socket, a.ledger, a.condition, a.run_id, tasks).serve_forever()
     return 0
 
 

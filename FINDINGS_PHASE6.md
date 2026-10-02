@@ -106,4 +106,20 @@ ledger exactly after removing sequence, clock, `ipc_*` rows and the
 `self_reported` marker on advisory unmediated-attempt rows; the evaluator
 returns the canonical verdicts and the observer agrees on every use.
 
+## Defects discovered and fixed
+
+| # | found by | defect | class | fix |
+|---|---|---|---|---|
+| 1 | lifecycle test (restart) | grant ids restarted at `g-1` after a trusted restart: a stale pre-restart id could collide with a fresh mint (observer: `duplicate_mint_id`) | identity across restart | the authority's grant counter resumes from the ledger's highest minted id; sequence, clock and grant ids all continue, authority state does not |
+| 2 | first real-model run | the model's malformed `derived_from` entries were rejected by the IPC schema as *protocol* errors; the agent loop did not catch them and every run crashed on the first effect — a semantics change versus in-process, where the broker refuses them with a receipt | boundary changed semantics | provenance entries cross the boundary as bounded JSON values and the broker refuses malformed ones with its own receipt; the remote facade turns protocol rejections into observations, never exceptions |
+| 3 | lifecycle test review | the server served one connection at a time, so an idle connection blocked every other client for the read timeout | availability | one thread per connection; broker dispatch serialized by a lock |
+| 4 | lifecycle test review | a clean EOF from the server was raised as a transport error without counting it | telemetry | counted |
+| 5 | hostile review (high) | **task identity was client-chosen**: a compromised client could begin any task in any order any number of times, relabel itself as a task with a more permissive policy (t5's denied directory read approved under t10's label) and write receipts onto finished or undesignated tasks | confused deputy | the server owns task identity: designated tasks only, each once, one active, ops only for the active task, closure persists across restart |
+| 6 | hostile review (high) | agent-shaped narrative claims (a list of strings) and telemetry crashed the run's evaluation so no metrics were written | evaluation robustness | claim schema at the protocol; tolerant comparator; type-checked telemetry; per-run evaluation failure recorded |
+| 7 | hostile review (medium) | nested NaN/Infinity, overflowing numbers and lone surrogates reached the ledger (invalid JSON on disk) | parser | constants rejected at parse; nested numbers finite and bounded; strings valid UTF-8 |
+| 8 | hostile review (medium) | the `task` condition was never delivered over IPC (behaved as control) | semantics | `begin_task` returns the task view in that condition |
+| 9 | hostile review (medium) | a second server could take over a live socket and both wrote colliding sequence and grant ids | identity | ledger `flock`; live-socket probe; inode-checked unlink |
+| 10 | hostile review (medium) | a read whose response exceeded the frame limit was receipted as disclosed but never reached the client, with no record | receipt precision | `ipc_reject response_too_large` naming the read receipt |
+| 11 | hostile review (low) | huge integer TTL → internal error; `v: 1.0` accepted; rejection replies dropped a parsed id; narrative/task_end rows unmarked; agent inherited the orchestrator's full environment | hygiene | bounded numbers; strict int version; id echoed; `self_reported` marks; minimal agent env |
+
 RESULTS_PLACEHOLDER

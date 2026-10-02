@@ -144,3 +144,65 @@ mode; a test asserts the import graph.
 ## Results namespace
 
 `results/exploratory/phase6-ipc-*`. Canonical artifacts untouched.
+
+## Hostile review disposition (2026-10-02)
+
+A second model attacked the boundary as a compromised same-user agent.
+Fixed with reproducers and regression tests (`tests/test_ipc_review_fixes.py`,
+`tests/test_ipc_boundary.py`, `tests/test_ipc_lifecycle.py`):
+
+- **Task identity was client-chosen** (high): any task could be begun in
+  any order, any number of times, so a client could relabel itself as a
+  task with a more permissive policy and write receipts onto any task. Now
+  the server owns task identity: only tasks the orchestrator designated
+  (`--tasks`), each begun at most once, one active at a time; operations
+  are accepted only for the active task; `task_end` closes it; closure is
+  derived from the ledger across a restart (a task interrupted by a trusted
+  restart is closed, not resumed — its grants are gone and re-running it
+  would merge two executions under one task id). Order is not enforced:
+  the process reaches every designated task's authority within the run
+  regardless of order, so ordering adds no authority; attribution and
+  per-task policy are what the rule protects.
+- **Agent-shaped records crashed evaluation** (high): narrative claims are
+  now schema-checked at the protocol, the narrative comparator tolerates
+  non-object claims, agent telemetry is type-checked, and an evaluation
+  failure is recorded per run instead of aborting the batch.
+- **Nested NaN/Infinity, overflowing numbers and lone surrogates reached
+  the ledger** (medium): JSON constants are rejected at parse; every nested
+  number must be finite and ≤ 1e9; every string must be valid UTF-8.
+- **`task` condition not delivered over IPC** (medium): `begin_task` now
+  returns the task-conditioned view when the server runs that condition.
+- **A second server could take over a live socket and corrupt identities**
+  (medium): the ledger is `flock`ed by its server; a live socket is probed
+  before any unlink; a server unlinks only the socket inode it created.
+- **An oversized read response was silently dropped after its receipt was
+  written** (medium): the server now records `ipc_reject response_too_large`
+  naming the read receipt, so an observer can see the disclosure never
+  reached the client (receipt-precision gap, documented).
+- Huge integers no longer raise internal errors; `"v": 1.0` is rejected;
+  non-closing rejections echo the request id; `narrative` and `task_end`
+  rows carry `self_reported: true` like unmediated reports; the agent
+  subprocess receives a minimal environment, not the orchestrator's.
+
+Documented, not changed (semantics or limitations):
+
+- Grants and effects per task are unbounded by the policy: a compromised
+  client landed 200 sends to `thr-alice` under t3 in 0.09 s, each with a
+  fresh grant and valid `user_input` provenance. Replay on one grant is
+  refused, read replay is budget-bound per grant, but grant *count* is not
+  bounded. This is a policy question (per-task quotas; "approvable ≠
+  expected"), kept separate per the phase 5C carry-forward, and recorded
+  here as the quantified authority-inflation channel of the design.
+- A trusted restart resets the in-memory corpus: effects that landed before
+  the restart are in the ledger but not in the restarted world state, and
+  a post-restart retry sees "unknown grant", not "consumed". No persistence
+  layer exists (as documented since phase 5B).
+- Ledger growth, server memory and threads per connection are unbounded
+  by the protocol (availability, not authority).
+- Same-user limitations, confirmed: the socket path is in the agent's own
+  argv and the ledger path follows from it by convention; both are visible
+  in the server's `/proc/<pid>/cmdline`; the corpus, policy and prompts are
+  importable by any process with the repository on its path; the agent can
+  write into the results tree. None of these cross the *protocol*; all of
+  them cross the *OS* boundary that this phase does not have. User or
+  namespace separation is the missing mechanism.

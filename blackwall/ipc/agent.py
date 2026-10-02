@@ -80,6 +80,8 @@ class RemoteHarness:
         facade = RemoteFacade(self._broker, task_id, discovery=self._mode == "global")
         task_view = {"task_id": task_id, "prompt": begun["prompt"],
                      "prompt_hash": begun["prompt_hash"]}
+        if begun.get("capabilities") is not None:     # task-conditioned view
+            task_view["capabilities"] = begun["capabilities"]
         driver.begin(task_view)
         observations, answer, truncated = [], "", True
         transport_failures = 0

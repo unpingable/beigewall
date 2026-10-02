@@ -285,10 +285,14 @@ class TestTransport(_Env):
         server2 = self.start_server(tag="server2")
         self.wait_socket(server2)
         s = self.raw_connect()
-        # the server's begun-task set is in memory too: begin again, and the
-        # old grant must still be unknown
-        self.assertTrue(self.raw_call(s, "begin_task", T1, {})["ok"])
-        resp = self.raw_call(s, "read", T1,
+        # a task interrupted by a trusted restart is closed (its grants are
+        # gone; re-running it would merge two executions): re-beginning it
+        # is refused, and the old grant is unknown to the next task
+        closed = self.raw_call(s, "begin_task", T1, {})
+        self.assertFalse(closed["ok"])
+        self.assertEqual(closed["error"]["message"], "task_closed")
+        self.assertTrue(self.raw_call(s, "begin_task", T3, {})["ok"])
+        resp = self.raw_call(s, "read", T3,
                              {"grant_id": gid, "resource": ALICE,
                               "projection": "conversation@1"})
         self.assertFalse(resp["ok"])

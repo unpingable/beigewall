@@ -43,11 +43,38 @@ OPS = {
 }
 
 
+MAX_NUMBER = 1e9            # bound on any numeric argument
+
+
 class ProtocolError(Exception):
-    def __init__(self, reason: str, close: bool = False):
+    def __init__(self, reason: str, close: bool = False, req_id: str | None = None):
         super().__init__(reason)
         self.reason = reason
         self.close = close      # framing-level: the connection is dropped
+        self.req_id = req_id    # echoed when the request id parsed
+
+
+def _reject_constant(name):
+    # NaN / Infinity / -Infinity literals never enter the trusted side
+    raise ProtocolError("bad_number")
+
+
+def _check_text(value: str, limit: int, what: str) -> None:
+    if len(value) > limit:
+        raise ProtocolError(f"too_long:{what}")
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError:           # lone surrogates
+        raise ProtocolError(f"bad_text:{what}")
+
+
+def _check_number(value, what: str) -> None:
+    if isinstance(value, bool):
+        return
+    if isinstance(value, float) and (value != value or value in (float("inf"), float("-inf"))):
+        raise ProtocolError(f"bad_number:{what}")
+    if isinstance(value, (int, float)) and abs(value) > MAX_NUMBER:
+        raise ProtocolError(f"bad_number:{what}")
 
 
 def _no_duplicates(pairs):
@@ -68,20 +95,32 @@ def decode(payload: bytes) -> dict:
     except UnicodeDecodeError:
         raise ProtocolError("invalid_utf8", close=True)
     try:
-        obj = json.loads(text, object_pairs_hook=_no_duplicates)
+        obj = json.loads(text, object_pairs_hook=_no_duplicates,
+                         parse_constant=_reject_constant)
     except ProtocolError:
         raise
     except (json.JSONDecodeError, RecursionError, ValueError):
         raise ProtocolError("invalid_json", close=True)
     if not isinstance(obj, dict):
         raise ProtocolError("not_an_object", close=True)
+    rid = obj.get("id") if isinstance(obj.get("id"), str) and len(obj.get("id")) <= MAX_ID else None
+    try:
+        _validate(obj)
+    except ProtocolError as exc:
+        exc.req_id = rid
+        raise
+    return obj
+
+
+def _validate(obj: dict) -> None:
     if set(obj) != REQUEST_KEYS:
         raise ProtocolError("bad_keys")
-    if obj["v"] is not VERSION and obj["v"] != VERSION or isinstance(obj["v"], bool):
+    if type(obj["v"]) is not int or obj["v"] != VERSION:
         raise ProtocolError("bad_version")
     for key, limit in (("id", MAX_ID), ("op", MAX_STR), ("task_id", MAX_TASK_ID)):
         if not isinstance(obj[key], str) or not obj[key] or len(obj[key]) > limit:
             raise ProtocolError(f"bad_{key}")
+        _check_text(obj[key], limit, key)
     if not isinstance(obj["args"], dict):
         raise ProtocolError("bad_args")
     spec = OPS.get(obj["op"])
@@ -103,14 +142,14 @@ def decode(payload: bytes) -> dict:
         if isinstance(val, str):
             limit = {"answer": MAX_ANSWER, "summary": MAX_SUMMARY,
                      "args_repr": 200}.get(name, MAX_STR)
-            if len(val) > limit:
-                raise ProtocolError(f"too_long:{name}")
-        if isinstance(val, float) and (val != val or val in (float("inf"), float("-inf"))):
-            raise ProtocolError(f"bad_number:{name}")
+            _check_text(val, limit, name)
+        if isinstance(val, (int, float)):
+            _check_number(val, name)
     if obj["op"] == "request_grant" and "budget" in args:
         b = args["budget"]
         if set(b) != {"reads", "objects"} or not all(
-                isinstance(b[k], int) and not isinstance(b[k], bool) for k in b):
+                isinstance(b[k], int) and not isinstance(b[k], bool)
+                and 0 < b[k] <= MAX_NUMBER for k in b):
             raise ProtocolError("bad_budget")
     if obj["op"] == "effect":
         if len(json.dumps(args["params"], sort_keys=True)) > MAX_PARAMS:
@@ -126,9 +165,18 @@ def decode(payload: bytes) -> dict:
     if obj["op"] == "narrative":
         if len(args["claims"]) > MAX_CLAIMS or len(args["declared_effects"]) > MAX_DERIVED:
             raise ProtocolError("too_long:narrative")
+        for c in args["claims"]:
+            # a claim is {resource: str, objects?: [str], fields?: [str]}
+            if (not isinstance(c, dict) or not isinstance(c.get("resource"), str)
+                    or set(c) - {"resource", "objects", "fields"}
+                    or any(not isinstance(c.get(k, []), list)
+                           or any(not isinstance(x, str) for x in c.get(k, []))
+                           for k in ("objects", "fields"))):
+                raise ProtocolError("bad_claim")
         _strings_only(args["claims"], depth=0)
         _strings_only(args["declared_effects"], depth=0)
-    return obj
+        if any(not isinstance(x, str) for x in args["declared_effects"]):
+            raise ProtocolError("bad_claim")
 
 
 def _strings_only(value, depth: int) -> None:
@@ -138,8 +186,9 @@ def _strings_only(value, depth: int) -> None:
         raise ProtocolError("too_deep")
     if isinstance(value, dict):
         for k, v in value.items():
-            if not isinstance(k, str) or len(k) > MAX_STR:
+            if not isinstance(k, str):
                 raise ProtocolError("bad_key")
+            _check_text(k, MAX_STR, "key")
             _strings_only(v, depth + 1)
     elif isinstance(value, list):
         if len(value) > 256:
@@ -147,10 +196,11 @@ def _strings_only(value, depth: int) -> None:
         for v in value:
             _strings_only(v, depth + 1)
     elif isinstance(value, str):
-        if len(value) > MAX_PARAMS:
-            raise ProtocolError("too_long:string")
-    elif value is None or isinstance(value, (bool, int, float)):
+        _check_text(value, MAX_PARAMS, "string")
+    elif value is None or isinstance(value, bool):
         return
+    elif isinstance(value, (int, float)):
+        _check_number(value, "value")
     else:
         raise ProtocolError("bad_value")
 

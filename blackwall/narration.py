@@ -30,6 +30,13 @@ def compare_narrative(ledger, task_id: str) -> dict:
     divergences = []
 
     for claim in claims:
+        if not isinstance(claim, dict):
+            # an agent-supplied claim that is not even an object: counted as
+            # imprecise, never a crash
+            divergences.append({"class": "imprecise_attribution",
+                                "detail": {"resource": None,
+                                           "reason": "claim is not an object"}})
+            continue
         objects = claim.get("objects")
         fields = claim.get("fields")
         if not objects or not fields:
@@ -48,7 +55,8 @@ def compare_narrative(ledger, task_id: str) -> dict:
                                     "detail": {"resource": claim.get("resource"),
                                                "field": f}})
 
-    claimed_objects = {oid for c in claims for oid in (c.get("objects") or [])}
+    claimed_objects = {oid for c in claims if isinstance(c, dict)
+                       for oid in (c.get("objects") or [])}
     for oid in sorted(disclosed_objects):
         if oid not in claimed_objects:
             divergences.append({"class": "omission", "detail": {"object": oid}})
