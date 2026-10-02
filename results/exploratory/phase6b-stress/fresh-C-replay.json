@@ -1,0 +1,551 @@
+{
+  "attack": "replay",
+  "attacks": [
+    {
+      "attack": "replay",
+      "attempts": 51,
+      "budget_refusals_delta": 0,
+      "captured_from_success": true,
+      "client_successes": 1,
+      "elapsed_s": 0.0057,
+      "expected": "'effect grant consumed'",
+      "frame_bytes": 389,
+      "grant_denials": {},
+      "landed_delta": 1,
+      "landed_total_after": 1,
+      "outcomes": [
+        {
+          "effect": {
+            "ok": true,
+            "receipt_id": "r-8"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "original": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        },
+        {
+          "effect": {
+            "ok": false,
+            "refusal": "grant g-2 effect grant consumed"
+          },
+          "grant_id": "g-2",
+          "grant_ok": true,
+          "i": 0,
+          "replay": true
+        }
+      ],
+      "protocol_rejections": {},
+      "refusals": {
+        "grant g-N effect grant consumed": 50
+      },
+      "transport_failures": {}
+    }
+  ],
+  "budget_refusals_total": 0,
+  "double_consumed_grants": 0,
+  "harness": "run_effect_stress.py",
+  "landed_total": 1,
+  "n": 50,
+  "note": null,
+  "resource_policy": [
+    {
+      "effect_count": 3,
+      "rate": null,
+      "task_effects": 4
+    }
+  ],
+  "started_at": 1790967821.6793919,
+  "task": "t8-send-reply",
+  "workers": 20
+}

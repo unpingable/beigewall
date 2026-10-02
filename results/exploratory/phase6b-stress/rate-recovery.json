@@ -1,0 +1,24 @@
+{
+  "landed_total": 6,
+  "phases": [
+    {
+      "attempts": 6,
+      "elapsed_s": 0.0021,
+      "landed": 3,
+      "phase": "burst-1 (6 attempts inside the window)",
+      "refusals": {
+        "effect rate exceeded: send_message (3 in 10s)": 3
+      }
+    },
+    {
+      "attempts": 6,
+      "elapsed_s": 0.0032,
+      "landed": 3,
+      "phase": "burst-2 (after 10.5 s)",
+      "refusals": {
+        "effect rate exceeded: send_message (3 in 10s)": 3
+      }
+    }
+  ],
+  "policy": "effect_count 1000, task_effects 1000, rate 3/10"
+}
