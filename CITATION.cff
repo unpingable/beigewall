@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you reference BeigeWall, please cite it as below."
+title: "BeigeWall: an adversarial-agent authority and evidence-custody research vertical"
+abstract: >-
+  BeigeWall is a research artifact investigating whether an untrusted agent can
+  stay useful when the authority, disclosure, effect, resource, and evidence
+  boundaries do not depend on trusting it. It progresses from in-process
+  mediation through a process boundary, resource bounds, durable and independent
+  evidence custody, a VM/KVM boundary, and recoverable evidence. Synthetic
+  corpus; standard-library Python; not a production system.
+type: software
+authors:
+  - name: "The BeigeWall Authors"
+repository-code: "https://github.com/unpingable/beigewall"
+url: "https://github.com/unpingable/beigewall"
+license: Apache-2.0
+version: "0.1.0"
+date-released: "2026-10-02"
+keywords:
+  - adversarial agents
+  - capability security
+  - authority mediation
+  - evidence custody
+  - provenance
+  - LLM agents

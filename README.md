@@ -1,4 +1,4 @@
-# BeigeWall (spike)
+# BeigeWall — research artifact
 
 A research artifact testing one question:
 
@@ -100,7 +100,7 @@ untrusted side                     trusted side (mediation layer)
   exploratory telemetry only — same interface, same boundary, same receipts;
   it changes nothing about evaluation.
 
-## Threat model (spike scope)
+## Threat model (initial in-process phase)
 
 Protected assets: the synthetic desktop corpus (messages, calendar, notes,
 contacts) and the set of world-changing effects (send_message, create_event,
@@ -120,11 +120,17 @@ the mediation layer is trusted. The spike exercises, as deterministic fixtures:
 - post-task narration that omits, overclaims, or stays vague → detected by
   diffing narrative against the receipt graph
 
-Explicitly out of scope: OS-level enforcement. In this spike the boundary is by
-construction (the driver never receives a store reference) within one Python
-process. Nothing here stops a driver with interpreter-level access from
-importing the corpus module. That is a documented limitation, not a property
-claimed. See "Known limitations".
+This section describes the **initial (in-process) phase**. There, OS-level
+enforcement was out of scope: the boundary was by construction (the driver never
+receives a store reference) within one Python process, and nothing stopped a
+driver with interpreter-level access from importing the corpus module — a
+documented limitation of that phase, not a property claimed. Later phases
+removed exactly that gap: a real **process** boundary (phase 6), server-enforced
+**resource bounds** (6B), a **VM/KVM** boundary where the untrusted agent is a
+separate guest reaching the host only through two mediated vsock endpoints
+(phase 7), and **evidence custody** against a compromised ledger writer
+(7B/7C). What each phase does and does not establish is in the "Boundaries and
+claims" table above and in `RESEARCH-SUMMARY.md`.
 
 ## Usage
 
@@ -198,10 +204,13 @@ at another. Demonstrated (D) vs explicit nonclaim (N):
   in a separate `reasoning` field without content produce an empty final
   answer (scored not useful) in every condition; ≈10–17% of executions in
   the gpt-oss:20b runs.
-- **Capability discovery is a mechanism, not a usefulness fix.** In the
-  phase 4 experiment it cut denied requests by more than half with every
-  safety invariant intact, but converted none of the honest-but-useless
-  executions and induced over-deference in one task (`FINDINGS_PHASE4.md`).
+- **Capability discovery is a mechanism, not a blanket usefulness fix.** Global
+  discovery (phase 4) cut denied requests by more than half with every safety
+  invariant intact, but converted none of the honest-but-useless executions and
+  induced over-deference in one task (`FINDINGS_PHASE4.md`). The
+  task-conditioned view (phase 5) *did* convert part of that class — 18/47
+  honest-but-useless executions (p≈0.03) — so the usefulness effect is
+  discovery-shape-dependent, not absent (`FINDINGS_PHASE5.md`).
 
 - **OS isolation: demonstrated for a VM-separated agent (phase 7).** The
   authority boundary was convention through phase 6 (same-user process); phase 7
@@ -222,19 +231,26 @@ at another. Demonstrated (D) vs explicit nonclaim (N):
   This is the final core experiment; core research is complete.
 - **Scripted normative driver.** It proves the mediation layer enforces and
   measures; it does not prove a real model would navigate grant requests as
-  competently. The LLM adapter is stub-server tested, and one real-endpoint
-  exploratory experiment has been run (local gpt-oss:20b, 5×12 tasks) — see
-  `FINDINGS_REALMODEL.md`: the authority plane held in 60/60 executions while
-  strict task success fell to 25%. One model, one endpoint; not a general
-  result.
+  competently. The LLM adapter is stub-server tested, and real-endpoint
+  exploratory runs span the later phases (local gpt-oss:20b across the in-process
+  baseline and the process, resource-bound, VM and custody architectures). The
+  **safety** result is consistent throughout: the authority plane held in every
+  execution (e.g. 60/60 in the first run, `FINDINGS_REALMODEL.md`). The
+  **usefulness** figure depends on the scoring and the phase — the early
+  in-process run's *strict* task success was ~25%, while receipt-grounded
+  *usefulness* in the process and VM phases was ~53–55%
+  (`FINDINGS_PHASE6.md`, `FINDINGS_PHASE7.md`); the early 25% is the pessimistic
+  end, not the headline. One model family, a local endpoint, small samples;
+  exploratory telemetry, not a general result.
 - **Dependency provenance, not taint.** `derived_from` records declared
   dependencies and validates their existence; it does not prove the effect's
   content actually flowed from them.
 - **Strict omission counting.** The narrative comparator flags every disclosed
   object the narrative doesn't mention, including task-irrelevant ones
   (see FINDINGS).
-- **Single-tenant authority.** One policy table, no revocation mid-task, no
-  delegation chains.
+- **Single-tenant authority.** One policy table, no delegation chains.
+  (Revocation and mid-task grant expiry/replay *were* exercised under the
+  lifecycle experiments — `FINDINGS_PHASE5B.md`/`FINDINGS_PHASE5C.md`.)
 - **Small corpus.** 12 task fixtures, ~25 corpus objects.
 
 ## Findings index

@@ -1,18 +1,18 @@
 # HANDOFF
 
-Date: 2026-10-02. Status: **spike complete + real-model exploratory experiment
-complete + receipt-grounded evaluator (phase 3) complete + capability
-negotiation experiment (phase 4) complete + task-conditioned negotiation
-(phase 5) complete + long-horizon authority lifecycle (phase 5B) complete +
-context reset / forced expiry / refusal-oracle repair (phase 5C) complete +
-process boundary (phase 6) complete**. All milestones in `docs/PLAN.md`
-(phases 1–4) are checked. Phase 4 result: the discovery mechanism is sound
-and halved negotiation overhead, but did **not** convert the
-honest-but-useless class (0 conversions, 8 regressions); see
-`FINDINGS_PHASE4.md`. The canonical experiment result is
-recorded and unchanged; the real-model exploratory result is recorded in
-`FINDINGS_REALMODEL.md`; the receipt-grounded re-scoring of both is in
-`FINDINGS_EVALUATOR.md` with artifacts under `results/reevaluation/`.
+Date: 2026-10-02. Status: **core research COMPLETE.** All phases are sealed —
+logical mediation + real model + receipt-grounded evaluation (1–3), capability
+discovery + planning (4–5), lifecycle + context isolation + evidence semantics
+(5B–5C), process boundary (6), resource bounds (6B), durable evidence/recovery
+(6C), VM/OS boundary (7), independent evidence custody (7B), recoverable
+evidence (7C) — and the project was renamed BLACKWALL → BeigeWall (`RENAME.md`).
+The closeout gate is reached; there is no Phase 8. **468 tests**; canonical
+artifacts byte-identical. The one-paragraph arc, claims and nonclaims are in
+`RESEARCH-SUMMARY.md`; per-phase detail is in the `FINDINGS_PHASE*.md` entries
+below (most recent first order in this file's phase log). The canonical
+experiment result is recorded and unchanged (`FINDINGS.md`,
+`FINDINGS_EVALUATOR.md`); exploratory real-model results span phases 6/6B/7/7B/7C
+plus the original run in `FINDINGS_REALMODEL.md`.
 
 ## How to verify state
 
@@ -63,7 +63,7 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   `run_llm_experiment.py` — exploratory real-model telemetry, runner, CLI
 - `beigewall/agent/` — untrusted side: harness (tool loop + facade trap),
   drivers (scripted = normative; LLM = exploratory, env-gated)
-- `tests/` — 405 unittest tests (no real API key required; LLM paths use a
+- `tests/` — 468 unittest tests (no real API key required; LLM paths use a
   stub server); `test_evaluator.py` holds the regression fixtures
 
 ## Resuming / extending
@@ -226,13 +226,15 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   byte-identical. **466 tests. Closeout gate reached: core BeigeWall research
   is complete — no Phase 8.** `FINDINGS_PHASE7C.md`, updated
   `docs/EVIDENCE-CUSTODY.md`.
-- **Next (not started)**: OS enforcement of the boundary — user or
-  namespace separation — as its own experiment. Carry forward unchanged:
-  the budget-count wording re-seal; multi-use grants for real-model expiry;
-  a task suite whose legitimate need exceeds a cap (to measure the
-  usefulness trade-off the budget metrics can score); receipted rate
-  windows; corpus persistence across trusted restart; "approvable ≠
-  expected" (one unrequested send under budget in phase 6B).
+- **OS enforcement of the boundary — DONE (phase 7).** Demonstrated via the
+  VM/KVM boundary (a compromised guest reaches the host only through two
+  mediated vsock endpoints); QEMU/KVM is trusted. See `FINDINGS_PHASE7.md`.
+  Out-of-scope future directions (deliberately not pursued) are listed in
+  `RESEARCH-SUMMARY.md`. Minor items observed and carried as notes, not work:
+  the budget-count wording re-seal; multi-use grants for real-model expiry; a
+  task suite whose legitimate need exceeds a cap; receipted rate windows;
+  corpus persistence across trusted restart; "approvable ≠ expected" (one
+  unrequested send under budget in phase 6B).
 - **Policy question raised by phase 5**: an approvable effect is not an
   expected effect; effect *grants* carry no user-intent reference.
 - **Refusal-reason oracle (phase 5C): repaired for existence/type.**

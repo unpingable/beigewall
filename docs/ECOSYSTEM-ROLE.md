@@ -41,12 +41,13 @@ wrong without its errors becoming operational authority. The principle:
 demonstrates this at the tested toy strength only; it is not a solved
 property.
 
-**ABSD.** ABSD is a potential lower substrate for eventually enforcing
-some of the boundaries that BeigeWall enforces, today, by in-process
-convention and, next, by a trusted-process architecture. BeigeWall does not
-run on ABSD. The progression is: logical authority membrane → process
-boundary → eventually, if warranted, substrate/OS enforcement. ABSD remains
-an independent research program, not an "AI OS".
+**ABSD.** ABSD is a potential lower substrate for enforcing some of the
+boundaries that BeigeWall exercised — by an in-process membrane (phases 1–5C), a
+trusted-process boundary (6), and a VM/KVM boundary (7). BeigeWall does not run
+on ABSD. The progression it followed was: logical authority membrane → process
+boundary → VM/OS boundary; substrate/OS enforcement *beneath* the VM remains a
+potential future layer, not something BeigeWall claims. ABSD remains an
+independent research program, not an "AI OS".
 
 **atproto-ACL.** A domain-specific policy/admission layer that could serve
 as a governed policy component for an agent operating on ATProto
@@ -95,7 +96,10 @@ ABSD or other substrate            (potential future enforcement layer)
 ## Current empirical boundary
 
 Demonstrated at toy strength (synthetic corpus of ~25 objects, 12 fixed
-tasks, one local 20B model); **process/OS isolation not yet demonstrated**.
+tasks, a local 20B model). Process isolation (phase 6), a VM/KVM boundary
+(phase 7), and independent + recoverable evidence custody (7B/7C) **are**
+demonstrated; QEMU/KVM is trusted and OS enforcement *beneath* the VM is not
+claimed. See `RESEARCH-SUMMARY.md` and the `docs/*_BOUNDARY` / custody docs.
 
 - The authority membrane held across every tested lifecycle experiment:
   real-model runs produced zero successful stale, foreign, revoked or
@@ -129,10 +133,13 @@ generalised security claims.
 3. Receipt-grounded evaluation — completed.
 4. Capability negotiation (global, denial-triggered, task-conditioned) — completed.
 5. Lifecycle pressure (expiry, revocation, replay, restart, cross-task) — completed.
-6. Process/OS boundary — next.
-7. Only later, if warranted: stronger OS isolation, real desktop resources,
-   or production-oriented integration.
+6. Process boundary; resource bounds; durable evidence/recovery (6/6B/6C) — completed.
+7. VM/OS boundary; independent evidence custody; recoverable evidence
+   (7/7B/7C) — completed. **Core research complete; stopped here.**
+8. Deliberately out of scope (separate questions, not pursued): stronger OS
+   isolation beneath the VM, signed/Byzantine/multi-witness custody, real
+   desktop resources, production integration — see `RESEARCH-SUMMARY.md`.
 
-BeigeWall is becoming a reusable adversarial reference vertical for the
-governed-agent research. It is not a standalone framework and does not
-absorb the other projects.
+BeigeWall is a reusable adversarial reference vertical for the governed-agent
+research. It is not a standalone framework and does not absorb the other
+projects.
