@@ -142,8 +142,19 @@ def evaluate_ledger(receipts_path: str, telemetry: dict[str, dict], tasks,
             "suite": suite, "ipc": ipc_run}
 
 
+def _policy_args(policy: dict | None) -> list[str]:
+    flags = (("effect_count", "--effect-count"), ("task_effects", "--task-effects"),
+             ("rate", "--rate"))
+    out: list[str] = []
+    for key, flag in flags:
+        if policy and policy.get(key) is not None:
+            out += [flag, str(policy[key])]
+    return out
+
+
 def execute_run(run_dir: str, *, condition: str, driver: str, task_ids: list[str],
-                max_steps: int, run_id: str, agent_timeout: float) -> dict:
+                max_steps: int, run_id: str, agent_timeout: float,
+                resource_policy: dict | None = None) -> dict:
     """Start server + agent, return {"agent_rc", "server_rc", "error"?}.
     Never raises on a subprocess failure; the caller decides about sealing."""
     os.makedirs(run_dir, mode=0o700, exist_ok=True)
@@ -164,7 +175,7 @@ def execute_run(run_dir: str, *, condition: str, driver: str, task_ids: list[str
     server = subprocess.Popen(
         [sys.executable, "-m", "blackwall.ipc.server", "--socket", sock,
          "--ledger", receipts, "--condition", condition, "--run-id", run_id,
-         "--tasks", ",".join(task_ids)],
+         "--tasks", ",".join(task_ids)] + _policy_args(resource_policy),
         cwd=ROOT, stdout=server_log, stderr=subprocess.STDOUT)
     try:
         deadline = time.time() + SOCKET_WAIT
@@ -211,7 +222,32 @@ def execute_run(run_dir: str, *, condition: str, driver: str, task_ids: list[str
         server_log.close()
 
 
-def _render_report(meta: dict, records: list[dict], infos: dict) -> str:
+def _budget_section(meta: dict, records: list[dict], out: str | None) -> list[str]:
+    from blackwall.budget_metrics import CLASSIFICATIONS, run_budget_summary
+    lines = ["", "## Resource budgets", "",
+             f"- configured policy: {meta.get('resource_policy')}", "",
+             "| run | effects | budget refusals (count/task/rate) | "
+             + " | ".join(CLASSIFICATIONS) + " |",
+             "|---|---|---|" + "---|" * len(CLASSIFICATIONS)]
+    for rec in records:
+        i = rec["_index"]
+        try:
+            with open(os.path.join(out, f"run-{i}", "receipts.jsonl")) as fh:
+                rows = [json.loads(l) for l in fh if l.strip()]
+            s = run_budget_summary(rows)
+        except Exception as exc:
+            lines.append(f"| run-{i} | n/a ({type(exc).__name__}) |" + " |" * (1 + len(CLASSIFICATIONS)))
+            continue
+        t = s["totals"]["budget_refusals"]
+        lines.append(f"| run-{i} | {s['totals']['effects']} | "
+                     f"{t['total']} ({t['count']}/{t['task']}/{t['rate']}) | "
+                     + " | ".join(str(s["classification"][c])
+                                  for c in CLASSIFICATIONS) + " |")
+    return lines
+
+
+def _render_report(meta: dict, records: list[dict], infos: dict,
+                   out: str | None = None) -> str:
     lines = [
         "# BLACKWALL process-separated run (phase 6, exploratory)", "",
         f"- label: {meta['label']}", f"- model: {meta['model']}",
@@ -239,6 +275,8 @@ def _render_report(meta: dict, records: list[dict], infos: dict) -> str:
             f"{'n/a' if bpt is None else '%.0f' % bpt} | "
             f"{ipc.get('reconnects', 0)} | "
             f"{ipc.get('transport_failures', 0)} | {src} |")
+    if out is not None:
+        lines += _budget_section(meta, records, out)
     if meta["agent_crashes"]:
         lines += ["", "## Unsealed runs", ""]
         for c in meta["agent_crashes"]:
@@ -260,6 +298,12 @@ def main(argv=None) -> int:
     p.add_argument("--out", default=None)
     p.add_argument("--max-steps", type=int, default=40)
     p.add_argument("--agent-timeout", type=float, default=3600.0)
+    p.add_argument("--effect-count", default=None,
+                   help="server --effect-count (total effect budget), passed through")
+    p.add_argument("--task-effects", default=None,
+                   help="server --task-effects (per-task effect budget), passed through")
+    p.add_argument("--rate", default=None,
+                   help="server --rate n/seconds (effect rate limit), passed through")
     a = p.parse_args(argv)
 
     model = (os.environ.get("BLACKWALL_LLM_MODEL", "unset")
@@ -296,6 +340,8 @@ def main(argv=None) -> int:
                       file=sys.stderr)
                 return 2
 
+    resource_policy = {"effect_count": a.effect_count,
+                       "task_effects": a.task_effects, "rate": a.rate}
     started = datetime.now(timezone.utc).isoformat()
     revision = _git_revision()
     records: list[dict] = []
@@ -322,7 +368,8 @@ def main(argv=None) -> int:
         print(f"run {i}/{a.runs}: starting server + agent", flush=True)
         info = execute_run(run_dir, condition=a.condition, driver=a.driver,
                            task_ids=task_ids, max_steps=a.max_steps,
-                           run_id=run_id, agent_timeout=a.agent_timeout)
+                           run_id=run_id, agent_timeout=a.agent_timeout,
+                           resource_policy=resource_policy)
         infos[i] = info
         _write_json(os.path.join(run_dir, "run_info.json"), info)
         receipts = os.path.join(run_dir, "receipts.jsonl")
@@ -354,6 +401,7 @@ def main(argv=None) -> int:
         "runs_reused": reused, "runs_executed": executed,
         "runs_crashed": [c["run"] for c in crashes],
         "agent_crashes": crashes,
+        "resource_policy": resource_policy,
         "server_exit_codes": {str(i): infos[i].get("server_rc")
                               for i in sorted(infos)},
         "started_utc": started,
@@ -365,7 +413,7 @@ def main(argv=None) -> int:
     _write_json(meta_path, meta)
     with open(os.path.join(out, "report.md"), "w") as fh:
         fh.write(_render_report(meta, sorted(records, key=lambda r: r["_index"]),
-                                infos))
+                                infos, out))
     print(f"wrote {out}/ ({len(records)} sealed, {len(crashes)} unsealed)")
     return 1 if crashes else 0
 

@@ -330,6 +330,25 @@ data. Design: `docs/PROCESS_BOUNDARY.md`; results: `FINDINGS_PHASE6.md`.
       client; OS enforcement (user/namespace separation) not demonstrated.
       Stop.
 
+## Phase 6B milestones / status (resource-bounded effects, 2026-10-02)
+
+Design: `docs/RESOURCE_BOUNDS.md`; results: `FINDINGS_PHASE6B.md`. No
+OS/user/namespace work; no general rate-limiting framework.
+
+- [x] `ResourceLedger`: trusted, explicit, invariant-checked consumption per
+      (task, effect, resource), per task, and per wall-clock window; enforced
+      in the broker after authorization/provenance and before the world
+      changes; rebuilt from effect receipts on restart; `resource_policy`
+      receipt; budget refusals receipted with scope/consumed/cap; observer
+      verifies them. Unbounded by default (canonical byte-identical).
+- [ ] Hostile stress client + attack matrix (`run_effect_stress.py`),
+      including N ≫ M concurrency, reconnect, second process, replay, forged
+      counters/task/grant ids, trusted restart.
+- [ ] Budget usefulness metrics (correctly blocked over-budget vs
+      incorrectly blocked legitimate effect; unrequested effects separate).
+- [ ] Deterministic results; hostile review; real-model bounded run vs the
+      phase 6 unbounded control; `FINDINGS_PHASE6B.md`; HANDOFF.
+
 ## Handoff protocol for a resuming agent
 
 1. Read `PLAN.md` (this file), `HANDOFF.md`, and `git log --oneline`.
