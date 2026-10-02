@@ -347,10 +347,6 @@ class LedgerOrdering(unittest.TestCase):
         self.assertEqual(len(Ledger.existing_rows(os.path.join(d, "l.jsonl"))), 1)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class ObserverEvidence(unittest.TestCase):
     """The independent observer reconstructs every accepted effect from the
     evidence rows without trusting the client or the broker's words."""
@@ -450,3 +446,7 @@ class ObserverEvidence(unittest.TestCase):
                               effect_id="e-2", grant_id="g-9")]   # a broker that over-admits
         _, dis = self._obs(forged)
         self.assertIn("over_budget_intent", [d["observer_state"] for d in dis])
+
+
+if __name__ == "__main__":
+    unittest.main()

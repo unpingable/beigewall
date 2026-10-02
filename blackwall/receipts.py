@@ -52,12 +52,17 @@ class Ledger:
     rows recovery depends on: effect intents, commits, aborts). After one
     sink failure the ledger is failed: every later record raises."""
 
-    def __init__(self, clock, sink_path: str | None = None):
+    def __init__(self, clock, sink_path: str | None = None,
+                 durable_kinds: frozenset | None = None):
         self._clock = clock
         self._sink_path = sink_path
         self._receipts: list[Receipt] = []
         self._seq_offset = 0
         self.failed: Exception | None = None
+        # kinds fsynced regardless of the caller's flag (the trusted server
+        # names the rows an observer's conclusions depend on, phase 6C)
+        self._durable_kinds = durable_kinds or frozenset()
+        self._dir_synced = False
 
     @staticmethod
     def existing_rows(path: str) -> list[dict]:
@@ -82,7 +87,8 @@ class Ledger:
                     kind=kind, task_id=task_id, detail=detail)
         if self._sink_path is not None:
             try:
-                self._sink_write(json.dumps(r.to_dict(), sort_keys=True) + "\n", _durable)
+                self._sink_write(json.dumps(r.to_dict(), sort_keys=True) + "\n",
+                                 _durable or kind in self._durable_kinds)
             except OSError as exc:
                 self.failed = exc
                 raise LedgerError(str(exc)) from exc
@@ -93,11 +99,21 @@ class Ledger:
         """One appended line; with `durable`, flushed and fsynced before
         returning (the only point where the process waits on the disk)."""
         import os
+        created = not os.path.exists(self._sink_path)
         with open(self._sink_path, "a", encoding="utf-8") as fh:
             fh.write(line)
             if durable:
                 fh.flush()
                 os.fsync(fh.fileno())
+        if durable and (created or not self._dir_synced):
+            # the file's own existence must survive power loss too
+            dfd = os.open(os.path.dirname(os.path.abspath(self._sink_path)) or ".",
+                          os.O_RDONLY)
+            try:
+                os.fsync(dfd)
+            finally:
+                os.close(dfd)
+            self._dir_synced = True
 
     def all(self) -> list[Receipt]:
         return list(self._receipts)

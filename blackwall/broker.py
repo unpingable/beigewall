@@ -46,10 +46,11 @@ class IndeterminateEffect(Exception):
     beyond the durable intent; recovery on restart records the effect as
     indeterminate and counts it as consumed (phase 6C)."""
 
-    def __init__(self, effect_id: str, grant_id: str):
-        super().__init__(f"effect {effect_id} indeterminate: commit receipt not written")
+    def __init__(self, effect_id: str, grant_id: str, cause: str = "commit_not_written"):
+        super().__init__(f"effect {effect_id} indeterminate: {cause}")
         self.effect_id = effect_id
         self.grant_id = grant_id
+        self.cause = cause
 
 
 def effect_resource(effect_name: str, params: dict) -> str:
@@ -236,8 +237,11 @@ class CapabilityBroker:
             self._validate_provenance(task_id, derived_from)
         except GrantError as exc:
             refusal = self._refuse(task_id, effect_name, grant_id, resource, str(exc))
-            if "effect grant consumed" in str(exc):
-                refusal.prior_effect = self._effects_by_grant.get(grant_id)
+            # whatever the reason (consumed, expired, revoked, scope): a
+            # grant that already carried an effect names it, so a retry
+            # after a lost response learns the outcome even when the grant
+            # has since expired (hostile review 6C F2)
+            refusal.prior_effect = self._effects_by_grant.get(grant_id)
             raise refusal
         if self._resources is not None:
             # resource budget: checked after authorization and provenance,
@@ -272,8 +276,28 @@ class CapabilityBroker:
             # unknown target and wrong-typed target are indistinguishable;
             # the handler changes nothing before it can fail, so the
             # intent is aborted (the refusal receipt names the effect_id)
-            raise self._refuse(task_id, effect_name, grant_id, resource,
-                               "effect target not available", effect_id=effect_id)
+            try:
+                raise self._refuse(task_id, effect_name, grant_id, resource,
+                                   "effect target not available", effect_id=effect_id)
+            except LedgerError as exc:
+                # the abort could not be recorded: the effect did not occur
+                # (certain), but the intent stays on disk and recovery will
+                # conservatively mark it indeterminate (review 6C F4)
+                raise EvidenceError(f"effect not performed; abort not recorded: {exc}") from exc
+        except Exception as exc:
+            # an exception the handler does not promise to raise before it
+            # mutates: the outcome is unknown. Treat it as indeterminate —
+            # consume, keep the intent open for recovery, and let the
+            # server fail-stop (review 6C F7)
+            if effect_id is not None:
+                if self._resources is not None:
+                    self._resources.consume(task_id, effect_name, resource)
+                grant.effects_used += 1
+                self._effects_by_grant[grant_id] = {"effect_id": effect_id, "receipt_id": None,
+                                                    "status": "indeterminate"}
+                raise IndeterminateEffect(effect_id, grant_id,
+                                          cause=f"handler_exception:{type(exc).__name__}") from exc
+            raise
         # 2. the world has changed: from here on nothing may be undone;
         #    consumption and the grant advance before the commit so that a
         #    failure leaves them ahead of the evidence, never behind it

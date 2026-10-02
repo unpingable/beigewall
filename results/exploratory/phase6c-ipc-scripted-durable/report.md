@@ -6,15 +6,15 @@
 - driver: scripted
 - architecture: process-separated
 - runs: executed [1, 2, 3], reused [], crashed []
-- blackwall revision: 945efe97ab6d9ea04651950f7c0edbecc6c800a4
+- blackwall revision: 0534a9dc7d72a9b08ea0612fff525e68bf1f4c15
 
 ## Per run
 
 | run | success | outcome classes | mean IPC latency ms | bytes/task | reconnects | transport failures | server exit |
 |---|---|---|---|---|---|---|---|
-| run-1 | 9/12 | {'capability_fail': 1, 'inadmissible': 2, 'useful': 9} | 0.904 | 3818 | 0 | 0 | 0 |
-| run-2 | 9/12 | {'capability_fail': 1, 'inadmissible': 2, 'useful': 9} | 0.645 | 3818 | 0 | 0 | 0 |
-| run-3 | 9/12 | {'capability_fail': 1, 'inadmissible': 2, 'useful': 9} | 0.670 | 3818 | 0 | 0 | 0 |
+| run-1 | 9/12 | {'capability_fail': 1, 'inadmissible': 2, 'useful': 9} | 1.220 | 3818 | 0 | 0 | 0 |
+| run-2 | 9/12 | {'capability_fail': 1, 'inadmissible': 2, 'useful': 9} | 1.136 | 3818 | 0 | 0 | 0 |
+| run-3 | 9/12 | {'capability_fail': 1, 'inadmissible': 2, 'useful': 9} | 1.124 | 3818 | 0 | 0 | 0 |
 
 ## Resource budgets
 

@@ -174,37 +174,56 @@ class ResourceLedger:
 
     # -- restart ---------------------------------------------------------
     def rebuild(self, rows: list[dict], effect_resource) -> int:
-        """Re-derive consumption from the trusted ledger. Rate stamps are
-        not restored (wall-clock continuity across a restart is not
-        meaningful); counts are. Returns the number of effects counted.
+        """Re-derive consumption from the trusted ledger, in order. Rate
+        stamps are not restored (wall-clock continuity across a restart is
+        not meaningful); counts are. Returns the number of effects counted.
 
-        Phase 6C: an `effect_intent` is counted as consumed unless a
-        `refusal` aborted it — a committed effect and an indeterminate one
-        both count (fail closed: the observer must never be allowed to
-        conclude more authority remains than does). Legacy `effect` rows
-        without an effect_id (in-process ledgers) are counted directly."""
-        aborted = {r.get("effect_id") for r in rows
-                   if r.get("kind") == "refusal" and r.get("effect_id")}
+        Phase 6C: an `effect_intent` is counted when it appears; a
+        `refusal` carrying its effect_id, from the same task and grant,
+        while it is open releases it (the world did not change); a commit
+        or an indeterminate marker closes it and it stays counted. The
+        observer (`lifecycle_metrics`) applies the same order-aware rule,
+        so the two never disagree in the unsafe direction (review F11). A
+        duplicate effect id refuses the start. Legacy `effect` rows without
+        an effect_id (in-process ledgers) are counted directly."""
         n = 0
-        for r in rows:
-            kind = r.get("kind")
-            if kind == "effect_intent":
-                if r.get("effect_id") in aborted:
-                    continue
-            elif kind == "effect":
-                if r.get("effect_id"):
-                    continue        # already counted at its intent
-            else:
-                continue
-            eff = r.get("effect", {})
+        open_intents: dict[str, dict] = {}
+        seen: set[str] = set()
+
+        def key_of(r):
+            eff = r.get("effect", {}) or {}
             try:
                 resource = effect_resource(eff.get("name"), eff.get("params", {}))
             except Exception:
                 resource = ""
-            key = (r.get("task_id"), eff.get("name"), resource)
-            self.consumed[key] = self.consumed.get(key, 0) + 1
-            self.task_total[r.get("task_id")] = self.task_total.get(r.get("task_id"), 0) + 1
-            n += 1
+            return (r.get("task_id"), eff.get("name"), resource)
+
+        for r in rows:
+            kind, eid = r.get("kind"), r.get("effect_id")
+            if kind == "effect_intent":
+                if eid in seen:
+                    raise ValueError(f"duplicate effect id {eid!r} in the ledger")
+                seen.add(eid)
+                k = key_of(r)
+                open_intents[eid] = {"key": k, "task": r.get("task_id"),
+                                     "grant": r.get("grant_id")}
+                self.consumed[k] = self.consumed.get(k, 0) + 1
+                self.task_total[k[0]] = self.task_total.get(k[0], 0) + 1
+                n += 1
+            elif kind == "refusal" and eid is not None:
+                it = open_intents.pop(eid, None)
+                if it is not None and it["task"] == r.get("task_id") \
+                        and it["grant"] == r.get("grant_id"):
+                    self.consumed[it["key"]] -= 1
+                    self.task_total[it["task"]] -= 1
+                    n -= 1
+            elif kind in ("effect", "effect_indeterminate") and eid is not None:
+                open_intents.pop(eid, None)
+            elif kind == "effect" and eid is None:
+                k = key_of(r)
+                self.consumed[k] = self.consumed.get(k, 0) + 1
+                self.task_total[k[0]] = self.task_total.get(k[0], 0) + 1
+                n += 1
         return n
 
     def snapshot(self) -> dict:

@@ -29,12 +29,17 @@ import uuid
 from ..authority import PolicyAuthority
 from ..broker import CapabilityBroker, EvidenceError, IndeterminateEffect, RefusalError
 from ..corpus import build_demo_corpus
-from ..receipts import Ledger, canonical_hash
+from ..receipts import Ledger, LedgerError, canonical_hash
 from ..resources import ResourceConfigError, ResourceLedger, ResourcePolicy
 from ..tasks import LogicalClock, experiment_policy, task_suite
 from . import protocol as P
 
 READ_TIMEOUT = 30.0
+MAX_CLIENT_ROWS_PER_TASK = 64      # narrative + unmediated reports per task
+# rows an observer's conclusions depend on, fsynced before the response
+DURABLE_KINDS = frozenset({"read", "grant_mint", "grant_revoke", "task_end",
+                           "trusted_restart", "resource_policy", "effect_indeterminate",
+                           "effect_intent", "effect", "lifecycle"})
 
 
 def task_id_of(req: dict) -> str:
@@ -61,8 +66,10 @@ class TrustedServer:
         self.socket_path = socket_path
         self.ledger_path = ledger_path
         # exclusive ownership of the ledger: a second server on the same
-        # ledger (or socket) must not start (identity corruption otherwise)
-        self._lock_fh = open(ledger_path + ".lock", "w")
+        # ledger (or socket) must not start (identity corruption otherwise).
+        # The lock is on the ledger's own inode, so another path to the
+        # same file (symlink, hard link, bind mount) meets it (review F9).
+        self._lock_fh = open(ledger_path, "a")
         try:
             fcntl.flock(self._lock_fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
@@ -73,8 +80,10 @@ class TrustedServer:
         self.run_id = run_id or uuid.uuid4().hex[:12]
         self.clock = LogicalClock()
         prior = self._load_prior(ledger_path, recover)
-        self.ledger = Ledger(clock=self.clock.now, sink_path=ledger_path)
+        self.ledger = Ledger(clock=self.clock.now, sink_path=ledger_path,
+                             durable_kinds=DURABLE_KINDS)
         self.degraded: str | None = None     # set after a ledger failure: fail-stop
+        self._client_rows: dict[str, int] = {}   # task -> narrative/unmediated rows
         self.tasks = {t.task_id: t for t in task_suite()}
         if prior:
             self.ledger.resume_after(prior)
@@ -171,34 +180,61 @@ class TrustedServer:
         the torn bytes are dropped and the fact is receipted; any other
         corruption refuses the start regardless."""
         self._torn_tail = None
-        try:
-            return Ledger.existing_rows(ledger_path)
-        except ValueError:
-            pass
         with open(ledger_path, "rb") as fh:
             raw = fh.read()
+        if not raw:
+            return []
+        if raw.endswith(b"\n"):
+            try:
+                return [json.loads(l) for l in raw.decode("utf-8").splitlines() if l.strip()]
+            except ValueError as exc:
+                raise ValueError(f"ledger {ledger_path} has an unparsable complete line: {exc}")
+        # the last line has no newline: the crash hit during its write. The
+        # bytes are either a partial row (dropped) or a complete row whose
+        # terminator never landed (kept, terminated). Nothing is accepted
+        # silently and nothing is rewritten with a window in which complete
+        # rows are absent (review F1, F3).
         head, _, tail = raw.rpartition(b"\n")
-        complete = raw if raw.endswith(b"\n") else head + b"\n"
-        torn = b"" if raw.endswith(b"\n") else tail
+        complete = head + b"\n" if head else b""
         try:
             rows = [json.loads(l) for l in complete.decode("utf-8").splitlines() if l.strip()]
         except ValueError as exc:
             raise ValueError(f"ledger {ledger_path} is corrupt beyond its last line: {exc}")
-        if not torn:
-            raise ValueError(f"ledger {ledger_path} has an unparsable complete line")
+        try:
+            tail_row = json.loads(tail.decode("utf-8"))
+            tail_complete = isinstance(tail_row, dict) and "kind" in tail_row
+        except ValueError:
+            tail_row, tail_complete = None, False
         if not recover:
-            raise ValueError(f"ledger {ledger_path} ends in a torn line ({len(torn)} bytes); "
-                             "restart with --recover to drop it (receipted)")
-        with open(ledger_path, "wb") as fh:
-            fh.write(complete)
-            fh.flush()
-            os.fsync(fh.fileno())
-        self._torn_tail = {"bytes": len(torn), "sha256": hashlib.sha256(torn).hexdigest()}
+            raise ValueError(f"ledger {ledger_path} ends in a torn line ({len(tail)} bytes); "
+                             "restart with --recover (receipted)")
+        digest = hashlib.sha256(tail).hexdigest()
+        if tail_complete:
+            with open(ledger_path, "ab") as fh:
+                fh.write(b"\n")
+                fh.flush()
+                os.fsync(fh.fileno())
+            rows.append(tail_row)
+            self._torn_tail = {"bytes": len(tail), "sha256": digest, "action": "terminated"}
+        else:
+            os.truncate(ledger_path, len(complete))     # in place: no empty-file window
+            with open(ledger_path, "ab") as fh:
+                os.fsync(fh.fileno())
+            self._torn_tail = {"bytes": len(tail), "sha256": digest, "action": "dropped"}
         return rows
+
+    def _reject_record(self, **detail) -> None:
+        """An ipc_reject row; a failed ledger is noted, never raised here."""
+        try:
+            self.ledger.record("ipc_reject", "", **detail)
+        except LedgerError:
+            self.degraded = "ledger_failed"
 
     # -- dispatch ---------------------------------------------------------
     def handle(self, req: dict) -> dict:
         op, task_id, args, rid = req["op"], req["task_id"], req["args"], req["id"]
+        if self.ledger.failed is not None:
+            self.degraded = "ledger_failed"      # any row, any op (review F5)
         if op == "hello":
             return P.ok_response(rid, {"protocol": P.PROTOCOL, "server_run_id": self.run_id,
                                        "condition": self.condition,
@@ -207,6 +243,13 @@ class TrustedServer:
         if self.degraded is not None:
             # fail-stop: a membrane that cannot write evidence does not act
             raise P.ProtocolError("ledger_failed")
+        try:
+            return self._dispatch(op, task_id, args, rid)
+        except LedgerError:
+            self.degraded = "ledger_failed"
+            raise P.ProtocolError("ledger_failed")
+
+    def _dispatch(self, op: str, task_id: str, args: dict, rid: str) -> dict:
         if op == "begin_task":
             task = self.tasks.get(task_id)
             if task is None:
@@ -262,6 +305,13 @@ class TrustedServer:
                 if self.mode != "global":
                     raise P.ProtocolError("unknown_op")
                 return P.ok_response(rid, self.broker.discover(task_id, args.get("resource")))
+            if op in ("report_unmediated", "narrative"):
+                # client-driven rows are bounded per task: an unbounded
+                # client could fill the disk and force the fail-stop
+                n = self._client_rows.get(task_id, 0) + 1
+                if n > MAX_CLIENT_ROWS_PER_TASK:
+                    raise P.ProtocolError("row_quota")
+                self._client_rows[task_id] = n
             if op == "report_unmediated":
                 r = self.ledger.record("unmediated_attempt", task_id,
                                        attempted=args["attempted"],
@@ -305,11 +355,11 @@ class TrustedServer:
                     body = P.read_frame(conn)
                 except socket.timeout:
                     with self._lock:
-                        self.ledger.record("ipc_reject", "", reason="timeout", conn=serial)
+                        self._reject_record(reason="timeout", conn=serial)
                     return
                 except P.ProtocolError as exc:
                     with self._lock:
-                        self.ledger.record("ipc_reject", "", reason=exc.reason, conn=serial)
+                        self._reject_record(reason=exc.reason, conn=serial)
                     self._try_send(conn, P.error_response(None, "protocol", exc.reason))
                     return
                 if body is None:
@@ -318,7 +368,7 @@ class TrustedServer:
                     req = P.decode(body)
                 except P.ProtocolError as exc:
                     with self._lock:
-                        self.ledger.record("ipc_reject", "", reason=exc.reason, conn=serial,
+                        self._reject_record(reason=exc.reason, conn=serial,
                                            bytes=len(body))
                     self._try_send(conn, P.error_response(exc.req_id, "protocol", exc.reason))
                     if exc.close:
@@ -333,7 +383,7 @@ class TrustedServer:
                             # the broker already receipted the operation; the
                             # client must learn the result did not reach it
                             rr = resp.get("result") or {}
-                            self.ledger.record("ipc_reject", "",
+                            self._reject_record(
                                                reason="response_too_large", conn=serial,
                                                op=req.get("op"), claimed_task=task_id_of(req),
                                                receipt_id=rr.get("receipt_id"))
@@ -341,12 +391,12 @@ class TrustedServer:
                                                     "response_too_large")
                 except P.ProtocolError as exc:
                     with self._lock:
-                        self.ledger.record("ipc_reject", "", reason=exc.reason, conn=serial,
+                        self._reject_record(reason=exc.reason, conn=serial,
                                            op=req.get("op"), claimed_task=task_id_of(req))
                     resp = P.error_response(req["id"], "protocol", exc.reason)
                 except Exception as exc:   # fail closed, never crash the membrane
                     with self._lock:
-                        self.ledger.record("ipc_reject", "",
+                        self._reject_record(
                                            reason=f"internal:{type(exc).__name__}",
                                            conn=serial, op=req.get("op"),
                                            claimed_task=task_id_of(req))

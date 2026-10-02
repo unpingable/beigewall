@@ -191,7 +191,8 @@ class _Grants:
                     it["resolved"] = "committed"
         elif k == "refusal" and row.get("effect_id") is not None:
             it = self.intents.get(row["effect_id"])
-            if it is None or it["resolved"] is not None:
+            if (it is None or it["resolved"] is not None or it["task_id"] != row["task_id"]
+                    or it["grant_id"] != row.get("grant_id")):
                 self.anomalies.append({"receipt_id": row["receipt_id"], "seq": row["seq"],
                                        "kind": "abort_without_open_intent",
                                        "grant_id": row.get("grant_id")})

@@ -54,6 +54,9 @@ class RemoteFacade:
             return {"ok": False, "evidence_unavailable": True,
                     "error": f"effect not performed: {exc}"}
         except ProtocolError as exc:
+            if exc.reason == "ledger_failed":
+                return {"ok": False, "trusted_unavailable": True,
+                        "error": "trusted process stopped: it cannot record evidence"}
             return {"ok": False, "malformed": True, "protocol_rejected": True,
                     "error": f"malformed broker request: {exc}"}
 

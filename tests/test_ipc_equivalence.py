@@ -24,6 +24,21 @@ SERVER_ONLY_KINDS = ("trusted_restart", "effect_intent", "effect_indeterminate")
 SERVER_ONLY_KEYS = ("effect_id",)
 
 
+def intents_resolved(rows) -> bool:
+    """Every effect intent is resolved by exactly one commit or abort of the
+    same task and grant (phase 6C): an open intent is never silently equal
+    to an effect that was not attempted."""
+    intents = {r["effect_id"]: r for r in rows if r["kind"] == "effect_intent"}
+    resolved = {}
+    for r in rows:
+        if r["kind"] in ("effect", "refusal") and r.get("effect_id"):
+            it = intents.get(r["effect_id"])
+            if it is None or it["task_id"] != r["task_id"] or it["grant_id"] != r.get("grant_id"):
+                return False
+            resolved[r["effect_id"]] = resolved.get(r["effect_id"], 0) + 1
+    return all(resolved.get(eid) == 1 for eid in intents)
+
+
 def strip(rows):
     return [{k: v for k, v in r.items()
              if k not in ("receipt_id", "seq", "ts", "expires_at", "self_reported")
@@ -60,6 +75,9 @@ class TestProcessSeparatedEquivalence(unittest.TestCase):
             canonical = [json.loads(l) for l in open(os.path.join(ROOT, "results", "canonical",
                                                                     "receipts.jsonl"))]
             self.assertEqual(strip(rows), strip(canonical))
+            self.assertTrue(intents_resolved(rows))
+            self.assertEqual(sum(1 for r in rows if r["kind"] == "effect_intent"),
+                             sum(1 for r in canonical if r["kind"] == "effect"))
             self.assertTrue(all(r.get("self_reported") for r in rows
                                 if r["kind"] == "unmediated_attempt"))
             for t in task_suite():

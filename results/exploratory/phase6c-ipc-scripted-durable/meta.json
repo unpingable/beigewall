@@ -1,11 +1,11 @@
 {
   "agent_crashes": [],
   "architecture": "process-separated",
-  "blackwall_revision_at_start": "945efe97ab6d9ea04651950f7c0edbecc6c800a4",
+  "blackwall_revision_at_start": "0534a9dc7d72a9b08ea0612fff525e68bf1f4c15",
   "condition": "control",
   "driver": "scripted",
   "exploratory": true,
-  "finished_utc": "2026-10-02T19:30:33.239006+00:00",
+  "finished_utc": "2026-10-02T19:49:58.310014+00:00",
   "label": "scripted-durable",
   "max_steps": 40,
   "model": "scripted-driver",
@@ -28,5 +28,5 @@
     "2": 0,
     "3": 0
   },
-  "started_utc": "2026-10-02T19:30:31.110137+00:00"
+  "started_utc": "2026-10-02T19:49:56.177994+00:00"
 }
