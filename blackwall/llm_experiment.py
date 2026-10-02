@@ -20,11 +20,17 @@ from .broker import CapabilityBroker
 from .corpus import build_demo_corpus
 from .capabilities import policy_version
 from .evaluator import evaluate_task
-from .negotiation import negotiation_telemetry
+from .deference import classify_deference
+from .negotiation import acquisition_timing, negotiation_telemetry
 from .llm_metrics import aggregate_runs, denial_recovery
 from .metrics import suite_metrics, task_metrics
 from .receipts import Ledger
 from .tasks import LogicalClock, RunContext, experiment_policy, task_suite
+
+
+CONDITION_MODES = {"control": None, "global": "global", "denial": "denial",
+                   "task": "task"}
+CONDITION_ALIASES = {"treatment": "global"}
 
 
 def _repeated_requests(ledger: Ledger, task_id: str) -> int:
@@ -44,12 +50,15 @@ def _repeated_requests(ledger: Ledger, task_id: str) -> int:
 def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
                        base_url: str, runs: int = 5, tasks=None,
                        max_steps: int = 40, condition: str = "control") -> dict:
-    """condition: "control" (three-method facade, current manifest) or
-    "treatment" (facade additionally exposes capability discovery; the
-    driver factory is expected to build discovery-aware drivers)."""
-    if condition not in ("control", "treatment"):
+    """condition: "control" (three-method facade, current manifest);
+    "global" (= phase 4 "treatment": discover tool); "denial" (capability
+    hint attached to denials/refusals); "task" (task-conditioned view in the
+    task message). The driver factory must build drivers for the same mode."""
+    condition = CONDITION_ALIASES.get(condition, condition)
+    if condition not in CONDITION_MODES:
         raise ValueError(f"unknown condition {condition!r}")
-    discovery = condition == "treatment"
+    mode = CONDITION_MODES[condition]
+    discovery = mode is not None
     tasks = tasks if tasks is not None else task_suite()
     os.makedirs(out_dir, exist_ok=True)
     started = datetime.now(timezone.utc).isoformat()
@@ -77,8 +86,9 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
         corpus = build_demo_corpus()
         ledger = Ledger(clock=clock.now, sink_path=receipts_path)
         authority = PolicyAuthority(experiment_policy(), clock=clock.now)
-        broker = CapabilityBroker(corpus, authority, ledger, clock=clock.now)
-        harness = Harness(broker, ledger, discovery=discovery)
+        broker = CapabilityBroker(corpus, authority, ledger, clock=clock.now,
+                                  discovery_mode=mode)
+        harness = Harness(broker, ledger, discovery_mode=mode)
 
         per_task: dict[str, dict] = {}
         success: dict[str, bool] = {}
@@ -104,6 +114,9 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
                 rows, task.task_id, task.prompt)
             record["negotiation"] = negotiation_telemetry(
                 rows, task.task_id, authority.rules)
+            record["acquisition_timing"] = acquisition_timing(rows, task.task_id)
+            record["deference"] = classify_deference(
+                rows, task.task_id, task.prompt, record["receipt_grounded"])
             per_task[task.task_id] = record
 
         suite = suite_metrics(per_task, success)
@@ -131,6 +144,7 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
         "driver": "llm-adapter", "exploratory": True,
         "max_steps": max_steps,
         "condition": condition,
+        "discovery_mode": mode,
         "capability_discovery": discovery,
         "policy_version": policy_version(experiment_policy()),
         "runs_completed": runs_reused + runs_executed,

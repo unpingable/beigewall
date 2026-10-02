@@ -31,10 +31,13 @@ def main() -> int:
     parser.add_argument("--label", default=None)
     parser.add_argument("--out", default=None)
     parser.add_argument("--max-steps", type=int, default=40)
-    parser.add_argument("--condition", choices=("control", "treatment"),
-                        default="control",
-                        help="treatment exposes capability discovery "
-                             "(phase 4); control is the phase 2/3 setup")
+    parser.add_argument("--condition",
+                        choices=("control", "treatment", "global", "denial",
+                                 "task"), default="control",
+                        help="control: phase 2/3 setup; global (alias "
+                             "treatment): discover tool (phase 4); denial: "
+                             "hint on denial/refusal; task: task-conditioned "
+                             "view (phase 5)")
     args = parser.parse_args()
 
     probe = LLMDriver.from_env()
@@ -59,8 +62,10 @@ def main() -> int:
         return 2
 
     def factory(_task):
+        from blackwall.llm_experiment import CONDITION_ALIASES, CONDITION_MODES
+        cond = CONDITION_ALIASES.get(args.condition, args.condition)
         return LLMDriver(base_url, api_key, model,
-                         discovery=args.condition == "treatment")
+                         discovery=CONDITION_MODES[cond] or False)
 
     print(f"running {args.runs} exploratory run(s) of 12 tasks "
           f"against {model} @ {base_url} [condition={args.condition}]")

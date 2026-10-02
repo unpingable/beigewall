@@ -10,7 +10,7 @@ refs must match the task's registered prompt hash.
 """
 
 from .authority import PolicyAuthority
-from .capabilities import CapabilityCatalog
+from .capabilities import CapabilityCatalog, resource_class
 from .corpus import Corpus
 from .effects import EFFECTS, EffectError
 from .grants import Budget, Grant, GrantError, validate_use
@@ -21,10 +21,14 @@ DEFAULT_TTL = 600.0
 DEFAULT_BUDGET = Budget(reads=8, objects=200)
 
 
+DISCOVERY_MODES = (None, "global", "denial", "task")
+
+
 class RefusalError(Exception):
-    def __init__(self, message: str, receipt_id: str):
+    def __init__(self, message: str, receipt_id: str, hint: dict | None = None):
         super().__init__(message)
         self.receipt_id = receipt_id
+        self.hint = hint   # denial-triggered capability hint (receipted)
 
 
 def _effect_resource(effect_name: str, params: dict) -> str:
@@ -42,11 +46,14 @@ def _effect_resource(effect_name: str, params: dict) -> str:
 
 class CapabilityBroker:
     def __init__(self, corpus: Corpus, authority: PolicyAuthority,
-                 ledger: Ledger, clock):
+                 ledger: Ledger, clock, discovery_mode: str | None = None):
+        if discovery_mode not in DISCOVERY_MODES:
+            raise ValueError(f"unknown discovery mode {discovery_mode!r}")
         self._corpus = corpus
         self._authority = authority
         self._ledger = ledger
         self._clock = clock
+        self._discovery_mode = discovery_mode
         self._grants: dict[str, Grant] = {}
         self._task_prompts: dict[str, str] = {}
         self._catalog = CapabilityCatalog(
@@ -73,7 +80,11 @@ class CapabilityBroker:
             self._ledger.record("grant_deny", task_id, resource=resource,
                                 operation=operation, projection=projection,
                                 reason=reason)
-            return {"ok": False, "reason": reason}
+            result = {"ok": False, "reason": reason}
+            if self._discovery_mode == "denial":
+                result["capability_hint"] = self._denial_hint(
+                    task_id, resource, operation, reason)
+            return result
         self._grants[grant.grant_id] = grant
         self._ledger.record("grant_mint", task_id, grant_id=grant.grant_id,
                             resource=grant.resource, operation=grant.operation,
@@ -90,13 +101,39 @@ class CapabilityBroker:
         as `discovery` with the policy/catalog version shown."""
         catalog = self._catalog.build(task_id, resource)
         receipt = self._ledger.record(
-            "discovery", task_id, schema=catalog["schema"],
+            "discovery", task_id, schema=catalog["schema"], trigger="global",
             policy_version=catalog["policy_version"],
             catalog_hash=catalog["catalog_hash"], query=resource,
             query_matched=catalog["query_matched"],
+            scope=sorted({resource_class(r["resource"]) for r in catalog["rules"]
+                          if r["resource"] != "*"}),
             rules_shown=len(catalog["rules"]))
         return {"ok": True, "receipt_id": receipt.receipt_id,
                 "catalog": catalog}
+
+    def task_view(self, task_id: str, prompt: str) -> dict:
+        """Task-conditioned capability view, receipted as an initial
+        discovery event. Grants nothing."""
+        view = self._catalog.task_view(task_id, prompt)
+        receipt = self._ledger.record(
+            "discovery", task_id, schema=view["schema"], trigger="initial",
+            policy_version=view["policy_version"],
+            catalog_hash=view["catalog_hash"], query=None,
+            query_matched=None, scope=view["scope"],
+            rules_shown=len(view["rules"]))
+        return {"receipt_id": receipt.receipt_id, "view": view}
+
+    def _denial_hint(self, task_id: str, resource: str, operation: str,
+                     reason: str) -> dict:
+        hint = self._catalog.denial_view(task_id, resource, operation, reason)
+        receipt = self._ledger.record(
+            "discovery", task_id, schema=hint["schema"], trigger="denial",
+            policy_version=hint["policy_version"],
+            catalog_hash=hint["catalog_hash"], query=resource,
+            query_matched=bool(hint["rules"]), scope=hint["scope"],
+            rules_shown=len(hint["rules"]))
+        hint["receipt_id"] = receipt.receipt_id
+        return hint
 
     def read(self, task_id: str, grant_id: str, resource: str,
              projection: str) -> dict:
@@ -172,7 +209,10 @@ class CapabilityBroker:
         receipt = self._ledger.record("refusal", task_id, operation=operation,
                                       grant_id=grant_id, resource=resource,
                                       reason=reason)
-        return RefusalError(reason, receipt.receipt_id)
+        hint = None
+        if self._discovery_mode == "denial" and resource:
+            hint = self._denial_hint(task_id, resource, operation, reason)
+        return RefusalError(reason, receipt.receipt_id, hint)
 
     def _validate_provenance(self, task_id: str, derived_from: list[dict]) -> None:
         if not derived_from:

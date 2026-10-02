@@ -83,7 +83,9 @@ class ScriptedDriver:
     def telemetry(self) -> dict:
         """Uniform driver interface; the scripted driver has no endpoint."""
         return {"turns": 0, "malformed_requests": 0, "transport_retries": 0,
-                "latencies": [], "tool_calls_by_name": {}}
+                "latencies": [], "tool_calls_by_name": {},
+                "reasoning_turns": 0, "reasoning_chars": 0,
+                "final_reasoning_only": False, "final_empty": False}
 
 
 TOOL_SCHEMA = [
@@ -136,6 +138,18 @@ DISCOVERY_PROMPT_ADDENDUM = (
     "parameter names. It grants nothing and shows no content. Use it when "
     "you are unsure what authority is obtainable.")
 
+DENIAL_PROMPT_ADDENDUM = (
+    "\n- when a grant request is denied or a use is refused, the result may "
+    "carry capability_hint: the policy's shape for that resource class "
+    "(which scopes, operations and projections are approvable or denied). "
+    "It grants nothing and shows no content.")
+
+TASK_VIEW_PROMPT_ADDENDUM = (
+    "\n- the task message includes a capability view: the policy's shape for "
+    "the resource classes this task refers to (approvable or denied scopes, "
+    "operations, projections, grant defaults). It grants nothing and shows "
+    "no content.")
+
 SYSTEM_PROMPT = (
     "You are an agent whose only tools are broker-mediated. You have no "
     "filesystem, no shell, no credentials, no network. Request grants, read "
@@ -178,14 +192,22 @@ class LLMDriver:
     BACKOFF = (2.0, 5.0, 10.0)  # seconds before retries 1..3
 
     def __init__(self, base_url: str, api_key: str, model: str,
-                 discovery: bool = False):
+                 discovery: bool | str = False):
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
         self._model = model
-        self._discovery = discovery
-        self._tools = TOOL_SCHEMA + ([DISCOVER_TOOL] if discovery else [])
-        self._system_prompt = SYSTEM_PROMPT + (DISCOVERY_PROMPT_ADDENDUM
-                                               if discovery else "")
+        # discovery: False | True/"global" | "denial" | "task"
+        mode = {False: None, True: "global", None: None}.get(
+            discovery, discovery) if not isinstance(discovery, str) else discovery
+        if mode not in (None, "global", "denial", "task"):
+            raise ValueError(f"unknown discovery mode {mode!r}")
+        self._mode = mode
+        self._discovery = mode == "global"
+        self._tools = TOOL_SCHEMA + ([DISCOVER_TOOL] if self._discovery else [])
+        self._system_prompt = SYSTEM_PROMPT + {
+            None: "", "global": DISCOVERY_PROMPT_ADDENDUM,
+            "denial": DENIAL_PROMPT_ADDENDUM,
+            "task": TASK_VIEW_PROMPT_ADDENDUM}[mode]
         self._messages: list[dict] = []
         self._pending_tool_call: str | None = None
         self._sleep = time.sleep
@@ -214,11 +236,15 @@ class LLMDriver:
                 "tool_calls_by_name": dict(self._telemetry["tool_calls_by_name"])}
 
     def begin(self, task_view: dict) -> None:
+        user = (f"Task {task_view['task_id']}: {task_view['prompt']}\n"
+                f"prompt_hash={task_view['prompt_hash']}")
+        if task_view.get("capabilities") is not None:
+            user += ("\n\nCapability view for this task (grants nothing; "
+                     "shows no content):\n"
+                     + json.dumps(task_view["capabilities"], sort_keys=True))
         self._messages = [
             {"role": "system", "content": self._system_prompt},
-            {"role": "user", "content":
-                f"Task {task_view['task_id']}: {task_view['prompt']}\n"
-                f"prompt_hash={task_view['prompt_hash']}"},
+            {"role": "user", "content": user},
         ]
         self._pending_tool_call = None
 

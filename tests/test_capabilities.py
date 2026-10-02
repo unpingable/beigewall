@@ -233,7 +233,7 @@ class TestScriptedTreatmentDriver(unittest.TestCase):
                                      model="scripted", base_url="n/a", runs=1,
                                      condition="treatment")
             meta = json.load(open(os.path.join(d, "meta.json")))
-            self.assertEqual(meta["condition"], "treatment")
+            self.assertEqual(meta["condition"], "global")  # alias of treatment
             self.assertTrue(meta["capability_discovery"])
             rows = [json.loads(l) for l in
                     open(os.path.join(d, "run-1", "receipts.jsonl"))]

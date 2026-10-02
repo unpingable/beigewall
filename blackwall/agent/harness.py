@@ -17,7 +17,7 @@ class ToolFacade:
         self._broker = broker
         self._ledger = ledger
         self._task_id = task_id
-        if discovery:
+        if discovery:   # global discovery only; other modes have no tool
             # The attribute exists only in the treatment condition; without it
             # a call to `discover` is an unmediated attempt like any other.
             self.discover = self._discover
@@ -42,7 +42,14 @@ class ToolFacade:
             return self._broker.read(self._task_id, grant_id, resource,
                                      projection=projection)
         except RefusalError as exc:
-            return {"ok": False, "error": str(exc), "receipt_id": exc.receipt_id}
+            return self._refused(exc)
+
+    @staticmethod
+    def _refused(exc: RefusalError) -> dict:
+        out = {"ok": False, "error": str(exc), "receipt_id": exc.receipt_id}
+        if exc.hint is not None:
+            out["capability_hint"] = exc.hint
+        return out
 
     def effect(self, grant_id: str, effect_name: str, params: dict,
                derived_from: list[dict]) -> dict:
@@ -50,7 +57,7 @@ class ToolFacade:
             return self._broker.effect(self._task_id, grant_id, effect_name,
                                        params, derived_from)
         except RefusalError as exc:
-            return {"ok": False, "error": str(exc), "receipt_id": exc.receipt_id}
+            return self._refused(exc)
 
     def __getattr__(self, name: str):
         # Only missing attributes land here: request_grant/read/effect exist.
@@ -79,10 +86,11 @@ class RunResult:
 
 class Harness:
     def __init__(self, broker: CapabilityBroker, ledger: Ledger,
-                 discovery: bool = False):
+                 discovery: bool = False, discovery_mode: str | None = None):
         self._broker = broker
         self._ledger = ledger
-        self._discovery = discovery
+        self._mode = discovery_mode or ("global" if discovery else None)
+        self._discovery = self._mode == "global"
 
     def run_task(self, task_id: str, driver, prompt: str,
                  max_steps: int = 30) -> RunResult:
@@ -90,8 +98,12 @@ class Harness:
         self._broker.begin_task(task_id, prompt_hash)
         facade = ToolFacade(self._broker, self._ledger, task_id,
                             discovery=self._discovery)
-        driver.begin({"task_id": task_id, "prompt": prompt,
-                      "prompt_hash": prompt_hash})
+        task_view = {"task_id": task_id, "prompt": prompt,
+                     "prompt_hash": prompt_hash}
+        if self._mode == "task":
+            task_view["capabilities"] = self._broker.task_view(
+                task_id, prompt)["view"]
+        driver.begin(task_view)
         observations: list[dict] = []
         answer = None
         truncated = True

@@ -112,3 +112,35 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
             "repeated_queries": len(queries) - len(set(queries)),
         },
     }
+
+
+def acquisition_timing(receipts: list[dict], task_id: str) -> dict:
+    """For each minted grant, what discovery (if any) preceded it in the
+    task: trigger of the most recent discovery receipt (initial | denial |
+    global) or none, and whether that discovery's scope covered the minted
+    resource's class."""
+    rows = [r for r in receipts if r.get("task_id") == task_id]
+    last_disc = None
+    events = []
+    for r in rows:
+        if r["kind"] == "discovery":
+            last_disc = r
+        elif r["kind"] == "grant_mint":
+            cls = r["resource"].split("/", 1)[0]
+            if last_disc is None:
+                events.append({"grant_id": r["grant_id"], "resource": r["resource"],
+                               "after": "none", "scoped": None})
+            else:
+                scope = last_disc.get("scope") or []
+                events.append({"grant_id": r["grant_id"], "resource": r["resource"],
+                               "after": last_disc.get("trigger", "global"),
+                               "scoped": (cls in scope) if scope else None})
+    summary = {"none": 0, "initial": 0, "denial": 0, "global": 0,
+               "scoped": 0, "unscoped": 0}
+    for e in events:
+        summary[e["after"]] += 1
+        if e["scoped"] is True:
+            summary["scoped"] += 1
+        elif e["scoped"] is False:
+            summary["unscoped"] += 1
+    return {"events": events, "summary": summary}
