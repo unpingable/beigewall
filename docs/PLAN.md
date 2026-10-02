@@ -354,6 +354,26 @@ OS/user/namespace work; no general rate-limiting framework.
       useful 33 = 33, zero budget refusals, zero observer disagreements);
       `FINDINGS_PHASE6B.md`; HANDOFF. Phase 6B sealed 2026-10-02.
 
+## Phase 6C milestones / status (evidence durability, 2026-10-02)
+
+Design: `docs/EVIDENCE_DURABILITY.md`; results: `FINDINGS_PHASE6C.md`. No
+OS/user/namespace work.
+
+- [x] Characterize the pre-existing effect ordering and its failure
+      semantics (nine failure points).
+- [x] Durable intent → handler → consume → commit in the trusted server;
+      abort by refusal; explicit `indeterminate` + fail-stop; recovery
+      markers on restart; receipted `--recover` for a torn tail;
+      write-before-visible ledger; effect ids resumed across restarts;
+      `prior_effect` on consumed-grant refusals; same-grant client retry.
+      In-process canonical semantics unchanged (byte-identical).
+- [x] Fault-injection tests for every named failure point, replay, duplicate
+      retry, client restart, trusted restart, observer reconstruction.
+- [ ] Hostile review (consume-before-receipt, receipt-before-effect,
+      duplicates, lost receipts/responses, restart after partial commit,
+      budget/observer disagreement, effect-id reuse, replay); fixes;
+      `FINDINGS_PHASE6C.md`; HANDOFF.
+
 ## Handoff protocol for a resuming agent
 
 1. Read `PLAN.md` (this file), `HANDOFF.md`, and `git log --oneline`.
