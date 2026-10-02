@@ -168,6 +168,12 @@ Exploratory artifacts and interpretation: `FINDINGS_REALMODEL.md`.
   evidence, but not undetectably or as reduced authority/consumption
   (`FINDINGS_PHASE7B.md`, `docs/EVIDENCE-CUSTODY.md`). Not tamper-proof; no
   signing; not consensus.
+- **Recoverable evidence custody (phase 7C).** In retain mode the witness keeps
+  canonical envelopes, so omitted / truncated / rolled-back entries are
+  *reconstructed* (chain-verified, provenance-tagged), while rewritten entries
+  stay detect-and-fail-closed. Recovery is evidence only — it mints no
+  authority, restores no budget, authorizes no effect (`FINDINGS_PHASE7C.md`).
+  This is the final core experiment; core research is complete.
 - **Scripted normative driver.** It proves the mediation layer enforces and
   measures; it does not prove a real model would navigate grant requests as
   competently. The LLM adapter is stub-server tested, and one real-endpoint

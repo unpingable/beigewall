@@ -406,6 +406,23 @@ OS/user/namespace work.
       tamper-proof); suppression detected + fail-closed. Phase 7B sealed
       2026-10-02.
 
+## Phase 7C milestones / status (recoverable evidence custody, 2026-10-02)
+
+- [x] Witness retain mode (`Witness(retain=True)`, server `--witness-retain`):
+      store the canonical envelope per occurrence; hash-only default unchanged,
+      canonical byte-identical.
+- [x] `reconstruct()` rebuilds omitted/truncated/rolled-back entries from witness
+      custody, provenance-tagged (original vs recovered), re-verified against the
+      attested chain; `verify_chain` checks the witness's own integrity.
+- [x] Recovery invariant: omission classes reconstructable; active rewriting
+      detect+fail-closed; hash-only → INDETERMINATE; evidence only (no authority/
+      budget/effect). 21 tests (`tests/test_evidence_recovery.py`); hostile
+      review (recovery-as-authority, substitution, witness rollback, identity
+      confusion, budget reset) covered.
+- [x] Live VM reconstruction demonstration (`run_vm_experiment.py`,
+      `result.json custody.reconstruction_demo`). `FINDINGS_PHASE7C.md`.
+      **Core research complete; closeout gate reached. Phase 7C sealed 2026-10-02.**
+
 ## Handoff protocol for a resuming agent
 
 1. Read `PLAN.md` (this file), `HANDOFF.md`, and `git log --oneline`.

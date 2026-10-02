@@ -54,6 +54,14 @@ Primary receipt rows are **unchanged** (the chain lives only in the witness),
 so canonical artifacts remain byte-identical. The witness attaches only when
 enabled (`Ledger(witness=…)`, server `--witness`); default runs are untouched.
 
+**Retain mode (phase 7C).** `Witness(retain=True)` (server `--witness-retain`)
+additionally stores the canonical receipt **envelope** per occurrence, so
+omitted entries can be *reconstructed*, not merely detected. In retain mode the
+witness is a second **evidence** store (it holds canonical content) — still
+strictly observational, never a second authority. Hash-only mode remains the
+default and keeps the "minimal, not a second copy" property for custody paths
+that need only tamper-evidence. See "Recovery" below.
+
 ### Why no cryptography (yet)
 
 Detection uses only sequence + content hashes + the chain — no signing. In
@@ -119,6 +127,26 @@ ledger-**file** tampering, truncation and restart rollback and fails closed, but
 does not survive a compromise of that process. The writer-**compromise**
 separation is the VM topology above (writer in the guest, witness on the host),
 which is the configuration the custody claim rests on.
+
+## Recovery (phase 7C)
+
+`reconstruct(primary_rows, witness_records)` rebuilds the canonical event list
+when the primary ledger merely **omitted** material (OMITTED / TRUNCATED /
+ROLLED_BACK): each entry is taken from the surviving primary where it MATCHes and
+from the witness envelope where it is missing, tagged `provenance:
+"original"|"recovered"`, and the whole reconstruction is re-verified against the
+attested chain head — so it is exactly the producer's history. Actively
+**rewritten** entries (ALTERED / DUPLICATED / REPLAYED / REORDERED / FABRICATED /
+FORKED) are *not* recovered — they are detected and fail closed. A hash-only
+witness yields INDETERMINATE for missing content (detectable, not
+reconstructable). `verify_chain` re-derives the witness's own chain (and checks
+each retained envelope against its hash) to catch corruption of the witness
+store itself.
+
+Recovery is **evidence, not authority**: the result holds only `{seq,
+provenance, row}`; it mints no grant, restores no budget, authorizes no effect
+or retry, and never claims the compromised writer persisted the recovered rows.
+See `FINDINGS_PHASE7C.md`.
 
 ## Budget interaction
 

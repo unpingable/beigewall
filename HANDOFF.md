@@ -209,6 +209,23 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   447 tests. Next (only on request): make the primary ledger
   suppression-*resistant* (reconstruct, not just detect) at the custody
   boundary — the gap this phase leaves — without a second authority or quorum.
+- **Phase 7C sealed (2026-10-02) — final core experiment**: recoverable
+  evidence custody. Witness retain mode (`Witness(retain=True)`, server
+  `--witness-retain`) stores the canonical envelope per occurrence;
+  `blackwall/witness.py reconstruct()` rebuilds OMITTED/TRUNCATED/ROLLED_BACK
+  entries from witness custody, provenance-tagged (original vs recovered) and
+  re-verified against the attested chain; active rewriting (ALTERED/DUP/REPLAY/
+  REORDER/FABRICATE) stays detect+fail-closed; hash-only witness →
+  INDETERMINATE. Recovery is evidence only (mints no authority, restores no
+  budget, authorizes no effect; `verify_chain` guards witness integrity). 21
+  tests (`tests/test_evidence_recovery.py`) + hostile review (recovery-as-
+  authority, envelope substitution, witness rollback, identity confusion,
+  budget reset, duplicate recovery). Live VM demo in
+  `result.json custody.reconstruction_demo`. Retain witness ≈1.6× ledger
+  (detection-only hash mode ≈0.58×). Hash-only default keeps canonical
+  byte-identical. **466 tests. Closeout gate reached: core BeigeWall research
+  is complete — no Phase 8.** `FINDINGS_PHASE7C.md`, updated
+  `docs/EVIDENCE-CUSTODY.md`.
 - **Next (not started)**: OS enforcement of the boundary — user or
   namespace separation — as its own experiment. Carry forward unchanged:
   the budget-count wording re-seal; multi-use grants for real-model expiry;
