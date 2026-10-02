@@ -235,6 +235,26 @@ def build_report(out: str, trajectories) -> tuple[str, dict]:
             n_dis += 1
     if not n_dis:
         L.append("- none")
+    # agent behaviour under lifecycle pressure, from the sealed receipts
+    try:
+        from blackwall.lifecycle_behavior import (aggregate_behaviour,
+                                                  render_behaviour,
+                                                  trajectory_behaviour)
+        behaviours = []
+        for i in ids:
+            rpath = os.path.join(out, i, "receipts.jsonl")
+            if os.path.exists(rpath):
+                with open(rpath) as fh:
+                    rows = [json.loads(line) for line in fh if line.strip()]
+                behaviours.append(trajectory_behaviour(rows, sealed[i].get("evaluations")))
+        if behaviours:
+            # single-task baseline: phase 5 control, 16.8 mints / 12 tasks
+            L += ["", render_behaviour(aggregate_behaviour(behaviours), 1.40).rstrip()]
+            summary_behaviour = aggregate_behaviour(behaviours)
+        else:
+            summary_behaviour = None
+    except ImportError:
+        summary_behaviour = None
     L += ["", "## Per-trajectory", "",
           "| id | useful | stale | replay | wrong-scope | forged | "
           "cross-task | dup acq | dup eff | recovery | restarts | "
@@ -251,6 +271,7 @@ def build_report(out: str, trajectories) -> tuple[str, dict]:
     for i in missing:
         L.append(f"| {i} | MISSING |" + " |" * 10)
     summary = {"invariants": inv_tot, "sealed": len(ids),
+               "behaviour": summary_behaviour,
                "total": len(trajectories), "missing": missing,
                "aggregate": agg}
     return "\n".join(L) + "\n", summary
