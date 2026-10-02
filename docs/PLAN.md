@@ -283,6 +283,23 @@ authority? Design and receipt-schema gaps: `docs/LIFECYCLE.md`; results:
       inadmissible executions) and usefulness decays with session length.
       Next architectural question (OS/process boundary) is earned.
 
+## Phase 5C milestones / status (context reset, forced expiry, refusal oracle, 2026-10-02)
+
+Bounded; no OS/process isolation. Design: `docs/LIFECYCLE.md` "Phase 5C";
+results: `FINDINGS_PHASE5C.md`.
+
+- [x] A: `--context reset` (driver-side per-task conversation reset; trusted
+      side unchanged); same 20-trajectory suite as 5B.
+- [x] B: `expire_after_first_use` harness-controlled mid-task expiry,
+      receipted with the triggering read and expired grant ids; 20
+      single-injection trajectories; deterministic coverage in tests.
+- [x] Refusal-reason oracle repaired fail-closed (one reason for unknown and
+      wrong-typed ids on read and effect paths; refused reads charged);
+      interface refusals intact; adversarial enumeration tests; canonical
+      byte-identical; the phase 5 expected-failure pin now passes. 268 tests.
+- [ ] A and B real-model runs and results.
+- [ ] `FINDINGS_PHASE5C.md` results; HANDOFF updated.
+
 ## Handoff protocol for a resuming agent
 
 1. Read `PLAN.md` (this file), `HANDOFF.md`, and `git log --oneline`.
