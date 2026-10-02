@@ -157,8 +157,17 @@ Exploratory artifacts and interpretation: `FINDINGS_REALMODEL.md`.
   safety invariant intact, but converted none of the honest-but-useless
   executions and induced over-deference in one task (`FINDINGS_PHASE4.md`).
 
-- **No OS isolation.** The authority boundary is convention, not mechanism.
-  Realizing it needs process isolation or a capability-secure runtime.
+- **OS isolation: demonstrated for a VM-separated agent (phase 7).** The
+  authority boundary was convention through phase 6 (same-user process); phase 7
+  runs the untrusted agent in a QEMU/KVM guest reaching the host only through
+  two vsock channels, and a 63-check probe finds no path to host state
+  (`FINDINGS_PHASE7.md`, `docs/VM_BOUNDARY.md`). QEMU/KVM is trusted.
+- **Evidence custody: tamper-evident against a compromised ledger writer
+  (phase 7B).** An independent, out-of-custody witness detects all 18 tested
+  ledger-corruption classes and fails closed; the writer can still *suppress*
+  evidence, but not undetectably or as reduced authority/consumption
+  (`FINDINGS_PHASE7B.md`, `docs/EVIDENCE-CUSTODY.md`). Not tamper-proof; no
+  signing; not consensus.
 - **Scripted normative driver.** It proves the mediation layer enforces and
   measures; it does not prove a real model would navigate grant requests as
   competently. The LLM adapter is stub-server tested, and one real-endpoint

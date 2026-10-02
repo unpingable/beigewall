@@ -375,6 +375,37 @@ OS/user/namespace work.
       spot); fixed or documented, `tests/test_review_6c.py`;
       `FINDINGS_PHASE6C.md`; HANDOFF. Phase 6C sealed 2026-10-02.
 
+## Phase 7 milestones / status (VM / OS boundary, 2026-10-02)
+
+- [x] Untrusted agent in a QEMU/KVM guest (initramfs-only, no disk/NIC/shared
+      FS); host trusted broker; two vsock channels only (authority
+      `server.serve_vsock`, transport-only `model_relay`).
+- [x] OS-boundary probe suite (`vm/probe_os_boundary.py`): 63 genuine attempts
+      across 9 categories, `reached_trusted_state=0`, mechanism_ok.
+- [x] Deterministic suite over vsock reproduces the canonical receipt-grounded
+      verdict for all 12 tasks; one exploratory real-model run (gpt-oss:20b).
+- [x] Guest builder `vm/build_guest.py`, orchestrator `run_vm_experiment.py`,
+      25 transport tests; adversarial review. QEMU/KVM trusted.
+      `FINDINGS_PHASE7.md`, `docs/VM_BOUNDARY.md`. Phase 7 sealed 2026-10-02.
+
+## Phase 7B milestones / status (evidence custody, 2026-10-02)
+
+- [x] Role split: receipt producer vs compromised primary writer vs independent
+      witness vs observer (`blackwall/witness.py`, additive; canonical
+      byte-identical).
+- [x] Witness (seq + content hash + hash chain, out of writer custody);
+      observer classifies MATCH/OMITTED/ALTERED/DUPLICATED/REPLAYED/REORDERED/
+      FABRICATED/TRUNCATED/ROLLED_BACK/FORKED/WITNESS_UNAVAILABLE.
+- [x] Deterministic attack matrix, 18 corruption classes, all detected / fail
+      closed (`tests/test_evidence_custody.py`); budget + effect-authority
+      safety; witnessed server restart fails closed (`tests/test_custody_server.py`).
+- [x] VM custody demonstration: compromised guest cannot read/modify the host
+      witness (probe `witness_custody`, 12 attempts, all ENOENT); live observer
+      HEALTHY; real-model behaviour unchanged.
+- [x] `FINDINGS_PHASE7B.md`, `docs/EVIDENCE-CUSTODY.md`. Tamper-evident (not
+      tamper-proof); suppression detected + fail-closed. Phase 7B sealed
+      2026-10-02.
+
 ## Handoff protocol for a resuming agent
 
 1. Read `PLAN.md` (this file), `HANDOFF.md`, and `git log --oneline`.

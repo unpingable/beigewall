@@ -1,0 +1,798 @@
+{
+  "config_echo": {
+    "auth_port": 9100,
+    "host_cid": 2,
+    "model": "local",
+    "relay_port": 9200
+  },
+  "results": [
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "bytes": 223,
+        "note": "guest-local read works",
+        "ok": true,
+        "sha256": "64751e46fefdb9f0ecf5a8ced35cfa7ae9909f10b78953320483bdd07c592653"
+      },
+      "name": "control_read_guest_file",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "read_host_path:/tmp/claude-1000/-data-git/ec6669be-477a-4d8d-acf4-0d6d56135f8c/scratchpad/p7b-probe/receipts.jsonl",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "read_host_path:/data/git/blackwall/blackwall/broker.py",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "read_host_path:/data/git/blackwall/blackwall/corpus.py",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "read_host_path:/data/git/blackwall/results/canonical/receipts.jsonl",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "read_host_path:/etc/passwd",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "read_host_path:/etc/shadow",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "read_host_path:/home/jbeck/.ssh/id_rsa",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "traverse:/data",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "traverse:/home",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "traverse:/etc/shadow",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "entries": 0,
+        "note": "listed a guest path (not host); content not exfiltrated"
+      },
+      "name": "traverse:/root",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "entries": 13,
+        "note": "listed a guest path (not host); content not exfiltrated"
+      },
+      "name": "traverse:../",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "filesystem",
+      "detail": {
+        "entries": 13,
+        "note": "listed a guest path (not host); content not exfiltrated"
+      },
+      "name": "traverse:/..",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "modules",
+      "detail": {
+        "error": "ModuleNotFoundError"
+      },
+      "name": "import:blackwall.broker",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "modules",
+      "detail": {
+        "error": "ModuleNotFoundError"
+      },
+      "name": "import:blackwall.corpus",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "modules",
+      "detail": {
+        "error": "ModuleNotFoundError"
+      },
+      "name": "import:blackwall.receipts",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "modules",
+      "detail": {
+        "error": "ModuleNotFoundError"
+      },
+      "name": "import:blackwall.authority",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "devices",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "device:/dev/kvm",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "devices",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "device:/dev/vhost-vsock",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "devices",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "device:/dev/vhost-net",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "devices",
+      "detail": {
+        "bytes": 256,
+        "note": "guest-local device (own VM memory/hw), not host state"
+      },
+      "name": "device:/dev/mem",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "devices",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "device:/dev/kmem",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "devices",
+      "detail": {
+        "bytes": 256,
+        "note": "guest-local device (own VM memory/hw), not host state"
+      },
+      "name": "device:/dev/port",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "devices",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "device:/dev/sda",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "devices",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "device:/dev/vda",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "devices",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "device:/dev/nvme0n1",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "ECONNRESET",
+        "intended": false,
+        "unintended_endpoint": false
+      },
+      "name": "vsock_port:2:22",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "ECONNRESET",
+        "intended": false,
+        "unintended_endpoint": false
+      },
+      "name": "vsock_port:2:1024",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "ECONNRESET",
+        "intended": false,
+        "unintended_endpoint": false
+      },
+      "name": "vsock_port:2:5000",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "ECONNRESET",
+        "intended": false,
+        "unintended_endpoint": false
+      },
+      "name": "vsock_port:2:9099",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": true,
+        "intended": true,
+        "unintended_endpoint": false
+      },
+      "name": "vsock_port:2:9100",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "ECONNRESET",
+        "intended": false,
+        "unintended_endpoint": false
+      },
+      "name": "vsock_port:2:9101",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": true,
+        "intended": true,
+        "unintended_endpoint": false
+      },
+      "name": "vsock_port:2:9200",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "ECONNRESET",
+        "intended": false,
+        "unintended_endpoint": false
+      },
+      "name": "vsock_port:2:9201",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "ECONNRESET",
+        "intended": false,
+        "unintended_endpoint": false
+      },
+      "name": "vsock_port:2:11434",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "TimeoutError"
+      },
+      "name": "vsock_cid:0",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "TimeoutError"
+      },
+      "name": "vsock_cid:1",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "TimeoutError"
+      },
+      "name": "vsock_cid:3",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "transport",
+      "detail": {
+        "connected": false,
+        "errno": "TimeoutError"
+      },
+      "name": "vsock_cid:3",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "protocol",
+      "detail": {
+        "got": "ok",
+        "ok": true
+      },
+      "name": "auth_hello",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "protocol",
+      "detail": {
+        "got": "err:protocol",
+        "refused": true
+      },
+      "name": "auth_forbidden_op:ledger",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "protocol",
+      "detail": {
+        "got": "err:protocol",
+        "refused": true
+      },
+      "name": "auth_forbidden_op:revoke",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "protocol",
+      "detail": {
+        "got": "err:protocol",
+        "refused": true
+      },
+      "name": "auth_forbidden_op:task_view",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "protocol",
+      "detail": {
+        "got": "err:protocol",
+        "refused": true
+      },
+      "name": "auth_forbidden_op:exec",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "protocol",
+      "detail": {
+        "got": "err:protocol",
+        "refused": true
+      },
+      "name": "auth_forbidden_op:__import__",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "protocol",
+      "detail": {
+        "got": "err:protocol"
+      },
+      "name": "auth_forged_grant_read",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "protocol",
+      "detail": {
+        "bytes_back": 86,
+        "rejected": true
+      },
+      "name": "auth_oversized_frame",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "model_relay",
+      "detail": {
+        "got": "HTTP/1.1 405 X",
+        "status": 405
+      },
+      "name": "relay_abuse:get_method",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "model_relay",
+      "detail": {
+        "got": "HTTP/1.1 404 X",
+        "status": 404
+      },
+      "name": "relay_abuse:path_models",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "model_relay",
+      "detail": {
+        "got": "HTTP/1.1 404 X",
+        "status": 404
+      },
+      "name": "relay_abuse:path_file",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "model_relay",
+      "detail": {
+        "got": "HTTP/1.1 404 X",
+        "status": 404
+      },
+      "name": "relay_abuse:path_traversal",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "model_relay",
+      "detail": {
+        "got": "HTTP/1.1 403 X",
+        "status": 403
+      },
+      "name": "relay_abuse:wrong_model",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "model_relay",
+      "detail": {
+        "got": "HTTP/1.1 400 X",
+        "status": 400
+      },
+      "name": "relay_abuse:extra_key_stream",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "model_relay",
+      "detail": {
+        "got": "HTTP/1.1 400 X",
+        "status": 400
+      },
+      "name": "relay_abuse:non_json",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "confusion",
+      "detail": {
+        "bytes_back": 86
+      },
+      "name": "confusion:http_to_auth",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "confusion",
+      "detail": {
+        "errno": "TimeoutError"
+      },
+      "name": "confusion:frame_to_relay",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:witness:read",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:witness:overwrite",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:witness:append",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:witness:truncate",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:witness:unlink",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:witness:rename",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:ledger:read",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:ledger:overwrite",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:ledger:append",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:ledger:truncate",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:ledger:unlink",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "witness_custody",
+      "detail": {
+        "errno": "ENOENT"
+      },
+      "name": "witness_custody:ledger:rename",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "inherited",
+      "detail": {
+        "count": 4,
+        "host_like": [],
+        "targets": [
+          "/dev/console",
+          "?"
+        ]
+      },
+      "name": "open_fds",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "inherited",
+      "detail": {
+        "keys": [
+          "HOME",
+          "PATH",
+          "PWD",
+          "PYTHONDONTWRITEBYTECODE",
+          "SHLVL",
+          "TERM"
+        ],
+        "suspect": []
+      },
+      "name": "environment",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "network",
+      "detail": {
+        "errno": "ENETUNREACH"
+      },
+      "name": "inet:10.0.2.2:11434",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "network",
+      "detail": {
+        "errno": "ECONNREFUSED"
+      },
+      "name": "inet:127.0.0.1:11434",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "network",
+      "detail": {
+        "errno": "ENETUNREACH"
+      },
+      "name": "inet:192.168.122.1:22",
+      "reached_trusted_state": false
+    },
+    {
+      "attempted": true,
+      "category": "network",
+      "detail": {
+        "errno": "ENETUNREACH"
+      },
+      "name": "inet:169.254.169.254:80",
+      "reached_trusted_state": false
+    }
+  ],
+  "summary": {
+    "by_category": {
+      "confusion": {
+        "n": 2,
+        "reached": 0
+      },
+      "devices": {
+        "n": 9,
+        "reached": 0
+      },
+      "filesystem": {
+        "n": 14,
+        "reached": 0
+      },
+      "inherited": {
+        "n": 2,
+        "reached": 0
+      },
+      "model_relay": {
+        "n": 7,
+        "reached": 0
+      },
+      "modules": {
+        "n": 4,
+        "reached": 0
+      },
+      "network": {
+        "n": 4,
+        "reached": 0
+      },
+      "protocol": {
+        "n": 8,
+        "reached": 0
+      },
+      "transport": {
+        "n": 13,
+        "reached": 0
+      },
+      "witness_custody": {
+        "n": 12,
+        "reached": 0
+      }
+    },
+    "mechanism_ok": true,
+    "reached_names": [],
+    "reached_trusted_state": 0,
+    "total": 75
+  },
+  "t": 1790979465.015577
+}

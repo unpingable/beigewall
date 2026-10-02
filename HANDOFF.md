@@ -187,6 +187,28 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   Next (only on request): evidence integrity against a compromised ledger
   *writer* (the real continuation of the 6C honest-ledger gap), not more VM
   hardening.
+- **Phase 7B sealed (2026-10-02)**: evidence custody against a compromised
+  ledger writer. Role split (producer vs compromised writer vs independent
+  witness vs observer) in `blackwall/witness.py`, additive, canonical
+  byte-identical. Witness keeps (epoch, seq, occurrence_id, content_hash,
+  chain_hash) out of writer custody, fed by the producer before the writer.
+  The observer classifies divergence (MATCH/OMITTED/ALTERED/DUPLICATED/
+  REPLAYED/REORDERED/FABRICATED/TRUNCATED/ROLLED_BACK/FORKED/
+  WITNESS_UNAVAILABLE) and fails closed. Deterministic attack matrix of 18
+  corruption classes: all detected, 0 missed, 0 false positives
+  (`tests/test_evidence_custody.py`, `blackwall/writer_corruption.py`). Budget
+  consumption and effect authority can never be relaxed by writer lies; a
+  fabricated receipt authorizes nothing. Server `--witness`: a witnessed
+  restart verifies the primary ledger, fails closed (SystemExit) on
+  divergence, and resumes identities from the witness head
+  (`tests/test_custody_server.py`). VM demonstration: the compromised guest
+  cannot read or modify the host witness (probe `witness_custody`, 12 attempts
+  all ENOENT); live observer HEALTHY; real-model behaviour unchanged.
+  Tamper-**evident** (not tamper-proof; suppression is detected + fail-closed),
+  no signing, not consensus. `FINDINGS_PHASE7B.md`, `docs/EVIDENCE-CUSTODY.md`.
+  447 tests. Next (only on request): make the primary ledger
+  suppression-*resistant* (reconstruct, not just detect) at the custody
+  boundary — the gap this phase leaves — without a second authority or quorum.
 - **Next (not started)**: OS enforcement of the boundary — user or
   namespace separation — as its own experiment. Carry forward unchanged:
   the budget-count wording re-seal; multi-use grants for real-model expiry;
