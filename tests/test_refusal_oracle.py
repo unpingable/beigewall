@@ -75,11 +75,14 @@ class TestEnumeration(unittest.TestCase):
         self.assertIn("outside scope", reason(broker, g, "messages/attachment/att-1"))
         self.assertIn("projection mismatch",
                       reason(broker, g, "messages/thread/thr-alice", "conversation@2"))
-        # under a class-wide grant, a wrong resource *shape* is interface info
+        # under a class-wide grant, a wrong resource *shape* collapses into
+        # the same non-oracle reason (projection X is not available for Y),
+        # which still tells the agent what to change
         _, _, _, _, broker2 = fixture()
         g2 = broker2.request_grant("t1-summarize-alice", "messages/*", "read",
                                    projection="conversation@1")["grant_id"]
-        self.assertIn("does not match", reason(broker2, g2, "messages/attachment/att-1"))
+        self.assertEqual(reason(broker2, g2, "messages/attachment/att-1"),
+                         "conversation@1 is not available for messages/attachment/att-1")
 
     def test_effect_targets_unknown_and_wrong_type_are_indistinguishable(self):
         # a wide send scope so the scope check does not fire first

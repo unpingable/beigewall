@@ -117,11 +117,14 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   real-model mid-task expiry injection.
 - **Policy question raised by phase 5**: an approvable effect is not an
   expected effect; effect *grants* carry no user-intent reference.
-- **Open defect, first item next phase**: broker refusal reasons are an
-  existence/type/count oracle at zero budget cost (pinned as an expected
-  failure in `tests/test_phase5_review_fixes.py`). Fixing it changes the
-  sealed canonical t6 refusal receipts: plan a documented canonical
-  regeneration, not a silent one.
+- **Refusal-reason oracle (phase 5C): repaired for existence/type.**
+  Unknown and wrong-typed ids share one reason on the read and effect
+  paths; every refused read is charged against the grant's read budget;
+  interface refusals keep their recovery information. Residual, bounded:
+  the object-budget reason keeps its sealed wording (it names the object
+  count of an in-scope resource) because changing it alters canonical t6
+  receipts; close with a documented canonical re-seal. Tests:
+  `tests/test_refusal_oracle.py`.
 
 - **Rename before any public release.** "Blackwall" collides with CD Projekt
   Red's Cyberpunk term; the working suggestion is "beigewall" or similar.
