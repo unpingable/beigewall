@@ -117,11 +117,11 @@ def decode(payload: bytes) -> dict:
             raise ProtocolError("too_long:params")
         if len(args["derived_from"]) > MAX_DERIVED:
             raise ProtocolError("too_long:derived_from")
-        for d in args["derived_from"]:
-            if (not isinstance(d, dict) or set(d) != {"type", "ref"}
-                    or not isinstance(d.get("type"), str)
-                    or not isinstance(d.get("ref"), str) or len(d["ref"]) > MAX_STR):
-                raise ProtocolError("bad_derived_from")
+        # provenance entries are bounded JSON values, not schema-checked
+        # here: a malformed entry must reach the broker and be refused
+        # with its own receipt ("malformed derived_from entry"), exactly as
+        # in-process, rather than vanish as a protocol rejection
+        _strings_only(args["derived_from"], depth=0)
         _strings_only(args["params"], depth=0)
     if obj["op"] == "narrative":
         if len(args["claims"]) > MAX_CLAIMS or len(args["declared_effects"]) > MAX_DERIVED:

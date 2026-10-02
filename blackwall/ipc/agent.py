@@ -10,6 +10,7 @@ trusted side via `begin_task`; the agent process cannot choose them.
 """
 
 from .client import RefusalError, RemoteBroker, TransportError
+from .protocol import ProtocolError
 
 
 class RemoteFacade:
@@ -20,29 +21,32 @@ class RemoteFacade:
             self.discover = self._discover
 
     def _discover(self, resource=None):
-        try:
-            return self._broker.discover(self._task_id, resource)
-        except RefusalError as exc:
-            return self._refused(exc)
+        return self._guard(lambda: self._broker.discover(self._task_id, resource))
 
     def request_grant(self, resource, operation, projection=None, ttl=None, budget=None):
-        if not isinstance(resource, str) or not isinstance(operation, str):
-            return {"ok": False, "malformed": True, "error": "malformed request arguments"}
-        return self._broker.request_grant(self._task_id, resource, operation,
-                                          projection=projection, ttl=ttl, budget=budget)
+        return self._guard(lambda: self._broker.request_grant(
+            self._task_id, resource, operation, projection=projection, ttl=ttl,
+            budget=budget))
 
     def read(self, grant_id, resource, projection):
-        try:
-            return self._broker.read(self._task_id, grant_id, resource, projection)
-        except RefusalError as exc:
-            return self._refused(exc)
+        return self._guard(lambda: self._broker.read(self._task_id, grant_id, resource,
+                                                     projection))
 
     def effect(self, grant_id, effect_name, params, derived_from):
+        return self._guard(lambda: self._broker.effect(self._task_id, grant_id, effect_name,
+                                                       params, derived_from))
+
+    def _guard(self, call):
+        """A refusal or a protocol rejection is an observation for the
+        driver (as the in-process facade's malformed/refused results are),
+        never an exception that ends the agent loop."""
         try:
-            return self._broker.effect(self._task_id, grant_id, effect_name, params,
-                                       derived_from)
+            return call()
         except RefusalError as exc:
             return self._refused(exc)
+        except ProtocolError as exc:
+            return {"ok": False, "malformed": True, "protocol_rejected": True,
+                    "error": f"malformed broker request: {exc}"}
 
     @staticmethod
     def _refused(exc: RefusalError) -> dict:

@@ -87,5 +87,72 @@ class TestProcessSeparatedEquivalence(unittest.TestCase):
             self.assertEqual(data[t.task_id]["narrative"], t.narrative)
 
 
+class TestMalformedProvenanceCrossesTheBoundary(unittest.TestCase):
+    """A model-style malformed derived_from must reach the broker and be
+    refused with its receipt (as in-process), not vanish as a protocol
+    rejection; and a protocol rejection must be an observation, not a crash."""
+
+    def test_malformed_derived_from_is_a_broker_refusal(self):
+        from blackwall.ipc import protocol as P
+        req = {"v": 1, "id": "a", "op": "effect", "task_id": "t8-send-reply",
+               "args": {"grant_id": "g-1", "effect_name": "send_message",
+                        "params": {"thread_id": "thr-alice", "body": "x"},
+                        "derived_from": ["d435cdd1", {"ref": "x"}, 7]}}
+        self.assertEqual(P.decode(json.dumps(req).encode())["op"], "effect")
+        with self.assertRaises(P.ProtocolError):
+            P.decode(json.dumps({**req, "args": {**req["args"],
+                                                 "derived_from": [[[[[[[[1]]]]]]]]}}).encode())
+
+    def test_facade_turns_protocol_rejection_into_an_observation(self):
+        from blackwall.ipc.agent import RemoteFacade
+        from blackwall.ipc.protocol import ProtocolError
+
+        class Stub:
+            def effect(self, *a, **k):
+                raise ProtocolError("unknown_arg")
+
+            def read(self, *a, **k):
+                raise ProtocolError("bad_type:grant_id")
+        f = RemoteFacade(Stub(), "t1-summarize-alice")
+        obs = f.effect("g-1", "send_message", {}, [])
+        self.assertFalse(obs["ok"])
+        self.assertTrue(obs["malformed"] and obs["protocol_rejected"])
+        self.assertFalse(f.read(5, "x", "y")["ok"])
+
+    def test_end_to_end_malformed_provenance_receipted(self):
+        from blackwall.tasks import task_suite
+        ids = ["t8-send-reply"]
+        with tempfile.TemporaryDirectory() as d:
+            os.mkdir(os.path.join(d, "sock"), 0o700)
+            sock, ledger = os.path.join(d, "sock", "bw.sock"), os.path.join(d, "receipts.jsonl")
+            srv = subprocess.Popen([sys.executable, "-m", "blackwall.ipc.server", "--socket",
+                                    sock, "--ledger", ledger, "--condition", "control"], cwd=ROOT)
+            try:
+                for _ in range(100):
+                    if os.path.exists(sock):
+                        break
+                    time.sleep(0.1)
+                from blackwall.ipc.client import RemoteBroker, RefusalError
+                b = RemoteBroker(sock)
+                b.begin_task("t8-send-reply")
+                g = b.request_grant("t8-send-reply", "messages/thread/thr-alice", "read",
+                                    projection="conversation@1")["grant_id"]
+                b.read("t8-send-reply", g, "messages/thread/thr-alice", "conversation@1")
+                gs = b.request_grant("t8-send-reply", "messages/thread/thr-alice",
+                                     "send_message")["grant_id"]
+                with self.assertRaises(RefusalError) as cm:
+                    b.effect("t8-send-reply", gs, "send_message",
+                             {"thread_id": "thr-alice", "body": "x"}, ["not-a-dict"])
+                self.assertIn("malformed derived_from", str(cm.exception))
+                b.close()
+            finally:
+                srv.terminate()
+                srv.wait(timeout=10)
+            rows = [json.loads(l) for l in open(ledger)]
+            self.assertTrue(any(r["kind"] == "refusal" and "malformed derived_from" in r["reason"]
+                                for r in rows))
+            self.assertFalse(any(r["kind"] == "ipc_reject" for r in rows))
+
+
 if __name__ == "__main__":
     unittest.main()
