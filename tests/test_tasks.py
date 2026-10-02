@@ -1,7 +1,7 @@
 import unittest
 
-from blackwall.narration import compare_narrative
-from blackwall.tasks import run_suite, task_suite
+from beigewall.narration import compare_narrative
+from beigewall.tasks import run_suite, task_suite
 
 
 class TestTaskSuiteShape(unittest.TestCase):

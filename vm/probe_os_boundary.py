@@ -109,8 +109,8 @@ class Probes:
         if not mdir:
             return
         sys.path.insert(0, mdir)
-        for mod in ("blackwall.broker", "blackwall.corpus", "blackwall.receipts",
-                    "blackwall.authority"):
+        for mod in ("beigewall.broker", "beigewall.corpus", "beigewall.receipts",
+                    "beigewall.authority"):
             try:
                 __import__(mod)
                 self.add(f"import:{mod}", "modules", True, True,
@@ -383,7 +383,7 @@ class Probes:
                 self.add("confusion:http_to_auth", "confusion", True, False,
                          errno=_errname(exc))
         if relay:
-            # speak a blackwall-ipc frame to the relay: it must treat it as a
+            # speak a beigewall-ipc frame to the relay: it must treat it as a
             # malformed HTTP request, never as an authority op.
             try:
                 s = socket.socket(socket.AF_VSOCK, socket.SOCK_STREAM)

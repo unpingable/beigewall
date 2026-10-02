@@ -3,8 +3,8 @@ import os
 import tempfile
 import unittest
 
-from blackwall.agent.drivers import LLMDriver, ScriptedDriver
-from blackwall.llm_experiment import run_llm_experiment
+from beigewall.agent.drivers import LLMDriver, ScriptedDriver
+from beigewall.llm_experiment import run_llm_experiment
 
 
 class TestRunnerResumability(unittest.TestCase):

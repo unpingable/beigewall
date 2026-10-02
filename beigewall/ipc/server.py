@@ -1,7 +1,7 @@
 """Trusted membrane process (phase 6).
 
 Owns the corpus, authority, broker, projections, effects, catalog and
-ledger. Serves `blackwall-ipc/1` on a Unix-domain socket; every byte from
+ledger. Serves `beigewall-ipc/1` on a Unix-domain socket; every byte from
 the socket is hostile. It never evaluates, imports or opens anything named
 by a client; the only filesystem paths it knows come from its own argv.
 Task definitions and prompts are the server's: the client learns a task's

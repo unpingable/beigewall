@@ -5,19 +5,19 @@ import json
 import math
 import unittest
 
-from blackwall.agent.drivers import LLMDriver, ScriptedDriver
-from blackwall.agent.harness import Harness, ToolFacade
-from blackwall.authority import PolicyAuthority
-from blackwall.broker import CapabilityBroker
-from blackwall.corpus import build_demo_corpus
-from blackwall.grants import Budget
-from blackwall.lifecycle import (LifecycleHarness, Step, Trajectory,
+from beigewall.agent.drivers import LLMDriver, ScriptedDriver
+from beigewall.agent.harness import Harness, ToolFacade
+from beigewall.authority import PolicyAuthority
+from beigewall.broker import CapabilityBroker
+from beigewall.corpus import build_demo_corpus
+from beigewall.grants import Budget
+from beigewall.lifecycle import (LifecycleHarness, Step, Trajectory,
                                  probe_trajectories, run_trajectory,
                                  scripted_driver_for)
-from blackwall.lifecycle_metrics import disagreements, trajectory_metrics
-from blackwall.lifecycle_suite import llm_trajectories
-from blackwall.receipts import Ledger
-from blackwall.tasks import LogicalClock, experiment_policy, task_suite
+from beigewall.lifecycle_metrics import disagreements, trajectory_metrics
+from beigewall.lifecycle_suite import llm_trajectories
+from beigewall.receipts import Ledger
+from beigewall.tasks import LogicalClock, experiment_policy, task_suite
 
 
 def fixture():

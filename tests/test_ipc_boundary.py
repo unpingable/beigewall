@@ -1,6 +1,6 @@
 """Phase 6 process-boundary probes (docs/PROCESS_BOUNDARY.md).
 
-A real `blackwall.ipc.server` subprocess is driven over raw AF_UNIX sockets
+A real `beigewall.ipc.server` subprocess is driven over raw AF_UNIX sockets
 by a client assumed compromised. Every probe asserts the exact server reply
 and the trusted ledger evidence: the client gains no trusted authority.
 """
@@ -16,15 +16,15 @@ import time
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SERVER_SRC = os.path.join(ROOT, "blackwall", "ipc", "server.py")
+SERVER_SRC = os.path.join(ROOT, "beigewall", "ipc", "server.py")
 AGENT_SRC = os.path.join(ROOT, "run_agent_process.py")
 MAX_FRAME = 262144
 ALICE = "messages/thread/thr-alice"
 GROUP = "messages/thread/thr-group"
 def _t8_prompt_hash():
     # computed test-side only to fabricate a *real other-task* hash
-    from blackwall.receipts import canonical_hash
-    from blackwall.tasks import task_suite
+    from beigewall.receipts import canonical_hash
+    from beigewall.tasks import task_suite
     t8 = next(t for t in task_suite() if t.task_id == "t8-send-reply")
     return canonical_hash({"prompt": t8.prompt})
 
@@ -100,14 +100,14 @@ class ServerCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not os.path.exists(SERVER_SRC):
-            raise unittest.SkipTest("blackwall/ipc/server.py not present yet")
+            raise unittest.SkipTest("beigewall/ipc/server.py not present yet")
         cls.tmp = tempfile.mkdtemp(prefix="bw-ipc-")
         os.chmod(cls.tmp, 0o700)
         cls.sock = os.path.join(cls.tmp, "s.sock")
         cls.ledger = os.path.join(cls.tmp, "receipts.jsonl")
         cls.log = open(os.path.join(cls.tmp, "server.log"), "wb")
         cls.proc = subprocess.Popen(
-            [sys.executable, "-m", "blackwall.ipc.server", "--socket", cls.sock,
+            [sys.executable, "-m", "beigewall.ipc.server", "--socket", cls.sock,
              "--ledger", cls.ledger, "--condition", "control",
              "--run-id", "probe"], cwd=ROOT, stdout=cls.log,
             stderr=subprocess.STDOUT)
@@ -440,7 +440,7 @@ class TestIpcBoundaryProbes(ServerCase):
         r = c.recv_obj()
         self.assertTrue(r["ok"], r)
         self.assertEqual(r["id"], "frag")
-        self.assertEqual(r["result"]["protocol"], "blackwall-ipc/1")
+        self.assertEqual(r["result"]["protocol"], "beigewall-ipc/1")
 
     def test_16_response_ids_echo_in_order(self):
         c = self.conn()
@@ -603,11 +603,11 @@ class TestAgentImportGraph(unittest.TestCase):
             self.skipTest("run_agent_process.py not present yet")
         out = subprocess.run(
             [sys.executable, "-c", "import run_agent_process, sys; print("
-             "'\\n'.join(sorted(m for m in sys.modules if m.startswith('blackwall'))))"],
+             "'\\n'.join(sorted(m for m in sys.modules if m.startswith('beigewall'))))"],
             cwd=ROOT, capture_output=True, text=True, timeout=60)
         self.assertEqual(out.returncode, 0, out.stderr)
         loaded = set(out.stdout.split())
-        trusted = {f"blackwall.{m}" for m in ("broker", "corpus", "authority",
+        trusted = {f"beigewall.{m}" for m in ("broker", "corpus", "authority",
                                               "projections", "effects", "receipts")}
         self.assertFalse(loaded & trusted, sorted(loaded & trusted))
 

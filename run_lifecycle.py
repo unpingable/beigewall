@@ -2,7 +2,7 @@
 """Run the Phase 5B lifecycle trajectory suite (exploratory) and report.
 
 Usage:
-  BLACKWALL_LLM_BASE_URL=... BLACKWALL_LLM_MODEL=... \
+  BEIGEWALL_LLM_BASE_URL=... BEIGEWALL_LLM_MODEL=... \
   python3 run_lifecycle.py --out results/exploratory/phase5b-<label> \
       [--trajectories 20] [--condition control|global|denial|task] \
       [--driver llm|scripted] [--attempts 8]
@@ -90,8 +90,8 @@ def _disagreements(disagreements, rows, tid):
 
 
 def _run_one(traj, out, driver_factory, discovery_mode, max_steps):
-    from blackwall.lifecycle import run_trajectory
-    from blackwall.lifecycle_metrics import disagreements, trajectory_metrics
+    from beigewall.lifecycle import run_trajectory
+    from beigewall.lifecycle_metrics import disagreements, trajectory_metrics
     tdir = os.path.join(out, traj.trajectory_id)
     os.makedirs(tdir, exist_ok=True)
     sink = os.path.join(tdir, "receipts.jsonl")
@@ -166,7 +166,7 @@ def _stats(vals) -> str:
 
 
 def build_report(out: str, trajectories) -> tuple[str, dict]:
-    from blackwall.lifecycle_suite import describe
+    from beigewall.lifecycle_suite import describe
     sealed, missing = {}, []
     for t in trajectories:
         rec = _load_sealed(out, t.trajectory_id)
@@ -177,7 +177,7 @@ def build_report(out: str, trajectories) -> tuple[str, dict]:
     agg = None
     if sealed:
         try:
-            from blackwall.lifecycle_metrics import aggregate
+            from beigewall.lifecycle_metrics import aggregate
             agg = aggregate(list(sealed.values()))
         except ImportError:
             agg = None
@@ -237,7 +237,7 @@ def build_report(out: str, trajectories) -> tuple[str, dict]:
         L.append("- none")
     # agent behaviour under lifecycle pressure, from the sealed receipts
     try:
-        from blackwall.lifecycle_behavior import (aggregate_behaviour,
+        from beigewall.lifecycle_behavior import (aggregate_behaviour,
                                                   render_behaviour,
                                                   trajectory_behaviour)
         behaviours = []
@@ -286,7 +286,7 @@ def main(argv=None) -> int:
     p.add_argument("--driver", choices=("llm", "scripted"), default="llm")
     p.add_argument("--attempts", type=int, default=8)
     p.add_argument("--max-steps", type=int, default=40)
-    p.add_argument("--model", default=os.environ.get("BLACKWALL_LLM_MODEL"))
+    p.add_argument("--model", default=os.environ.get("BEIGEWALL_LLM_MODEL"))
     p.add_argument("--report", action="store_true")
     p.add_argument("--context", choices=("session", "reset"), default="session",
                    help="session: one conversation across the trajectory "
@@ -301,13 +301,13 @@ def main(argv=None) -> int:
               file=sys.stderr)
         return 2
 
-    from blackwall.lifecycle_suite import (describe, llm_trajectories,
+    from beigewall.lifecycle_suite import (describe, llm_trajectories,
                                            scripted_probe_trajectories)
     if a.driver == "scripted":
-        from blackwall.lifecycle import probe_trajectories
+        from beigewall.lifecycle import probe_trajectories
         trajs = probe_trajectories()
     elif a.suite == "expiry":
-        from blackwall.lifecycle_suite import expiry_trajectories
+        from beigewall.lifecycle_suite import expiry_trajectories
         trajs = expiry_trajectories(a.trajectories)
     else:
         trajs = llm_trajectories(a.trajectories)
@@ -328,19 +328,19 @@ def main(argv=None) -> int:
         print(f"wrote {a.out}/report.md")
         return 0
 
-    from blackwall.llm_experiment import CONDITION_MODES
+    from beigewall.llm_experiment import CONDITION_MODES
     mode = CONDITION_MODES[a.condition]
-    base_url = os.environ.get("BLACKWALL_LLM_BASE_URL", "")
+    base_url = os.environ.get("BEIGEWALL_LLM_BASE_URL", "")
     model = a.model or "scripted"
     if a.driver == "llm":
-        from blackwall.agent.drivers import LLMDriver
+        from beigewall.agent.drivers import LLMDriver
         if LLMDriver.from_env() is None:
-            print("error: set BLACKWALL_LLM_BASE_URL (and "
-                  "BLACKWALL_LLM_API_KEY for non-loopback endpoints); "
+            print("error: set BEIGEWALL_LLM_BASE_URL (and "
+                  "BEIGEWALL_LLM_API_KEY for non-loopback endpoints); "
                   "refusing to run unconfigured", file=sys.stderr)
             return 2
         model = a.model or LLMDriver.from_env()._model
-        api_key = os.environ.get("BLACKWALL_LLM_API_KEY", "")
+        api_key = os.environ.get("BEIGEWALL_LLM_API_KEY", "")
 
         def factory(_traj):
             return LLMDriver(base_url, api_key, model,
@@ -348,9 +348,9 @@ def main(argv=None) -> int:
                              session=(a.context == "session"))
     else:
         try:
-            from blackwall.lifecycle import scripted_driver_for
+            from beigewall.lifecycle import scripted_driver_for
         except ImportError:
-            print("skip: blackwall.lifecycle.scripted_driver_for is not "
+            print("skip: beigewall.lifecycle.scripted_driver_for is not "
                   "available", file=sys.stderr)
             return 0
 

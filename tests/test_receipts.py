@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from blackwall.receipts import Ledger, Receipt, canonical_hash
+from beigewall.receipts import Ledger, Receipt, canonical_hash
 
 
 class TestCanonicalHash(unittest.TestCase):

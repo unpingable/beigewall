@@ -3,9 +3,9 @@
 Status: research experiment (phase 3). Normative canonical results in
 `results/canonical/` are unchanged; the legacy frozen checks (`Task.check`)
 are preserved as a diagnostic. This document is the design, threat model, and
-limitations of the new evaluator. Implementation: `blackwall/facts.py`,
-`blackwall/disclosure.py`, `blackwall/claims.py`, `blackwall/contracts.py`,
-`blackwall/evaluator.py`, `blackwall/reevaluation.py`, `run_reevaluation.py`.
+limitations of the new evaluator. Implementation: `beigewall/facts.py`,
+`beigewall/disclosure.py`, `beigewall/claims.py`, `beigewall/contracts.py`,
+`beigewall/evaluator.py`, `beigewall/reevaluation.py`, `run_reevaluation.py`.
 
 ## Research question
 

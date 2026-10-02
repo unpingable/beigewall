@@ -4,12 +4,12 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from blackwall.agent.drivers import LLMDriver
-from blackwall.agent.harness import Harness
-from blackwall.authority import PolicyAuthority, PolicyRule
-from blackwall.broker import CapabilityBroker
-from blackwall.corpus import build_demo_corpus
-from blackwall.receipts import Ledger
+from beigewall.agent.drivers import LLMDriver
+from beigewall.agent.harness import Harness
+from beigewall.authority import PolicyAuthority, PolicyRule
+from beigewall.broker import CapabilityBroker
+from beigewall.corpus import build_demo_corpus
+from beigewall.receipts import Ledger
 
 
 class StubLLMHandler(BaseHTTPRequestHandler):
@@ -86,11 +86,11 @@ class TestLLMDriver(unittest.TestCase):
 
     def test_from_env_gating(self):
         saved = {k: os.environ.pop(k, None)
-                 for k in ("BLACKWALL_LLM_BASE_URL", "BLACKWALL_LLM_API_KEY")}
+                 for k in ("BEIGEWALL_LLM_BASE_URL", "BEIGEWALL_LLM_API_KEY")}
         try:
             self.assertIsNone(LLMDriver.from_env())
-            os.environ["BLACKWALL_LLM_BASE_URL"] = self.base_url
-            os.environ["BLACKWALL_LLM_API_KEY"] = "test-key"
+            os.environ["BEIGEWALL_LLM_BASE_URL"] = self.base_url
+            os.environ["BEIGEWALL_LLM_API_KEY"] = "test-key"
             self.assertIsNotNone(LLMDriver.from_env())
         finally:
             for k, v in saved.items():

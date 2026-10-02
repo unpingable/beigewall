@@ -2,10 +2,10 @@ import json
 import unittest
 from pathlib import Path
 
-from blackwall.budget_metrics import (budget_refusal_kind, compare_conditions,
+from beigewall.budget_metrics import (budget_refusal_kind, compare_conditions,
                                       render, run_budget_summary,
                                       task_budget_outcome)
-from blackwall.contracts import AnswerContract
+from beigewall.contracts import AnswerContract
 
 ROOT = Path(__file__).resolve().parent.parent
 CANON = ROOT / "results" / "canonical" / "receipts.jsonl"

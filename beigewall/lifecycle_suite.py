@@ -12,7 +12,7 @@ is used at least 3 times across the default suite.
 import random
 
 try:  # lifecycle.py is written separately; keep this module importable alone
-    from blackwall.lifecycle import Step, Trajectory
+    from beigewall.lifecycle import Step, Trajectory
 except ImportError:  # pragma: no cover - fallback shapes only
     from dataclasses import dataclass, field
 
@@ -50,7 +50,7 @@ _TOKENS = {"ttl_cap": "ttl{ticks}", "time_jump": "jump{ticks}",
 
 
 def _task_ids() -> list[str]:
-    from blackwall.tasks import task_suite
+    from beigewall.tasks import task_suite
     return [t.task_id for t in task_suite()]
 
 
@@ -146,7 +146,7 @@ def llm_trajectories(n: int = 20, seed: int = 20261002) -> list:
 
 def scripted_probe_trajectories() -> list:
     """Empty by design: the deterministic scripted probes live in
-    blackwall/lifecycle.py (written by another engineer)."""
+    beigewall/lifecycle.py (written by another engineer)."""
     return []
 
 
@@ -171,13 +171,13 @@ EXPIRY_TARGETS = ("t8-send-reply", "t11-fabricated-provenance", "t4-schedule-pri
 
 
 def expiry_trajectories(n: int = 20, seed: int = 20261003) -> list:
-    from blackwall.tasks import task_suite
+    from beigewall.tasks import task_suite
     """Phase 5C-B: trajectories of 4-6 distinct tasks with exactly one
     harness-controlled `expire_after_first_use` injection placed before a
     target task (one where a grant minted before the first read is likely
     to be needed after it). No other injections, so recovery is attributable."""
     try:
-        from blackwall.lifecycle import Step, Trajectory
+        from beigewall.lifecycle import Step, Trajectory
     except ImportError:            # pragma: no cover
         Step, Trajectory = _Step, _Trajectory
     rng = random.Random(seed)

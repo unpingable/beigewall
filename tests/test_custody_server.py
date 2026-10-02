@@ -12,9 +12,9 @@ import os
 import tempfile
 import unittest
 
-from blackwall.receipts import Ledger
-from blackwall.witness import Witness
-from blackwall.ipc.server import TrustedServer
+from beigewall.receipts import Ledger
+from beigewall.witness import Witness
+from beigewall.ipc.server import TrustedServer
 
 
 def _seed(ledger_path, witness_path):

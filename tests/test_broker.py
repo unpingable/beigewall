@@ -1,10 +1,10 @@
 import unittest
 
-from blackwall.authority import PolicyAuthority, PolicyRule
-from blackwall.broker import CapabilityBroker, RefusalError
-from blackwall.corpus import build_demo_corpus
-from blackwall.grants import Budget
-from blackwall.receipts import Ledger, canonical_hash
+from beigewall.authority import PolicyAuthority, PolicyRule
+from beigewall.broker import CapabilityBroker, RefusalError
+from beigewall.corpus import build_demo_corpus
+from beigewall.grants import Budget
+from beigewall.receipts import Ledger, canonical_hash
 
 
 class BrokerFixture(unittest.TestCase):

@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from blackwall.agent.drivers import LLMDriver
+from beigewall.agent.drivers import LLMDriver
 
 
 class TestNarrativeParsing(unittest.TestCase):

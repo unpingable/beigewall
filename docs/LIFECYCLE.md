@@ -1,6 +1,6 @@
 # Phase 5B — long-horizon authority lifecycle
 
-Research question: does BLACKWALL preserve authority isolation and
+Research question: does BeigeWall preserve authority isolation and
 provenance correctness when an untrusted agent operates over a long-lived
 session containing retries, task transitions, expiration, revocation,
 restart, duplicate delivery and stale authority?
@@ -46,7 +46,7 @@ task initiated it, and whether a retry or duplicate occurred.
   injection and task transition, with `trajectory_id`, `step`, `event`,
   details (e.g. `{"event": "time_jump", "ticks": 700}`,
   `{"event": "transport_loss", "dropped_receipt_id": "r-41"}`).
-- Trajectory harness (`blackwall/lifecycle.py`): runs a sequence of steps
+- Trajectory harness (`beigewall/lifecycle.py`): runs a sequence of steps
   over one corpus/ledger/authority/broker; a step is a task (one of the 12,
   unchanged) or an injection; the driver is one session across steps.
   Injections: `time_jump` (advance the logical clock past TTLs),

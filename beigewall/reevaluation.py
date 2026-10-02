@@ -2,7 +2,7 @@
 
 Role: read saved `receipts.jsonl` / `metrics.json` pairs (the canonical run or
 the `run-N/` directories of an exploratory batch), evaluate every task with
-`blackwall.evaluator.evaluate_task`, and compare against the stored legacy
+`beigewall.evaluator.evaluate_task`, and compare against the stored legacy
 strict result (`per_task[task_id]["success"]`). Stored files are never
 modified and the legacy result is never recomputed. Each (run, task) gap is
 attributed to a cause per the "Gap attribution" table in docs/EVALUATOR.md.
@@ -15,7 +15,7 @@ import subprocess
 from collections import Counter
 from pathlib import Path
 
-from blackwall.tasks import task_suite
+from beigewall.tasks import task_suite
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -71,7 +71,7 @@ def _load_rows(path) -> list[dict]:
 
 
 def reevaluate_run(run: dict) -> dict:
-    from blackwall.evaluator import evaluate_task  # lazy: core may be absent
+    from beigewall.evaluator import evaluate_task  # lazy: core may be absent
 
     rows = _load_rows(run["receipts_path"])
     with open(run["metrics_path"]) as f:

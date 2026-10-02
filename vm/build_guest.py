@@ -28,16 +28,16 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # untrusted BeigeWall subset (must match the phase-6 import-graph contract)
 BW_FILES = [
-    "blackwall/__init__.py",
-    "blackwall/ipc/__init__.py",
-    "blackwall/ipc/client.py",
-    "blackwall/ipc/agent.py",
-    "blackwall/ipc/protocol.py",
-    "blackwall/ipc/scripted_tasks.json",
-    "blackwall/agent/__init__.py",
-    "blackwall/agent/drivers.py",
-    "blackwall/agent/harness.py",
-    "blackwall/tasks_public.py",
+    "beigewall/__init__.py",
+    "beigewall/ipc/__init__.py",
+    "beigewall/ipc/client.py",
+    "beigewall/ipc/agent.py",
+    "beigewall/ipc/protocol.py",
+    "beigewall/ipc/scripted_tasks.json",
+    "beigewall/agent/__init__.py",
+    "beigewall/agent/drivers.py",
+    "beigewall/agent/harness.py",
+    "beigewall/tasks_public.py",
     "run_agent_process.py",
     "vm/guest_main.py",
     "vm/guest_model_forwarder.py",
@@ -144,7 +144,7 @@ def build_stage(stage, modules_dir):
 def verify_no_trusted(stage):
     """Belt-and-suspenders: the staged tree must not contain a trusted
     module source (the import-graph test is the primary guard)."""
-    bwdir = os.path.join(stage, "opt/bw/blackwall")
+    bwdir = os.path.join(stage, "opt/bw/beigewall")
     present = {f[:-3] for f in os.listdir(bwdir) if f.endswith(".py")}
     leaked = present & TRUSTED_FORBIDDEN
     if leaked:

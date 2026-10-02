@@ -4,9 +4,9 @@ import os
 import tempfile
 import unittest
 
-from blackwall.agent.drivers import ScriptedDriver
-from blackwall.llm_experiment import run_llm_experiment
-from blackwall.phase4 import classify, compare, conversion, render
+from beigewall.agent.drivers import ScriptedDriver
+from beigewall.llm_experiment import run_llm_experiment
+from beigewall.phase4 import classify, compare, conversion, render
 
 
 class TestPhase4Comparison(unittest.TestCase):

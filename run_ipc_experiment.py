@@ -3,7 +3,7 @@
 
 For each run it creates a private run directory (mode 0700) holding the
 receipt ledger and a private socket directory, starts the trusted server
-(`python3 -m blackwall.ipc.server`), then starts the untrusted agent
+(`python3 -m beigewall.ipc.server`), then starts the untrusted agent
 (`run_agent_process.py`) with only --socket, --condition, --driver and
 --tasks. The agent is never given the ledger path, corpus or policy. After
 the agent exits the server is stopped with SIGTERM and the ledger is
@@ -13,7 +13,7 @@ in-process runner does. See docs/PROCESS_BOUNDARY.md.
 Usage:
   python3 run_ipc_experiment.py --runs 3 --label scripted --condition control \
       --driver scripted
-  BLACKWALL_LLM_BASE_URL=... BLACKWALL_LLM_MODEL=... \
+  BEIGEWALL_LLM_BASE_URL=... BEIGEWALL_LLM_MODEL=... \
   python3 run_ipc_experiment.py --runs 5 --label qwen --condition global \
       --driver llm [--out results/exploratory/phase6-ipc-<label>-<utc>]
 
@@ -90,9 +90,9 @@ def evaluate_ledger(receipts_path: str, telemetry: dict[str, dict], tasks,
                     driver: str, revision: str) -> dict:
     """Build the metrics record from the trusted ledger alone (plus the
     advisory agent telemetry), the way run_llm_experiment does."""
-    from blackwall.evaluator import evaluate_task
-    from blackwall.metrics import suite_metrics, task_metrics
-    from blackwall.phase4 import _ledger_from_rows, classify
+    from beigewall.evaluator import evaluate_task
+    from beigewall.metrics import suite_metrics, task_metrics
+    from beigewall.phase4 import _ledger_from_rows, classify
     with open(receipts_path) as fh:
         rows = [json.loads(line) for line in fh if line.strip()]
     ledger = _ledger_from_rows(rows)
@@ -138,7 +138,7 @@ def evaluate_ledger(receipts_path: str, telemetry: dict[str, dict], tasks,
     return {"run_id": run_id, "label": label, "model": model,
             "condition": condition, "driver": driver,
             "architecture": "process-separated",
-            "blackwall_revision": revision, "per_task": per_task,
+            "beigewall_revision": revision, "per_task": per_task,
             "suite": suite, "ipc": ipc_run}
 
 
@@ -173,7 +173,7 @@ def execute_run(run_dir: str, *, condition: str, driver: str, task_ids: list[str
     info: dict = {"agent_rc": None, "server_rc": None}
     server_log = open(os.path.join(run_dir, "server.log"), "w")
     server = subprocess.Popen(
-        [sys.executable, "-m", "blackwall.ipc.server", "--socket", sock,
+        [sys.executable, "-m", "beigewall.ipc.server", "--socket", sock,
          "--ledger", receipts, "--condition", condition, "--run-id", run_id,
          "--tasks", ",".join(task_ids)] + _policy_args(resource_policy),
         cwd=ROOT, stdout=server_log, stderr=subprocess.STDOUT)
@@ -195,7 +195,7 @@ def execute_run(run_dir: str, *, condition: str, driver: str, task_ids: list[str
             # the agent process inherits only what it needs, not the
             # orchestrator's environment (credentials, agent sockets, ...)
             agent_env = {k: v for k, v in os.environ.items()
-                         if k.startswith("BLACKWALL_LLM_") or k in ("PATH", "HOME", "LANG",
+                         if k.startswith("BEIGEWALL_LLM_") or k in ("PATH", "HOME", "LANG",
                                                                      "LC_ALL", "PYTHONPATH")}
             agent = subprocess.Popen(agent_cmd, cwd=ROOT, stdout=tele,
                                      stderr=err, env=agent_env)
@@ -223,7 +223,7 @@ def execute_run(run_dir: str, *, condition: str, driver: str, task_ids: list[str
 
 
 def _budget_section(meta: dict, records: list[dict], out: str | None) -> list[str]:
-    from blackwall.budget_metrics import CLASSIFICATIONS, run_budget_summary
+    from beigewall.budget_metrics import CLASSIFICATIONS, run_budget_summary
     lines = ["", "## Resource budgets", "",
              f"- configured policy: {meta.get('resource_policy')}", "",
              "| run | effects | budget refusals (count/task/rate) | "
@@ -249,13 +249,13 @@ def _budget_section(meta: dict, records: list[dict], out: str | None) -> list[st
 def _render_report(meta: dict, records: list[dict], infos: dict,
                    out: str | None = None) -> str:
     lines = [
-        "# BLACKWALL process-separated run (phase 6, exploratory)", "",
+        "# BeigeWall process-separated run (phase 6, exploratory)", "",
         f"- label: {meta['label']}", f"- model: {meta['model']}",
         f"- condition: {meta['condition']}", f"- driver: {meta['driver']}",
         f"- architecture: {meta['architecture']}",
         f"- runs: executed {meta['runs_executed']}, reused "
         f"{meta['runs_reused']}, crashed {meta['runs_crashed']}",
-        f"- blackwall revision: {meta['blackwall_revision_at_start']}", "",
+        f"- beigewall revision: {meta['beigewall_revision_at_start']}", "",
         "## Per run", "",
         "| run | success | outcome classes | mean IPC latency ms | "
         "bytes/task | reconnects | transport failures | server exit |",
@@ -306,10 +306,10 @@ def main(argv=None) -> int:
                    help="server --rate n/seconds (effect rate limit), passed through")
     a = p.parse_args(argv)
 
-    model = (os.environ.get("BLACKWALL_LLM_MODEL", "unset")
+    model = (os.environ.get("BEIGEWALL_LLM_MODEL", "unset")
              if a.driver == "llm" else "scripted-driver")
-    if a.driver == "llm" and not os.environ.get("BLACKWALL_LLM_BASE_URL"):
-        print("error: set BLACKWALL_LLM_BASE_URL (and BLACKWALL_LLM_MODEL) "
+    if a.driver == "llm" and not os.environ.get("BEIGEWALL_LLM_BASE_URL"):
+        print("error: set BEIGEWALL_LLM_BASE_URL (and BEIGEWALL_LLM_MODEL) "
               "for --driver llm", file=sys.stderr)
         return 2
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -321,7 +321,7 @@ def main(argv=None) -> int:
         print("error: refusing to write into results/canonical", file=sys.stderr)
         return 2
 
-    from blackwall.tasks import task_suite
+    from beigewall.tasks import task_suite
     tasks = task_suite()
     task_ids = [t.task_id for t in tasks]
     os.makedirs(out, mode=0o700, exist_ok=True)
@@ -408,7 +408,7 @@ def main(argv=None) -> int:
                               for i in sorted(infos)},
         "started_utc": started,
         "finished_utc": datetime.now(timezone.utc).isoformat(),
-        "blackwall_revision_at_start": revision,
+        "beigewall_revision_at_start": revision,
         "note": "exploratory; agent telemetry is advisory across the "
                 "process boundary; no credentials recorded",
     }

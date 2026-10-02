@@ -1,6 +1,6 @@
 import unittest
 
-from blackwall.grants import Budget, Grant, GrantError, scope_matches, validate_use
+from beigewall.grants import Budget, Grant, GrantError, scope_matches, validate_use
 
 
 def make_grant(**kw):

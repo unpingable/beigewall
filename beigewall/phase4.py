@@ -140,7 +140,7 @@ def summarize_condition(cond: dict) -> dict:
         "condition": cond["meta"].get("condition") or (
             "treatment" if cond["meta"].get("capability_discovery")
             else "control (no condition field in meta)"),
-        "model": cond["meta"].get("model"), "revision": cond["meta"].get("blackwall_revision"),
+        "model": cond["meta"].get("model"), "revision": cond["meta"].get("beigewall_revision"),
         "runs": len(runs), "executions": n,
         "classes": {c: classes.get(c, 0) for c in CLASSES},
         "honest_admissible": len(honest_adm),

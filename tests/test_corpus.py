@@ -1,6 +1,6 @@
 import unittest
 
-from blackwall.corpus import Corpus, build_demo_corpus
+from beigewall.corpus import Corpus, build_demo_corpus
 
 
 class TestCorpusApi(unittest.TestCase):

@@ -59,9 +59,9 @@ effect, target), 4 per task, 3 per 10 s.
 
 ## Deterministic results: the attack matrix
 
-Harness: `run_effect_stress.py` driving `blackwall/ipc/stress.py`, a
+Harness: `run_effect_stress.py` driving `beigewall/ipc/stress.py`, a
 hostile client that imports nothing trusted and builds raw
-`blackwall-ipc/1` frames. It attacks one server and one task
+`beigewall-ipc/1` frames. It attacks one server and one task
 (`t8-send-reply`, the only task whose policy approves `send_message` on
 `thr-alice`) with n = 50 attempts per attack and 20 concurrent workers.
 Landed effects are the delta of `effect` receipts in the trusted ledger

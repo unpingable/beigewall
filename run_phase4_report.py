@@ -15,7 +15,7 @@ import json
 import os
 import sys
 
-from blackwall.phase4 import compare, render
+from beigewall.phase4 import compare, render
 
 
 def main() -> int:

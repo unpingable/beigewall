@@ -7,11 +7,11 @@ state (existence, type, object count) through a refusal."""
 
 import unittest
 
-from blackwall.authority import PolicyAuthority
-from blackwall.broker import CapabilityBroker, RefusalError
-from blackwall.corpus import build_demo_corpus
-from blackwall.receipts import Ledger
-from blackwall.tasks import LogicalClock, experiment_policy
+from beigewall.authority import PolicyAuthority
+from beigewall.broker import CapabilityBroker, RefusalError
+from beigewall.corpus import build_demo_corpus
+from beigewall.receipts import Ledger
+from beigewall.tasks import LogicalClock, experiment_policy
 
 
 def fixture():
@@ -86,7 +86,7 @@ class TestEnumeration(unittest.TestCase):
 
     def test_effect_targets_unknown_and_wrong_type_are_indistinguishable(self):
         # a wide send scope so the scope check does not fire first
-        from blackwall.authority import PolicyRule
+        from beigewall.authority import PolicyRule
         clock = LogicalClock(); corpus = build_demo_corpus(); ledger = Ledger(clock=clock.now)
         rules = [PolicyRule(task_id="*", resource="messages/*", operation="send_message",
                             projection="*", decision="approve")] + experiment_policy()

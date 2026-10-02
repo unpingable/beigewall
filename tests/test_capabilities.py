@@ -7,18 +7,18 @@ import os
 import tempfile
 import unittest
 
-from blackwall.agent.drivers import ScriptedDriver
-from blackwall.agent.harness import Harness
-from blackwall.authority import PolicyAuthority
-from blackwall.broker import CapabilityBroker
-from blackwall.capabilities import (PROJECTION_SHAPES, SCHEMA, CapabilityCatalog,
+from beigewall.agent.drivers import ScriptedDriver
+from beigewall.agent.harness import Harness
+from beigewall.authority import PolicyAuthority
+from beigewall.broker import CapabilityBroker
+from beigewall.capabilities import (PROJECTION_SHAPES, SCHEMA, CapabilityCatalog,
                                     policy_decision, policy_version)
-from blackwall.corpus import build_demo_corpus
-from blackwall.experiment import run_experiment
-from blackwall.negotiation import negotiation_telemetry
-from blackwall.projections import run_projection
-from blackwall.receipts import Ledger
-from blackwall.tasks import LogicalClock, experiment_policy, task_suite
+from beigewall.corpus import build_demo_corpus
+from beigewall.experiment import run_experiment
+from beigewall.negotiation import negotiation_telemetry
+from beigewall.projections import run_projection
+from beigewall.receipts import Ledger
+from beigewall.tasks import LogicalClock, experiment_policy, task_suite
 
 
 def fixture():
@@ -52,7 +52,7 @@ class TestCatalogShape(unittest.TestCase):
         self.assertEqual(cat["policy_version"],
                          policy_version(experiment_policy()))
         body = {k: v for k, v in cat.items() if k != "catalog_hash"}
-        from blackwall.receipts import canonical_hash
+        from beigewall.receipts import canonical_hash
         self.assertEqual(canonical_hash(body), cat["catalog_hash"])
 
     def test_catalog_is_deterministic_and_task_scoped(self):
@@ -72,7 +72,7 @@ class TestCatalogShape(unittest.TestCase):
     def test_catalog_discloses_no_corpus_values(self):
         corpus, _, _, broker = fixture()
         values = corpus_values(corpus)
-        from blackwall.disclosure import MANIFEST_IDS
+        from beigewall.disclosure import MANIFEST_IDS
         for task in task_suite():
             cat = broker.discover(task.task_id)["catalog"]
             blob = json.dumps({k: v for k, v in cat.items()
@@ -124,7 +124,7 @@ class TestCatalogShape(unittest.TestCase):
 
     def test_policy_decision_replicates_authority(self):
         _, _, authority, _ = fixture()
-        from blackwall.grants import Budget
+        from beigewall.grants import Budget
         cases = [("t2-group-thread-resolution", "messages/*", "read", "conversation@1"),
                  ("t1-summarize-alice", "messages/thread/thr-alice", "read", "conversation@1"),
                  ("t1-summarize-alice", "messages/thread/thr-alice", "read", "conversation@2"),
@@ -151,7 +151,7 @@ class TestDiscoveryGrantsNothing(unittest.TestCase):
         self.assertEqual(authority.grants_minted, 0)
         self.assertEqual(broker._grants, {})
         # a read with a made-up grant id after discovery is refused as before
-        from blackwall.broker import RefusalError
+        from beigewall.broker import RefusalError
         with self.assertRaises(RefusalError):
             broker.read("t1-summarize-alice", "g-1",
                         "messages/thread/thr-alice", "conversation@1")
@@ -170,7 +170,7 @@ class TestDiscoveryGrantsNothing(unittest.TestCase):
         self.assertNotIn("projection", r)
         self.assertNotIn("content", r)
         # the receipt-grounded evaluator's disclosure set ignores it
-        from blackwall.disclosure import disclosure_from_receipts
+        from beigewall.disclosure import disclosure_from_receipts
         d = disclosure_from_receipts([r], "t1-summarize-alice", "p")
         self.assertEqual(d.pairs, set())
 
@@ -222,7 +222,7 @@ class TestScriptedTreatmentDriver(unittest.TestCase):
     produce the canonical read/effect receipts plus discovery receipts."""
 
     def test_discover_then_canonical_script(self):
-        from blackwall.llm_experiment import run_llm_experiment
+        from beigewall.llm_experiment import run_llm_experiment
 
         def factory(task):
             script = [{"op": "discover"}] + list(task.script)

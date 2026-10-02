@@ -1,4 +1,4 @@
-"""`blackwall-ipc/1`: framing and fail-closed validation.
+"""`beigewall-ipc/1`: framing and fail-closed validation.
 
 Framing: 4-byte big-endian length, then that many bytes of UTF-8 JSON
 holding exactly one object. Everything from the socket is hostile: the
@@ -10,7 +10,7 @@ never evaluates, imports or opens anything named by a client string.
 import json
 import struct
 
-PROTOCOL = "blackwall-ipc/1"
+PROTOCOL = "beigewall-ipc/1"
 VERSION = 1
 MAX_FRAME = 262144          # bytes, either direction
 MAX_ID = 64

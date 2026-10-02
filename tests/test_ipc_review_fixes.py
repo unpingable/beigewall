@@ -8,7 +8,7 @@ import tempfile
 import time
 import unittest
 
-from blackwall.ipc import protocol as P
+from beigewall.ipc import protocol as P
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -65,8 +65,8 @@ class TestProtocolHardening(unittest.TestCase):
                    declared_effects=["send_message"], summary="ok"))
 
     def test_narration_tolerates_non_object_claims(self):
-        from blackwall.narration import compare_narrative
-        from blackwall.receipts import Ledger
+        from beigewall.narration import compare_narrative
+        from beigewall.receipts import Ledger
         ledger = Ledger(clock=lambda: 0.0)
         ledger.record("narrative", "t1", claims=["I read nothing"], declared_effects=[],
                       summary="")
@@ -80,7 +80,7 @@ class _Server:
         os.makedirs(os.path.join(self.d, "sock"), exist_ok=True)
         self.sock = os.path.join(self.d, "sock", "bw.sock")
         self.ledger = ledger or os.path.join(self.d, "receipts.jsonl")
-        cmd = [sys.executable, "-m", "blackwall.ipc.server", "--socket", self.sock,
+        cmd = [sys.executable, "-m", "beigewall.ipc.server", "--socket", self.sock,
                "--ledger", self.ledger, "--condition", condition]
         if tasks:
             cmd += ["--tasks", ",".join(tasks)]
@@ -101,7 +101,7 @@ class _Server:
 
 class TestTaskIdentity(unittest.TestCase):
     def test_designated_once_active_closed(self):
-        from blackwall.ipc.client import RemoteBroker
+        from beigewall.ipc.client import RemoteBroker
         s = _Server(tasks=["t5-alice-personal-email", "t10-calendar-crossref"])
         try:
             b = RemoteBroker(s.sock)
@@ -136,7 +136,7 @@ class TestTaskIdentity(unittest.TestCase):
             s.stop()
 
     def test_closure_survives_restart_and_second_server_refused(self):
-        from blackwall.ipc.client import RemoteBroker
+        from beigewall.ipc.client import RemoteBroker
         s = _Server(tasks=["t1-summarize-alice", "t3-note-followup"])
         try:
             b = RemoteBroker(s.sock)
@@ -144,7 +144,7 @@ class TestTaskIdentity(unittest.TestCase):
             b.task_end("t1-summarize-alice", "done", False)
             b.close()
             # a second server on the same ledger while the first lives: refused
-            dup = subprocess.run([sys.executable, "-m", "blackwall.ipc.server", "--socket",
+            dup = subprocess.run([sys.executable, "-m", "beigewall.ipc.server", "--socket",
                                   s.sock + "2", "--ledger", s.ledger, "--condition", "control"],
                                  cwd=ROOT, capture_output=True, text=True, timeout=10)
             self.assertNotEqual(dup.returncode, 0)
@@ -163,7 +163,7 @@ class TestTaskIdentity(unittest.TestCase):
             s2.stop()
 
     def test_rejected_frames_carry_no_task_attribution_and_do_not_close_tasks(self):
-        from blackwall.ipc.client import RemoteBroker
+        from beigewall.ipc.client import RemoteBroker
         s = _Server(tasks=["t1-summarize-alice", "t3-note-followup"])
         try:
             b = RemoteBroker(s.sock)
@@ -186,7 +186,7 @@ class TestTaskIdentity(unittest.TestCase):
             s2.stop()
 
     def test_task_view_delivered_over_ipc(self):
-        from blackwall.ipc.client import RemoteBroker
+        from beigewall.ipc.client import RemoteBroker
         s = _Server(condition="task", tasks=["t9-unmediated-access"])
         try:
             b = RemoteBroker(s.sock)
@@ -200,7 +200,7 @@ class TestTaskIdentity(unittest.TestCase):
             s.stop()
 
     def test_agent_assertions_marked_and_live_socket_not_taken_over(self):
-        from blackwall.ipc.client import RemoteBroker
+        from beigewall.ipc.client import RemoteBroker
         s = _Server(tasks=["t1-summarize-alice"])
         try:
             b = RemoteBroker(s.sock)
@@ -211,7 +211,7 @@ class TestTaskIdentity(unittest.TestCase):
             rows = s.rows()
             self.assertTrue(all(r.get("self_reported") for r in rows
                                 if r["kind"] in ("narrative", "task_end")))
-            other = subprocess.run([sys.executable, "-m", "blackwall.ipc.server", "--socket",
+            other = subprocess.run([sys.executable, "-m", "beigewall.ipc.server", "--socket",
                                     s.sock, "--ledger", s.ledger + ".other", "--condition",
                                     "control"], cwd=ROOT, capture_output=True, text=True,
                                    timeout=10)

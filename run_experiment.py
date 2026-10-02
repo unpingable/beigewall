@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Run the BLACKWALL experiment.
+"""Run the BeigeWall experiment.
 
 Usage: python3 run_experiment.py [--out results/canonical]
 
 The run is deterministic: metrics.json and receipts.jsonl are byte-identical
-across runs. Set BLACKWALL_LLM_BASE_URL/BLACKWALL_LLM_API_KEY only to exercise
+across runs. Set BEIGEWALL_LLM_BASE_URL/BEIGEWALL_LLM_API_KEY only to exercise
 the exploratory LLM driver; the canonical results always come from the
 scripted driver.
 """
 
 import argparse
 
-from blackwall.experiment import run_experiment
+from beigewall.experiment import run_experiment
 
 
 def main() -> None:

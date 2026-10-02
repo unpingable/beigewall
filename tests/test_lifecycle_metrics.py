@@ -2,7 +2,7 @@ import json
 import unittest
 from pathlib import Path
 
-from blackwall.lifecycle_metrics import (aggregate, disagreements, reconstruct,
+from beigewall.lifecycle_metrics import (aggregate, disagreements, reconstruct,
                                          trajectory_metrics)
 
 CANONICAL = Path(__file__).resolve().parent.parent / "results/canonical/receipts.jsonl"

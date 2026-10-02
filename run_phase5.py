@@ -2,7 +2,7 @@
 """Phase 5 matrix runner: four conditions, resumable, never overwriting.
 
 Usage:
-  BLACKWALL_LLM_BASE_URL=... BLACKWALL_LLM_MODEL=... \
+  BEIGEWALL_LLM_BASE_URL=... BEIGEWALL_LLM_MODEL=... \
   python3 run_phase5.py --root results/exploratory/phase5-<label> \
       [--runs 10] [--conditions control global denial task] [--attempts 8]
   python3 run_phase5.py --root ... --report [--anchor name=dir ...]
@@ -76,7 +76,7 @@ def main() -> int:
         print("error: refusing to write into results/canonical", file=sys.stderr)
         return 2
     if a.report:
-        from blackwall.phase5 import compare, render
+        from beigewall.phase5 import compare, render
         conds = {c: os.path.join(a.root, c) for c in a.conditions
                  if sealed_runs(os.path.join(a.root, c))}
         missing = [c for c in a.conditions if c not in conds]
@@ -99,8 +99,8 @@ def main() -> int:
         print(text.split("## Over-deference")[0])
         print(f"wrote {out}/")
         return 0
-    if not os.environ.get("BLACKWALL_LLM_BASE_URL"):
-        print("error: set BLACKWALL_LLM_BASE_URL/BLACKWALL_LLM_MODEL", file=sys.stderr)
+    if not os.environ.get("BEIGEWALL_LLM_BASE_URL"):
+        print("error: set BEIGEWALL_LLM_BASE_URL/BEIGEWALL_LLM_MODEL", file=sys.stderr)
         return 2
     ok = True
     for c in a.conditions:

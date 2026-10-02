@@ -1,6 +1,6 @@
 # Capability discovery (phase 4)
 
-Capability discovery answers "what can I legitimately ask BLACKWALL for?"
+Capability discovery answers "what can I legitimately ask BeigeWall for?"
 without answering "what is in the protected corpus?". It is **not**
 authorization: it grants nothing, discloses no corpus value, consults no
 grant state, and cannot confirm whether a particular resource id exists.
@@ -15,7 +15,7 @@ grant state, and cannot confirm whether a particular resource id exists.
   and receipted as an `unmediated_attempt` like any other unknown name.
 - **LLM driver**: `LLMDriver(..., discovery=True)` adds one tool (`discover`)
   to the tool schema and one bullet to the system prompt (the
-  `DISCOVERY_PROMPT_ADDENDUM` in `blackwall/agent/drivers.py`). Nothing else
+  `DISCOVERY_PROMPT_ADDENDUM` in `beigewall/agent/drivers.py`). Nothing else
   about the prompt, tools, task wording, or policy differs between
   conditions.
 - **Runner**: `run_llm_experiment.py --condition {control,treatment}`;
@@ -82,7 +82,7 @@ grant state, and cannot confirm whether a particular resource id exists.
 The receipt-grounded evaluator's disclosure set ignores it; metrics count it
 separately from broker calls (`discovery_calls`), never as a read.
 
-## Abuse telemetry (`blackwall/negotiation.py`)
+## Abuse telemetry (`beigewall/negotiation.py`)
 
 Per task, from receipts and the pure policy matcher: discovery calls, calls
 before the first grant request, calls after a denial, distinct and repeated

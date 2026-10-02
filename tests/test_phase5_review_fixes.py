@@ -8,18 +8,18 @@ import os
 import tempfile
 import unittest
 
-from blackwall.agent.drivers import ScriptedDriver
-from blackwall.agent.harness import Harness
-from blackwall.authority import PolicyAuthority
-from blackwall.broker import CapabilityBroker, RefusalError
-from blackwall.capabilities import ground_prompt, resource_class
-from blackwall.corpus import build_demo_corpus
-from blackwall.deference import classify_deference
-from blackwall.evaluator import evaluate_task
-from blackwall.llm_experiment import run_llm_experiment
-from blackwall.negotiation import negotiation_telemetry
-from blackwall.receipts import Ledger
-from blackwall.tasks import LogicalClock, experiment_policy, task_suite
+from beigewall.agent.drivers import ScriptedDriver
+from beigewall.agent.harness import Harness
+from beigewall.authority import PolicyAuthority
+from beigewall.broker import CapabilityBroker, RefusalError
+from beigewall.capabilities import ground_prompt, resource_class
+from beigewall.corpus import build_demo_corpus
+from beigewall.deference import classify_deference
+from beigewall.evaluator import evaluate_task
+from beigewall.llm_experiment import run_llm_experiment
+from beigewall.negotiation import negotiation_telemetry
+from beigewall.receipts import Ledger
+from beigewall.tasks import LogicalClock, experiment_policy, task_suite
 
 
 def fixture(mode=None):
@@ -169,7 +169,7 @@ class TestRunnerResume(unittest.TestCase):
                                    runs=2, condition="control")
             rec = json.load(open(os.path.join(d, "run-1", "metrics.json")))
             self.assertEqual(rec["condition"], "control")
-            self.assertIn("blackwall_revision", rec)
+            self.assertIn("beigewall_revision", rec)
             # truncate the seal: it must be re-executed, not reused
             with open(os.path.join(d, "run-1", "metrics.json"), "w") as fh:
                 fh.write('{"per_task": {"t1')
@@ -184,7 +184,7 @@ class TestFacadeMalformed(unittest.TestCase):
     def test_malformed_arguments_are_refused_not_crashed(self):
         _, ledger, _, broker = fixture()
         t = task("t1-summarize-alice")
-        from blackwall.agent.harness import ToolFacade
+        from beigewall.agent.harness import ToolFacade
         broker.begin_task(t.task_id, "h")
         facade = ToolFacade(broker, ledger, t.task_id)
         outs = [facade.request_grant([1], "read"),

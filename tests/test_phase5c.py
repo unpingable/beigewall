@@ -5,9 +5,9 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from blackwall.agent.drivers import LLMDriver
-from blackwall.lifecycle import Step, Trajectory, run_trajectory, scripted_driver_for
-from blackwall.lifecycle_suite import expiry_trajectories
+from beigewall.agent.drivers import LLMDriver
+from beigewall.lifecycle import Step, Trajectory, run_trajectory, scripted_driver_for
+from beigewall.lifecycle_suite import expiry_trajectories
 
 
 class TestForcedExpiry(unittest.TestCase):
@@ -51,7 +51,7 @@ class TestForcedExpiry(unittest.TestCase):
         # provenance continuous across recovery: the pre-expiry read's hash
         self.assertEqual(eff["derived_from"][0]["ref"], read_row["projection"]["content_hash"])
         self.assertEqual(res["evaluations"]["t8-send-reply"]["outcome"], "SUCCESS")
-        from blackwall.lifecycle_metrics import disagreements, trajectory_metrics
+        from beigewall.lifecycle_metrics import disagreements, trajectory_metrics
         self.assertEqual(disagreements(rows), [])
         m = trajectory_metrics(rows, "ex-test")
         self.assertEqual(m["expired_attempts"], 1)

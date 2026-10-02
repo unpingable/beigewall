@@ -2,8 +2,8 @@
 
 import unittest
 
-from blackwall.lifecycle import probe_trajectories, run_trajectory, scripted_driver_for
-from blackwall.lifecycle_behavior import (aggregate_behaviour, render_behaviour,
+from beigewall.lifecycle import probe_trajectories, run_trajectory, scripted_driver_for
+from beigewall.lifecycle_behavior import (aggregate_behaviour, render_behaviour,
                                           trajectory_behaviour)
 
 

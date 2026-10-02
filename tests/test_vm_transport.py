@@ -9,8 +9,8 @@ import socket
 import threading
 import unittest
 
-from blackwall import model_relay as R
-from blackwall.ipc import server as S
+from beigewall import model_relay as R
+from beigewall.ipc import server as S
 
 
 def _good_body(model="m", extra=None):
@@ -261,7 +261,7 @@ class TestServerArgs(unittest.TestCase):
 
 class TestClientVsockParse(unittest.TestCase):
     def test_vsock_path_connects_via_af_vsock(self):
-        from blackwall.ipc.client import RemoteBroker, TransportError
+        from beigewall.ipc.client import RemoteBroker, TransportError
         captured = {}
         orig = socket.socket
 

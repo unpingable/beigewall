@@ -1,4 +1,4 @@
-# BLACKWALL — durable implementation plan (spike)
+# BeigeWall — durable implementation plan (spike)
 
 Status legend: `[ ]` pending, `[x]` done. A resuming agent should read this file,
 `HANDOFF.md`, then run `python3 -m unittest discover -s tests -v` to confirm state.
@@ -18,8 +18,8 @@ framework. All code is throwaway-grade unless later promoted by a new decision.
   harness (reproducible measurements). An optional LLM adapter may exist behind the
   same driver interface and the same broker boundary; it is **exploratory telemetry
   only** and must not alter the receipt model, evaluation criteria, or authority
-  semantics. Env-gated (`BLACKWALL_LLM_BASE_URL`, `BLACKWALL_LLM_API_KEY`).
-- **Human authority:** simulated policy authority (`blackwall/authority.py`).
+  semantics. Env-gated (`BEIGEWALL_LLM_BASE_URL`, `BEIGEWALL_LLM_API_KEY`).
+- **Human authority:** simulated policy authority (`beigewall/authority.py`).
   Every grant request produces an authorization event and a mint/deny receipt.
   Default decision is **deny** (fail-closed).
 - **Storage:** corpus as in-memory store seeded from `build_demo_corpus()`;
@@ -129,16 +129,16 @@ least one denial/refusal); friction (grants requested per successful task).
 
 - [x] Repo scaffold (nested git repo, package layout)
 - [x] Durable plan (this file)
-- [x] `blackwall/grants.py` + tests
-- [x] `blackwall/receipts.py` + tests
-- [x] `blackwall/corpus.py` + tests
-- [x] `blackwall/projections.py` + tests
-- [x] `blackwall/authority.py` + tests (incl. `exact` match flag)
-- [x] `blackwall/broker.py` + `blackwall/effects.py` + tests
-- [x] `blackwall/agent/harness.py` + `blackwall/agent/drivers.py` + tests
+- [x] `beigewall/grants.py` + tests
+- [x] `beigewall/receipts.py` + tests
+- [x] `beigewall/corpus.py` + tests
+- [x] `beigewall/projections.py` + tests
+- [x] `beigewall/authority.py` + tests (incl. `exact` match flag)
+- [x] `beigewall/broker.py` + `beigewall/effects.py` + tests
+- [x] `beigewall/agent/harness.py` + `beigewall/agent/drivers.py` + tests
       (scripted driver normative; LLM driver exploratory, stub-server tested)
-- [x] `blackwall/tasks.py` (12 tasks) + `blackwall/narration.py` + tests
-- [x] `blackwall/metrics.py` + `blackwall/experiment.py` + `run_experiment.py`
+- [x] `beigewall/tasks.py` (12 tasks) + `beigewall/narration.py` + tests
+- [x] `beigewall/metrics.py` + `beigewall/experiment.py` + `run_experiment.py`
 - [x] Experiment run → `results/canonical/` (receipts.jsonl, metrics.json,
       report.md)
 - [x] `README.md` (architecture, threat model, known limitations, usage)
@@ -156,10 +156,10 @@ results re-verified byte-identical after every change.
 - [x] LLM driver real-endpoint plumbing (tool roles, unknown-tool trap →
       unmediated-attempt telemetry, malformed-argument telemetry, bounded
       retries); harness `malformed` op. Canonical untouched.
-- [x] `blackwall/llm_metrics.py`: denial-recovery classification
+- [x] `beigewall/llm_metrics.py`: denial-recovery classification
       (adjusted_minted / adjusted_denied / repeated / no_retry) + cross-run
       aggregation with variance.
-- [x] `blackwall/llm_experiment.py` + `run_llm_experiment.py`: per-run isolated
+- [x] `beigewall/llm_experiment.py` + `run_llm_experiment.py`: per-run isolated
       runner (fresh corpus/ledger/authority), artifacts + aggregate + meta,
       env-gated opt-in CLI, refuses `--out` inside `results/canonical/`,
       resumable (sealed runs reused).
@@ -215,8 +215,8 @@ and canonical artifacts unchanged. Design: `docs/CAPABILITIES.md`; results:
 - [x] Facade exposes `discover` only in the treatment condition; control
       traps it as an unmediated attempt. Driver/runner `--condition`.
 - [x] Negotiation + discovery-abuse telemetry from receipts
-      (`blackwall/negotiation.py`); control-vs-treatment-vs-baseline
-      comparison (`blackwall/phase4.py`, `run_phase4_report.py`).
+      (`beigewall/negotiation.py`); control-vs-treatment-vs-baseline
+      comparison (`beigewall/phase4.py`, `run_phase4_report.py`).
 - [x] Deterministic tests: no authority granted, no protected values,
       hashing/versioning, receipts, grants unchanged, scripted treatment
       driver reproduces canonical read/effect receipts, canonical
@@ -240,8 +240,8 @@ Design: `docs/CAPABILITIES.md` (phase 5 shapes); results:
 - [x] Driver reasoning-field metadata telemetry (presence/size/
       reasoning-only; never content).
 - [x] Acquisition-timing telemetry; over-deference diagnostic
-      (`blackwall/deference.py`); four-condition comparison
-      (`blackwall/phase5.py`); resumable matrix runner (`run_phase5.py`).
+      (`beigewall/deference.py`); four-condition comparison
+      (`beigewall/phase5.py`); resumable matrix runner (`run_phase5.py`).
 - [x] Tests: 197 green; canonical byte-identical.
 - [x] Adversarial review; 10 defects fixed with regression tests; one
       pre-existing broker oracle pinned as an expected failure (open).
@@ -257,7 +257,7 @@ Design: `docs/CAPABILITIES.md` (phase 5 shapes); results:
 
 ## Phase 5B milestones / status (long-horizon authority lifecycle, 2026-10-02)
 
-Research question: does BLACKWALL preserve authority isolation and
+Research question: does BeigeWall preserve authority isolation and
 provenance correctness over a long-lived session with retries, task
 transitions, expiration, revocation, restart, duplicate delivery and stale
 authority? Design and receipt-schema gaps: `docs/LIFECYCLE.md`; results:
@@ -308,7 +308,7 @@ results: `FINDINGS_PHASE5C.md`.
 Smallest real process boundary; no containers/VMs/seccomp/namespaces/desktop
 data. Design: `docs/PROCESS_BOUNDARY.md`; results: `FINDINGS_PHASE6.md`.
 
-- [x] `blackwall-ipc/1`: framing, fail-closed validation, bounds.
+- [x] `beigewall-ipc/1`: framing, fail-closed validation, bounds.
 - [x] Trusted server (owns corpus/authority/broker/projections/effects/
       catalog/ledger/prompts); receipt seq, clock and grant ids resume across
       restart; authority does not.
@@ -391,7 +391,7 @@ OS/user/namespace work.
 ## Phase 7B milestones / status (evidence custody, 2026-10-02)
 
 - [x] Role split: receipt producer vs compromised primary writer vs independent
-      witness vs observer (`blackwall/witness.py`, additive; canonical
+      witness vs observer (`beigewall/witness.py`, additive; canonical
       byte-identical).
 - [x] Witness (seq + content hash + hash chain, out of writer custody);
       observer classifies MATCH/OMITTED/ALTERED/DUPLICATED/REPLAYED/REORDERED/

@@ -35,7 +35,7 @@ unchanged, so **canonical artifacts stay byte-identical** (verified).
 
 ## Attack matrix (deterministic, reproducible)
 
-A controlled compromised writer (`blackwall/writer_corruption.py`) mutates a
+A controlled compromised writer (`beigewall/writer_corruption.py`) mutates a
 canonical stream every way the threat model allows; the observer classifies
 each without trusting the writer (`tests/test_evidence_custody.py`).
 

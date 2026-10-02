@@ -18,14 +18,14 @@ OS/hypervisor now enforces that the convention did not.
 
 ```
 HOST (trusted)                                  GUEST (untrusted, compromised)
-  python3 -m blackwall.ipc.server               QEMU/KVM, initramfs-only
+  python3 -m beigewall.ipc.server               QEMU/KVM, initramfs-only
     --vsock-port A --vsock-peer-cid C             no disk, no NIC, no shared FS
     corpus, PolicyAuthority, Ledger             /init (busybox) -> guest_main.py
     CapabilityBroker, projections, effects        run_agent_process (UNCHANGED)
     capability catalog, receipt ledger            RemoteBroker("vsock:2:A")
         ▲                                             │ authority channel
         └───────────── vsock (CID C only) ───────────┘
-  python3 -m blackwall.model_relay              model channel (transport only):
+  python3 -m beigewall.model_relay              model channel (transport only):
     --vsock-port R --peer-cid C                   driver -> 127.0.0.1:8080
     POST /v1/chat/completions only                 -> guest_model_forwarder
     one configured model, rebuilt upstream         -> vsock:2:R -> relay -> Ollama
@@ -45,7 +45,7 @@ phase 6.
 
 ### The two channels are separate and minimal
 
-* **Authority channel** — the unchanged `blackwall-ipc/1` protocol, now over
+* **Authority channel** — the unchanged `beigewall-ipc/1` protocol, now over
   `AF_VSOCK` instead of `AF_UNIX`. `TrustedServer.serve_vsock` binds a host
   vsock port, and **accepts only the designated guest CID** (any other peer
   CID is closed before a byte is read and receipted as `ipc_reject
@@ -53,7 +53,7 @@ phase 6.
   byte the phase-6C code; only the listener differs. `RemoteBroker` accepts a
   `vsock:CID:PORT` path and is otherwise unchanged.
 
-* **Model channel** — `blackwall/model_relay.py`, a host process that exists
+* **Model channel** — `beigewall/model_relay.py`, a host process that exists
   only because the guest has no network and Ollama runs on the host. It is
   **not** an authority channel. It accepts, per connection, exactly one
   HTTP/1.1 `POST /v1/chat/completions` from the designated guest CID, with a

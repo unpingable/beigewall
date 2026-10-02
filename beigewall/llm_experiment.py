@@ -147,7 +147,7 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
         }
         run_record = {"run_id": run_id, "model": model, "label": label,
                       "condition": condition, "discovery_mode": mode,
-                      "blackwall_revision": revision_at_start,
+                      "beigewall_revision": revision_at_start,
                       "per_task": per_task, "suite": suite}
         # seal atomically: a crash mid-write must not leave a half file that
         # a resume would mistake for a sealed run
@@ -172,8 +172,8 @@ def run_llm_experiment(driver_factory, out_dir: str, *, label: str, model: str,
         "runs_reused": runs_reused,
         "runs_executed": runs_executed,
         "started_utc": started, "finished_utc": finished,
-        "blackwall_revision": _git_revision(),
-        "blackwall_revision_at_start": revision_at_start,
+        "beigewall_revision": _git_revision(),
+        "beigewall_revision_at_start": revision_at_start,
         "note": "exploratory real-model telemetry; not part of the normative "
                 "evaluation; no credentials recorded",
     }
@@ -222,13 +222,13 @@ def _fmt(stats: dict) -> str:
 def _render_report(meta: dict, aggregate: dict, run_records: list[dict]) -> str:
     s = aggregate["suite"]
     lines = [
-        "# BLACKWALL real-model exploratory run",
+        "# BeigeWall real-model exploratory run",
         "",
         f"- label: {meta['label']}",
         f"- model: {meta['model']}",
         f"- endpoint: {meta['base_url']}",
         f"- runs: {meta['runs']} ({meta['started_utc']} .. {meta['finished_utc']})",
-        f"- blackwall revision: {meta['blackwall_revision']}",
+        f"- beigewall revision: {meta['beigewall_revision']}",
         "",
         "## Suite",
         "",

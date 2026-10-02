@@ -1,7 +1,7 @@
 """Model-transport relay (phase 7): guest vsock -> host LLM endpoint.
 
 The guest has two host channels. The authority channel is the BeigeWall
-mediator (`blackwall.ipc.server --vsock-port`); it alone reaches trusted
+mediator (`beigewall.ipc.server --vsock-port`); it alone reaches trusted
 state. This relay is the model-transport channel: it carries chat
 completions to the local model server and nothing else. It holds no
 authority, imports no trusted module, reads no file, and must expose no

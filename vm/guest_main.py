@@ -70,9 +70,9 @@ def run_agent(cfg: dict) -> None:
         listen = start_forwarder(cfg)
         import time
         time.sleep(0.5)
-        os.environ["BLACKWALL_LLM_BASE_URL"] = f"http://127.0.0.1:{listen}/v1"
-        os.environ["BLACKWALL_LLM_MODEL"] = cfg.get("model", "local")
-        os.environ.setdefault("BLACKWALL_LLM_API_KEY", "")
+        os.environ["BEIGEWALL_LLM_BASE_URL"] = f"http://127.0.0.1:{listen}/v1"
+        os.environ["BEIGEWALL_LLM_MODEL"] = cfg.get("model", "local")
+        os.environ.setdefault("BEIGEWALL_LLM_API_KEY", "")
     sys.argv = ["run_agent_process.py", "--socket", f"vsock:{host_cid}:{auth}",
                 "--condition", cfg.get("condition", "control"),
                 "--driver", driver, "--tasks", ",".join(cfg["tasks"]),

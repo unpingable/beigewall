@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Adversarial effect-stress harness (phase 6B, docs/RESOURCE_BOUNDS.md).
 
-Drives the hostile client in `blackwall.ipc.stress` against a running
-`blackwall.ipc.server` (the caller starts it; this never spawns a server)
+Drives the hostile client in `beigewall.ipc.stress` against a running
+`beigewall.ipc.server` (the caller starts it; this never spawns a server)
 and counts effects that landed from the trusted ledger, not from what the
 client saw.
 
@@ -26,7 +26,7 @@ import os
 import sys
 import time
 
-from blackwall.ipc import stress as S
+from beigewall.ipc import stress as S
 
 ATTACKS = ("matrix", "sequential", "same_grant", "concurrent", "reconnect",
            "second_process", "replay", "forged_counter", "forged_task",

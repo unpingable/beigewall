@@ -1,7 +1,7 @@
 import unittest
 
-from blackwall.narration import compare_narrative
-from blackwall.receipts import Ledger
+from beigewall.narration import compare_narrative
+from beigewall.receipts import Ledger
 
 
 def make_ledger(reads, effects, narrative):

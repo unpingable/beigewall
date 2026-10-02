@@ -14,11 +14,11 @@ import shutil
 import tempfile
 import unittest
 
-from blackwall.ipc import protocol as P
-from blackwall.ipc.server import TrustedServer, unresolved_intents
-from blackwall.receipts import Ledger, LedgerError
-from blackwall.resources import ResourceLedger, ResourcePolicy
-from blackwall.broker import effect_resource
+from beigewall.ipc import protocol as P
+from beigewall.ipc.server import TrustedServer, unresolved_intents
+from beigewall.receipts import Ledger, LedgerError
+from beigewall.resources import ResourceLedger, ResourcePolicy
+from beigewall.broker import effect_resource
 
 from tests.test_evidence import _Srv, _kinds, _req, _dispatch, T8, T11, THR, POLICY
 
@@ -210,7 +210,7 @@ class F7UnexpectedHandlerException(_Base):
     observer reports the open intent as agree=True ('pending recovery')."""
 
     def test_unexpected_handler_error_resolves_the_intent(self):
-        from blackwall import effects
+        from beigewall import effects
         a = _Srv(self.d)
         prov = a.begin_and_prov(T8)
         gid = a.grant(T8)
@@ -245,7 +245,7 @@ class F8NonDurableRowsLost(_Base):
         prov = a.begin_and_prov(T8)                      # read response delivered
         a.stop()
         # power loss: nothing after the last fsync survives; no fsync happened
-        from blackwall.ipc.server import DURABLE_KINDS
+        from beigewall.ipc.server import DURABLE_KINDS
         rows = Ledger.existing_rows(a.path)
         last_durable = max(i for i, r in enumerate(rows) if r["kind"] in DURABLE_KINDS)
         self.assertEqual(rows[last_durable]["kind"], "read")
@@ -305,7 +305,7 @@ class F10ForgedRowsSteerRecovery(_Base):
         b = _Srv(self.d, policy=ResourcePolicy(effect_count=1))
         b.stop()
         rows = b.rows()
-        from blackwall.lifecycle_metrics import disagreements
+        from beigewall.lifecycle_metrics import disagreements
         self.assertEqual(_kinds(rows, "effect_indeterminate"), [])
         self.assertEqual(_kinds(rows, "resource_policy")[-1]["rebuilt_consumed"]["task_total"]
                          .get(T8, 0), 0)
@@ -326,7 +326,7 @@ class F11RebuildVsObserver(_Base):
         return rl.task_total.get(T8, 0)
 
     def _observer(self, rows):
-        from blackwall.lifecycle_metrics import _Grants
+        from beigewall.lifecycle_metrics import _Grants
         g = _Grants()
         for r in sorted(rows, key=lambda r: r["seq"]):
             g.apply(r)
@@ -364,7 +364,7 @@ class F12EquivalenceFilterHidesOpenIntent(_Base):
 
     def test_open_intent_invisible_to_equivalence_checks(self):
         from tests.test_ipc_equivalence import strip
-        from blackwall.lifecycle_metrics import disagreements
+        from beigewall.lifecycle_metrics import disagreements
         a = _Srv(self.d)
         prov = a.begin_and_prov(T8)
         a.stop()

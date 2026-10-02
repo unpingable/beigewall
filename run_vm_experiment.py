@@ -71,8 +71,8 @@ def probe_config(cfg: dict) -> dict:
         "probe": {
             "host_paths": [
                 cfg["ledger_path"],
-                os.path.join(ROOT, "blackwall", "broker.py"),
-                os.path.join(ROOT, "blackwall", "corpus.py"),
+                os.path.join(ROOT, "beigewall", "broker.py"),
+                os.path.join(ROOT, "beigewall", "corpus.py"),
                 os.path.join(ROOT, "results", "canonical", "receipts.jsonl"),
                 "/etc/passwd", "/etc/shadow",
                 os.path.expanduser("~/.ssh/id_rsa"),
@@ -107,7 +107,7 @@ def start_server(run_dir, auth_port, guest_cid, condition, task_ids, run_id):
     witness = os.path.join(run_dir, "witness.jsonl")
     log = open(os.path.join(run_dir, "server.log"), "w")
     proc = subprocess.Popen(
-        [sys.executable, "-m", "blackwall.ipc.server",
+        [sys.executable, "-m", "beigewall.ipc.server",
          "--vsock-port", str(auth_port), "--vsock-peer-cid", str(guest_cid),
          "--ledger", ledger, "--witness", witness, "--witness-retain",
          "--condition", condition, "--run-id", run_id,
@@ -119,7 +119,7 @@ def start_server(run_dir, auth_port, guest_cid, condition, task_ids, run_id):
 def start_relay(run_dir, relay_port, guest_cid, upstream, model):
     log_path = os.path.join(run_dir, "relay.jsonl")
     proc = subprocess.Popen(
-        [sys.executable, "-m", "blackwall.model_relay",
+        [sys.executable, "-m", "beigewall.model_relay",
          "--vsock-port", str(relay_port), "--peer-cid", str(guest_cid),
          "--upstream", upstream, "--model", model, "--log", log_path],
         cwd=ROOT, stdout=subprocess.DEVNULL,
@@ -172,7 +172,7 @@ def parse_console(console_path):
 def host_custody_check(ledger_path, witness_path):
     """Observer over the live run: primary ledger vs independent witness."""
     import json as _json
-    from blackwall.witness import Witness, classify, recovery_decision
+    from beigewall.witness import Witness, classify, recovery_decision
     try:
         rows = [_json.loads(x) for x in open(ledger_path) if x.strip()]
     except OSError:
@@ -191,7 +191,7 @@ def host_custody_check(ledger_path, witness_path):
     # (never the real one), simulate a compromised writer truncating its tail,
     # then reconstruct the canonical history from the retained witness.
     if w._retain and rows:
-        from blackwall.witness import reconstruct
+        from beigewall.witness import reconstruct
         truncated = rows[:max(1, len(rows) - 3)]
         rec = reconstruct(truncated, w.records)
         out["reconstruction_demo"] = {
@@ -237,13 +237,13 @@ def main(argv=None):
     p.add_argument("--max-steps", type=int, default=40)
     p.add_argument("--timeout", type=float, default=300.0)
     p.add_argument("--upstream", default=os.environ.get(
-        "BLACKWALL_LLM_BASE_URL", "http://127.0.0.1:11434"))
-    p.add_argument("--model", default=os.environ.get("BLACKWALL_LLM_MODEL", "local"))
+        "BEIGEWALL_LLM_BASE_URL", "http://127.0.0.1:11434"))
+    p.add_argument("--model", default=os.environ.get("BEIGEWALL_LLM_MODEL", "local"))
     a = p.parse_args(argv)
     if not a.probe and a.driver == "none":
         p.error("nothing to do: pass --probe and/or --driver")
 
-    from blackwall.tasks import task_suite
+    from beigewall.tasks import task_suite
     tasks = task_suite()
     task_ids = ([t for t in a.tasks.split(",") if t] if a.tasks
                 else [t.task_id for t in tasks])

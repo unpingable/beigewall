@@ -11,9 +11,9 @@ import json
 import os
 import unittest
 
-from blackwall import witness as W
-from blackwall import writer_corruption as C
-from blackwall.lifecycle_metrics import _effect_target
+from beigewall import witness as W
+from beigewall import writer_corruption as C
+from beigewall.lifecycle_metrics import _effect_target
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANON = os.path.join(ROOT, "results", "canonical", "receipts.jsonl")

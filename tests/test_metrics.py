@@ -3,8 +3,8 @@ import os
 import tempfile
 import unittest
 
-from blackwall.metrics import suite_metrics, task_metrics
-from blackwall.tasks import run_suite
+from beigewall.metrics import suite_metrics, task_metrics
+from beigewall.tasks import run_suite
 
 
 class TestTaskMetrics(unittest.TestCase):
@@ -85,7 +85,7 @@ class TestSuiteMetrics(unittest.TestCase):
 
 class TestExperimentReproducibility(unittest.TestCase):
     def test_two_runs_produce_identical_metrics(self):
-        from blackwall.experiment import run_experiment
+        from beigewall.experiment import run_experiment
         with tempfile.TemporaryDirectory() as d1, \
                 tempfile.TemporaryDirectory() as d2:
             run_experiment(d1)
@@ -96,7 +96,7 @@ class TestExperimentReproducibility(unittest.TestCase):
                     self.assertEqual(a.read(), b.read(), name)
 
     def test_report_written(self):
-        from blackwall.experiment import run_experiment
+        from beigewall.experiment import run_experiment
         with tempfile.TemporaryDirectory() as d:
             run_experiment(d)
             report = open(os.path.join(d, "report.md")).read()

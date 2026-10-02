@@ -5,11 +5,11 @@ behaviour and pass once effect grants are consumed on success."""
 
 import unittest
 
-from blackwall.authority import PolicyAuthority
-from blackwall.broker import CapabilityBroker, RefusalError
-from blackwall.corpus import build_demo_corpus
-from blackwall.receipts import Ledger
-from blackwall.tasks import LogicalClock, experiment_policy
+from beigewall.authority import PolicyAuthority
+from beigewall.broker import CapabilityBroker, RefusalError
+from beigewall.corpus import build_demo_corpus
+from beigewall.receipts import Ledger
+from beigewall.tasks import LogicalClock, experiment_policy
 
 
 def fixture():

@@ -12,7 +12,7 @@ agent's self-report is not.
 
 ## Research question
 
-> Does BLACKWALL preserve authority isolation and provenance correctness
+> Does BeigeWall preserve authority isolation and provenance correctness
 > when an untrusted agent operates over a long-lived session containing
 > retries, task transitions, expiration, revocation, restart, duplicate
 > delivery and stale authority?
@@ -67,13 +67,13 @@ details), so every transition is in the chain:
 | `session_restart` | the driver's conversation is reset with a note; broker state persists | observe re-acquisition vs guessed ids |
 | task transition | next task begins while prior grants are live | prior grants refused "unknown grant" in the new task |
 
-Deterministic probes (`blackwall/lifecycle.py::probe_trajectories`, 7
+Deterministic probes (`beigewall/lifecycle.py::probe_trajectories`, 7
 trajectories, scripted driver with cross-task aliases) exercise every row
 plus: a stale grant reused from the previous task, task A's send grant and
 projection hash used in task B, a forged id, object-budget exhaustion with
 a repeat, and an out-of-scope effect with valid provenance.
 
-Real-model suite (`blackwall/lifecycle_suite.py::llm_trajectories`): 20
+Real-model suite (`beigewall/lifecycle_suite.py::llm_trajectories`): 20
 seeded trajectories of 4–8 task steps (≥1 effect task, ≥2 resource
 classes, no immediate repeats) with each injection placed ≥3 times across
 the suite; the LLM driver keeps its conversation across tasks
@@ -82,7 +82,7 @@ as phases 2–5 (`gpt-oss:20b`, local Ollama, endpoint-default sampling).
 
 ## Independent observer
 
-`blackwall/lifecycle_metrics.py::reconstruct` replays the ledger and, at
+`beigewall/lifecycle_metrics.py::reconstruct` replays the ledger and, at
 every read/effect/refusal that names a grant, derives the grant's state from
 earlier receipts only — unknown / other-task / revoked / expired /
 operation mismatch / out of scope / projection mismatch / consumed /

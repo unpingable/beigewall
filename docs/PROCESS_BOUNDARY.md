@@ -1,6 +1,6 @@
 # Phase 6 — process boundary
 
-Research question: do the BLACKWALL authority, disclosure, effect and
+Research question: do the BeigeWall authority, disclosure, effect and
 provenance guarantees survive when the untrusted agent and the trusted
 mediation layer are separated by an actual OS process boundary rather than
 an in-process convention?
@@ -41,7 +41,7 @@ protocol reaches the broker.
 
 ```
 UNTRUSTED (agent)                         TRUSTED (membrane)
-run_agent_process.py                      python3 -m blackwall.ipc.server
+run_agent_process.py                      python3 -m beigewall.ipc.server
   Harness (task loop)                        corpus, PolicyAuthority, Ledger
   LLMDriver | ScriptedDriver                 CapabilityBroker, projections,
   ToolFacade ──► RemoteBroker ──(socket)──►  effects, CapabilityCatalog
@@ -60,7 +60,7 @@ server instance per run (fresh corpus/authority/clock), as the in-process
 runner does. Evaluation runs afterwards on the trusted ledger with the
 unchanged evaluator.
 
-## IPC protocol `blackwall-ipc/1`
+## IPC protocol `beigewall-ipc/1`
 
 - Transport: `AF_UNIX` `SOCK_STREAM`. Framing: 4-byte big-endian unsigned
   length, then exactly that many bytes of UTF-8 JSON (one object). Maximum
@@ -137,7 +137,7 @@ canonical ledger exactly after removing sequence, clock, `ipc_*` rows and
 the `self_reported` marker (`tests/test_ipc_equivalence.py`); the evaluator
 gives the canonical verdicts on the IPC ledger and the observer agrees on
 every use. The scripted self-check reads its scripts from
-`blackwall/ipc/scripted_tasks.json` (generated from `tasks.py`, kept in
+`beigewall/ipc/scripted_tasks.json` (generated from `tasks.py`, kept in
 sync by a test) so that the agent process imports no trusted module in any
 mode; a test asserts the import graph.
 

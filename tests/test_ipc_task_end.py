@@ -16,9 +16,9 @@ import tempfile
 import time
 import unittest
 
-from blackwall.ipc.agent import RemoteHarness
-from blackwall.ipc.client import RemoteBroker, TransportError
-from blackwall.ipc.protocol import ProtocolError
+from beigewall.ipc.agent import RemoteHarness
+from beigewall.ipc.client import RemoteBroker, TransportError
+from beigewall.ipc.protocol import ProtocolError
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 T1, T3 = "t1-summarize-alice", "t3-note-followup"
@@ -103,7 +103,7 @@ class AgainstRealServer(unittest.TestCase):
         self.sock = os.path.join(self.tmp, "s")
         self.ledger = os.path.join(self.tmp, "receipts.jsonl")
         self.proc = subprocess.Popen(
-            [sys.executable, "-m", "blackwall.ipc.server", "--socket", self.sock,
+            [sys.executable, "-m", "beigewall.ipc.server", "--socket", self.sock,
              "--ledger", self.ledger, "--condition", "control",
              "--tasks", f"{T1},{T3}"], cwd=ROOT,
             stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)

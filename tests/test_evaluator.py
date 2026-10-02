@@ -8,18 +8,18 @@ import json
 import os
 import unittest
 
-from blackwall.agent.drivers import ScriptedDriver
-from blackwall.agent.harness import Harness, RunResult
-from blackwall.authority import PolicyAuthority
-from blackwall.broker import CapabilityBroker
-from blackwall.claims import extract_claims  # noqa: F401  (API surface)
-from blackwall.contracts import answer_contracts, contract_for  # noqa: F401
-from blackwall.corpus import build_demo_corpus
-from blackwall.disclosure import disclosure_from_receipts, is_authorized
-from blackwall.evaluator import evaluate_task
-from blackwall.facts import fact_catalog, normalize
-from blackwall.receipts import Ledger
-from blackwall.tasks import (LogicalClock, RunContext, experiment_policy,
+from beigewall.agent.drivers import ScriptedDriver
+from beigewall.agent.harness import Harness, RunResult
+from beigewall.authority import PolicyAuthority
+from beigewall.broker import CapabilityBroker
+from beigewall.claims import extract_claims  # noqa: F401  (API surface)
+from beigewall.contracts import answer_contracts, contract_for  # noqa: F401
+from beigewall.corpus import build_demo_corpus
+from beigewall.disclosure import disclosure_from_receipts, is_authorized
+from beigewall.evaluator import evaluate_task
+from beigewall.facts import fact_catalog, normalize
+from beigewall.receipts import Ledger
+from beigewall.tasks import (LogicalClock, RunContext, experiment_policy,
                              task_suite)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -380,13 +380,13 @@ class TestRuntimeObjectsAndDateForms(unittest.TestCase):
     def test_event_created_earlier_in_the_run_is_disclosable(self):
         # run t4 (creates evt-new-3 for 2026-10-08) then t10 (agenda read
         # discloses it) in one ledger, like the real suite does
-        from blackwall.tasks import LogicalClock, experiment_policy
-        from blackwall.authority import PolicyAuthority
-        from blackwall.broker import CapabilityBroker
-        from blackwall.corpus import build_demo_corpus
-        from blackwall.receipts import Ledger
-        from blackwall.agent.harness import Harness
-        from blackwall.agent.drivers import ScriptedDriver
+        from beigewall.tasks import LogicalClock, experiment_policy
+        from beigewall.authority import PolicyAuthority
+        from beigewall.broker import CapabilityBroker
+        from beigewall.corpus import build_demo_corpus
+        from beigewall.receipts import Ledger
+        from beigewall.agent.harness import Harness
+        from beigewall.agent.drivers import ScriptedDriver
         clock = LogicalClock(); corpus = build_demo_corpus()
         ledger = Ledger(clock=clock.now)
         broker = CapabilityBroker(corpus, PolicyAuthority(experiment_policy(),

@@ -5,7 +5,7 @@ connection drop, a client dying during an effect, duplicate requests after
 reconnect, and the stale-response guard. Every test bounds its own waiting
 (each finishes well inside 15 s). The module is skipped when the IPC server
 module has not landed. Contract assumptions about the not-yet-written client
-are listed in the individual helpers; raw frames use blackwall.ipc.protocol.
+are listed in the individual helpers; raw frames use beigewall.ipc.protocol.
 """
 
 import json
@@ -21,8 +21,8 @@ import time
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if not os.path.exists(os.path.join(ROOT, "blackwall", "ipc", "server.py")):
-    raise unittest.SkipTest("blackwall/ipc/server.py does not exist yet: "
+if not os.path.exists(os.path.join(ROOT, "beigewall", "ipc", "server.py")):
+    raise unittest.SkipTest("beigewall/ipc/server.py does not exist yet: "
                             "IPC lifecycle tests need the trusted server")
 
 T1 = "t1-summarize-alice"
@@ -37,7 +37,7 @@ def _ipc_tele(rb) -> dict:
 
 
 def _prompt(task_id: str) -> str:
-    from blackwall.tasks import task_suite
+    from beigewall.tasks import task_suite
     return next(t.prompt for t in task_suite() if t.task_id == task_id)
 
 
@@ -71,7 +71,7 @@ class _Env(unittest.TestCase):
         log = open(os.path.join(self.tmp, f"{tag}.log"), "a")
         self.addCleanup(log.close)
         p = subprocess.Popen(
-            [sys.executable, "-m", "blackwall.ipc.server", "--socket",
+            [sys.executable, "-m", "beigewall.ipc.server", "--socket",
              self.sock, "--ledger", self.ledger, "--condition", condition,
              "--run-id", "lifecycle"],
             cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
@@ -147,7 +147,7 @@ class _Env(unittest.TestCase):
     _n = 0
 
     def raw_send(self, s, op, task_id, args, req_id=None):
-        from blackwall.ipc.protocol import encode_frame
+        from beigewall.ipc.protocol import encode_frame
         type(self)._n += 1
         req_id = req_id or f"raw-{type(self)._n}"
         s.sendall(encode_frame({"v": 1, "id": req_id, "op": op,
@@ -155,20 +155,20 @@ class _Env(unittest.TestCase):
         return req_id
 
     def raw_call(self, s, op, task_id, args, req_id=None):
-        from blackwall.ipc.protocol import read_frame
+        from beigewall.ipc.protocol import read_frame
         self.raw_send(s, op, task_id, args, req_id)
         body = read_frame(s)
         self.assertIsNotNone(body, "connection closed without a response")
         return json.loads(body)
 
     def remote(self):
-        from blackwall.ipc.client import RemoteBroker
+        from beigewall.ipc.client import RemoteBroker
         rb = RemoteBroker(self.sock)
         self._brokers.append(rb)
         return rb
 
     def evaluate(self, task_id):
-        from blackwall.evaluator import evaluate_task
+        from beigewall.evaluator import evaluate_task
         return evaluate_task(self.rows(), task_id, _prompt(task_id))
 
     def check_ledger_continuity(self):
@@ -185,7 +185,7 @@ class _Env(unittest.TestCase):
 
 class TestStartOrder(_Env):
     def test_a_server_before_client(self):
-        from blackwall.tasks import run_suite
+        from beigewall.tasks import run_suite
         server = self.start_server()
         self.wait_socket(server)
         agent = self.start_agent([T1, T3])
@@ -195,8 +195,8 @@ class TestStartOrder(_Env):
         ends = {r["task_id"] for r in self.rows() if r["kind"] == "task_end"}
         self.assertEqual(ends, {T1, T3})
         # canonical-equivalent outcomes, computed in-process for comparison
-        from blackwall.evaluator import evaluate_task
-        from blackwall.tasks import task_suite
+        from beigewall.evaluator import evaluate_task
+        from beigewall.tasks import task_suite
         _, _, led = run_suite()
         canon_rows = [r.to_dict() for r in led.all()]
         for tid in (T1, T3):
@@ -246,7 +246,7 @@ class TestTrustedRestart(_Env):
         self.assertTrue(any(r["kind"] == "trusted_restart" for r in rows))
         ends = {r["task_id"] for r in rows if r["kind"] == "task_end"}
         self.assertEqual(ends, {T1, T3})
-        from blackwall.lifecycle_metrics import disagreements
+        from beigewall.lifecycle_metrics import disagreements
         self.assertEqual(disagreements(rows), [])
 
 
@@ -277,7 +277,7 @@ class TestTransport(_Env):
         self.assertFalse(th.is_alive(), "read hung after the server died")
         self.assertLess(time.time() - t0, 5.5)
         self.assertIn("exc", outcome, "read succeeded against a dead server")
-        from blackwall.ipc.client import RefusalError, TransportError
+        from beigewall.ipc.client import RefusalError, TransportError
         self.assertNotIsInstance(outcome["exc"], RefusalError)
         self.assertIsInstance(outcome["exc"], TransportError)
         self.assertEqual(_ipc_tele(rb)["transport_failures"], 1)
@@ -353,7 +353,7 @@ class TestTransport(_Env):
                                   r2["result"]["grant_id"]})
 
     def test_g_stale_response_is_not_matched(self):
-        from blackwall.ipc.client import RemoteBroker
+        from beigewall.ipc.client import RemoteBroker
         self.assertTrue(
             hasattr(RemoteBroker, "_match_response"),
             "RemoteBroker._match_response(pending_id, response) is the "

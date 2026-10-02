@@ -35,7 +35,7 @@ phase-7 guest scripts (`guest_main`, `guest_model_forwarder`,
 
 ## Authority transport
 
-`blackwall-ipc/1` over `AF_VSOCK`. `TrustedServer.serve_vsock` binds a host
+`beigewall-ipc/1` over `AF_VSOCK`. `TrustedServer.serve_vsock` binds a host
 vsock port and accepts **only the designated guest CID** (any other peer CID
 is closed before a byte and receipted `ipc_reject peer_cid`). Broker,
 projections, effects, evaluator, task definitions and the ledger are the
@@ -44,7 +44,7 @@ unchanged phase-6C code (`durable_effects=True`). `RemoteBroker` accepts
 
 ## Model transport
 
-`blackwall/model_relay.py`: a host vsock listener that forwards **only**
+`beigewall/model_relay.py`: a host vsock listener that forwards **only**
 `POST /v1/chat/completions` for the **one** configured model, rebuilding the
 upstream request itself (fixed URL + headers), returning only the upstream
 status and body. No authority, no file access, no grants, no effects, no
@@ -59,7 +59,7 @@ loopback→vsock forwarder so the normative LLM driver is unchanged. Verified:
 | host memory / kernel objects unreachable | KVM (separate guest kernel + EPT) | by construction; guest `/dev/mem` reads **guest** RAM only |
 | host filesystem unreachable | separate root; no disk / no shared FS | every real host path → ENOENT, with a guest-local control read succeeding |
 | only 2 host endpoints reachable | vsock + per-endpoint CID check | port/CID scan: only auth+relay answer |
-| membrane refusals still hold | `blackwall-ipc/1` over vsock | forged grant / authority-op / oversized frame refused |
+| membrane refusals still hold | `beigewall-ipc/1` over vsock | forged grant / authority-op / oversized frame refused |
 | relay is transport-only | relay construction | every abuse 4xx; upstream rebuilt |
 
 ## Probe results (OS-boundary probe suite)
@@ -72,7 +72,7 @@ failures are isolation, not a broken probe).
 | category | checks | reached | representative outcome |
 |---|---|---|---|
 | filesystem | 14 | 0 | real host paths (ledger, `broker.py`, `/etc/shadow`, `~/.ssh/id_rsa`) → ENOENT; control read ok |
-| modules | 4 | 0 | `import blackwall.broker` (host dir on `sys.path`) → ModuleNotFoundError |
+| modules | 4 | 0 | `import beigewall.broker` (host dir on `sys.path`) → ModuleNotFoundError |
 | devices | 9 | 0 | `/dev/kvm`, `/dev/vhost-vsock` → ENOENT; `/dev/mem` reads **guest** RAM (not host) |
 | transport | 13 | 0 | only auth+relay ports answer; every other vsock port/CID refused (ECONNRESET) |
 | protocol | 8 | 0 | `hello` ok (channel reachable); `ledger`/`revoke`/`task_view`/forged-grant read refused; oversized frame rejected |

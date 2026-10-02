@@ -8,7 +8,7 @@ about the receipt model, evaluation criteria, or authority semantics.
 
 ## Central question
 
-> Does the BLACKWALL architecture remain useful when the untrusted language
+> Does the BeigeWall architecture remain useful when the untrusted language
 > layer is an actual nondeterministic agent?
 
 Short answer, supported below:
@@ -38,14 +38,14 @@ Short answer, supported below:
   unconfigured; refuses `--out` inside `results/canonical/`.
 - **Endpoint:** local Ollama, `http://localhost:11434/v1` (OpenAI-compatible
   chat completions). Loopback endpoints need no API key per driver policy;
-  remote endpoints require `BLACKWALL_LLM_API_KEY`. No credentials are recorded
+  remote endpoints require `BEIGEWALL_LLM_API_KEY`. No credentials are recorded
   in any artifact.
 - **Model:** `gpt-oss:20b` (as configured; single model, single endpoint).
 - **Command:**
 
   ```
-  BLACKWALL_LLM_BASE_URL=http://localhost:11434/v1 \
-  BLACKWALL_LLM_MODEL=gpt-oss:20b \
+  BEIGEWALL_LLM_BASE_URL=http://localhost:11434/v1 \
+  BEIGEWALL_LLM_MODEL=gpt-oss:20b \
   python3 run_llm_experiment.py --runs 5 --label gpt-oss-20b
   ```
 
@@ -63,7 +63,7 @@ Short answer, supported below:
   driver remains the normative reference.
 - **System-prompt environment manifest:** the model is told the resource
   namespaces, known object ids (`thr-alice`, `thr-group`, `note-1`), projection
-  names@versions, effect schemas, and provenance rules (`blackwall/agent/
+  names@versions, effect schemas, and provenance rules (`beigewall/agent/
   drivers.py` SYSTEM_PROMPT). This is addressing metadata only — the scripted
   driver possesses the same knowledge via its scripts. No corpus *content* is
   disclosed. Task wording is unchanged.

@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 import run_lifecycle
-from blackwall.lifecycle_suite import (EFFECT_TASKS, TASK_CLASSES, describe,
+from beigewall.lifecycle_suite import (EFFECT_TASKS, TASK_CLASSES, describe,
                                        llm_trajectories,
                                        scripted_probe_trajectories)
 

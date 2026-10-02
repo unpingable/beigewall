@@ -1,4 +1,4 @@
-"""Untrusted-side client: `RemoteBroker` speaks `blackwall-ipc/1` and
+"""Untrusted-side client: `RemoteBroker` speaks `beigewall-ipc/1` and
 presents the broker's method surface, so the unchanged ToolFacade and
 Harness run against it. It knows the socket path and nothing else about
 the trusted side. Imports nothing from the trusted modules except the
@@ -14,7 +14,7 @@ from . import protocol as P
 
 
 class RefusalError(Exception):
-    """Mirror of blackwall.broker.RefusalError for the facade."""
+    """Mirror of beigewall.broker.RefusalError for the facade."""
 
     def __init__(self, message: str, receipt_id: str, hint: dict | None = None):
         super().__init__(message)

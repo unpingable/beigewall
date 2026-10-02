@@ -13,11 +13,11 @@ import shutil
 import tempfile
 import unittest
 
-from blackwall.broker import RefusalError
-from blackwall.budget_metrics import task_budget_outcome
-from blackwall.ipc.server import TrustedServer
-from blackwall.lifecycle_metrics import disagreements, reconstruct
-from blackwall.resources import ResourceConfigError, ResourceLedger, ResourcePolicy
+from beigewall.broker import RefusalError
+from beigewall.budget_metrics import task_budget_outcome
+from beigewall.ipc.server import TrustedServer
+from beigewall.lifecycle_metrics import disagreements, reconstruct
+from beigewall.resources import ResourceConfigError, ResourceLedger, ResourcePolicy
 
 from tests.test_resources import fixture, send
 
@@ -286,7 +286,7 @@ class ReviewNonFindings(unittest.TestCase):
         corpus, ledger, broker, prov = fixture(ResourcePolicy(effect_count=3, task_effects=4))
         for i in range(3):
             send(broker, prov, i)
-        from blackwall.broker import effect_resource
+        from beigewall.broker import effect_resource
         rb = ResourceLedger(ResourcePolicy(effect_count=3, task_effects=4))
         rb.rebuild([r.to_dict() for r in ledger.all()], effect_resource)
         self.assertEqual(rb.consumed, broker._resources.consumed)

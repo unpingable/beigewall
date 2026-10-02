@@ -8,12 +8,12 @@ import tempfile
 import time
 import unittest
 
-from blackwall.authority import PolicyAuthority
-from blackwall.broker import CapabilityBroker, RefusalError, effect_resource
-from blackwall.corpus import build_demo_corpus
-from blackwall.receipts import Ledger
-from blackwall.resources import ResourceConfigError, ResourceLedger, ResourcePolicy
-from blackwall.tasks import LogicalClock, experiment_policy
+from beigewall.authority import PolicyAuthority
+from beigewall.broker import CapabilityBroker, RefusalError, effect_resource
+from beigewall.corpus import build_demo_corpus
+from beigewall.receipts import Ledger
+from beigewall.resources import ResourceConfigError, ResourceLedger, ResourcePolicy
+from beigewall.tasks import LogicalClock, experiment_policy
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -141,7 +141,7 @@ class TestServerRestartKeepsConsumption(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             os.mkdir(os.path.join(d, "sock"), 0o700)
             sock, ledger = os.path.join(d, "sock", "bw.sock"), os.path.join(d, "receipts.jsonl")
-            cmd = [sys.executable, "-m", "blackwall.ipc.server", "--socket", sock, "--ledger",
+            cmd = [sys.executable, "-m", "beigewall.ipc.server", "--socket", sock, "--ledger",
                    ledger, "--condition", "control", "--tasks", "t8-send-reply,t11-fabricated-provenance",
                    "--effect-count", "2", "--task-effects", "3"]
             srv = subprocess.Popen(cmd, cwd=ROOT)
@@ -150,7 +150,7 @@ class TestServerRestartKeepsConsumption(unittest.TestCase):
                     if os.path.exists(sock):
                         break
                     time.sleep(0.05)
-                from blackwall.ipc.client import RemoteBroker, RefusalError as RRefusal
+                from beigewall.ipc.client import RemoteBroker, RefusalError as RRefusal
                 b = RemoteBroker(sock)
                 pr = b.begin_task("t8-send-reply")
                 g = b.request_grant("t8-send-reply", "messages/thread/thr-alice", "read",
@@ -185,7 +185,7 @@ class TestServerRestartKeepsConsumption(unittest.TestCase):
                 rows = [json.loads(l) for l in open(ledger)]
                 pol2 = [r for r in rows if r["kind"] == "resource_policy"][-1]
                 self.assertEqual(pol2["rebuilt_consumed"]["task_total"], {"t8-send-reply": 2})
-                from blackwall.lifecycle_metrics import disagreements
+                from beigewall.lifecycle_metrics import disagreements
                 self.assertEqual(disagreements(rows), [])
             finally:
                 srv.terminate(); srv.wait(timeout=10)
@@ -194,7 +194,7 @@ class TestServerRestartKeepsConsumption(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             for flags in (["--effect-count", "0"], ["--effect-count", "-3"],
                           ["--rate", "3/0"], ["--rate", "nan/10"], ["--rate", "3/inf"]):
-                out = subprocess.run([sys.executable, "-m", "blackwall.ipc.server", "--socket",
+                out = subprocess.run([sys.executable, "-m", "beigewall.ipc.server", "--socket",
                                       os.path.join(d, "s"), "--ledger", os.path.join(d, "l"),
                                       "--condition", "control"] + flags, cwd=ROOT,
                                      capture_output=True, text=True, timeout=10)

@@ -12,9 +12,9 @@ import time
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TRUSTED = {"blackwall.broker", "blackwall.corpus", "blackwall.authority",
-           "blackwall.projections", "blackwall.effects", "blackwall.receipts",
-           "blackwall.tasks", "blackwall.grants", "blackwall.capabilities"}
+TRUSTED = {"beigewall.broker", "beigewall.corpus", "beigewall.authority",
+           "beigewall.projections", "beigewall.effects", "beigewall.receipts",
+           "beigewall.tasks", "beigewall.grants", "beigewall.capabilities"}
 
 
 # The trusted server adds evidence the frozen in-process run does not have
@@ -49,14 +49,14 @@ def strip(rows):
 
 class TestProcessSeparatedEquivalence(unittest.TestCase):
     def test_scripted_suite_matches_canonical_across_processes(self):
-        from blackwall.tasks import task_suite
-        from blackwall.evaluator import evaluate_task
-        from blackwall.lifecycle_metrics import disagreements
+        from beigewall.tasks import task_suite
+        from beigewall.evaluator import evaluate_task
+        from beigewall.lifecycle_metrics import disagreements
         ids = [t.task_id for t in task_suite()]
         with tempfile.TemporaryDirectory() as d:
             os.mkdir(os.path.join(d, "sock"), 0o700)
             sock, ledger = os.path.join(d, "sock", "bw.sock"), os.path.join(d, "receipts.jsonl")
-            srv = subprocess.Popen([sys.executable, "-m", "blackwall.ipc.server", "--socket",
+            srv = subprocess.Popen([sys.executable, "-m", "beigewall.ipc.server", "--socket",
                                     sock, "--ledger", ledger, "--condition", "control"], cwd=ROOT)
             try:
                 for _ in range(100):
@@ -95,10 +95,10 @@ class TestProcessSeparatedEquivalence(unittest.TestCase):
     def test_agent_process_imports_no_trusted_module(self):
         for driver in ("scripted", "llm"):
             code = ("import sys, run_agent_process\n"
-                    "from blackwall.ipc import agent, client\n"
-                    "import blackwall.tasks_public\n"
-                    "blackwall.tasks_public.task_scripts()\n"
-                    "print(sorted(m for m in sys.modules if m.startswith('blackwall')))")
+                    "from beigewall.ipc import agent, client\n"
+                    "import beigewall.tasks_public\n"
+                    "beigewall.tasks_public.task_scripts()\n"
+                    "print(sorted(m for m in sys.modules if m.startswith('beigewall')))")
             out = subprocess.run([sys.executable, "-c", code], cwd=ROOT, capture_output=True,
                                  text=True, timeout=30)
             self.assertEqual(out.returncode, 0, out.stderr)
@@ -106,8 +106,8 @@ class TestProcessSeparatedEquivalence(unittest.TestCase):
             self.assertFalse(loaded & TRUSTED, loaded & TRUSTED)
 
     def test_scripted_data_file_matches_tasks(self):
-        from blackwall.tasks import task_suite
-        from blackwall.tasks_public import task_scripts
+        from beigewall.tasks import task_suite
+        from beigewall.tasks_public import task_scripts
         data = task_scripts()
         for t in task_suite():
             self.assertEqual(data[t.task_id]["script"], t.script)
@@ -120,7 +120,7 @@ class TestMalformedProvenanceCrossesTheBoundary(unittest.TestCase):
     rejection; and a protocol rejection must be an observation, not a crash."""
 
     def test_malformed_derived_from_is_a_broker_refusal(self):
-        from blackwall.ipc import protocol as P
+        from beigewall.ipc import protocol as P
         req = {"v": 1, "id": "a", "op": "effect", "task_id": "t8-send-reply",
                "args": {"grant_id": "g-1", "effect_name": "send_message",
                         "params": {"thread_id": "thr-alice", "body": "x"},
@@ -131,8 +131,8 @@ class TestMalformedProvenanceCrossesTheBoundary(unittest.TestCase):
                                                  "derived_from": [[[[[[[[1]]]]]]]]}}).encode())
 
     def test_facade_turns_protocol_rejection_into_an_observation(self):
-        from blackwall.ipc.agent import RemoteFacade
-        from blackwall.ipc.protocol import ProtocolError
+        from beigewall.ipc.agent import RemoteFacade
+        from beigewall.ipc.protocol import ProtocolError
 
         class Stub:
             def effect(self, *a, **k):
@@ -147,19 +147,19 @@ class TestMalformedProvenanceCrossesTheBoundary(unittest.TestCase):
         self.assertFalse(f.read(5, "x", "y")["ok"])
 
     def test_end_to_end_malformed_provenance_receipted(self):
-        from blackwall.tasks import task_suite
+        from beigewall.tasks import task_suite
         ids = ["t8-send-reply"]
         with tempfile.TemporaryDirectory() as d:
             os.mkdir(os.path.join(d, "sock"), 0o700)
             sock, ledger = os.path.join(d, "sock", "bw.sock"), os.path.join(d, "receipts.jsonl")
-            srv = subprocess.Popen([sys.executable, "-m", "blackwall.ipc.server", "--socket",
+            srv = subprocess.Popen([sys.executable, "-m", "beigewall.ipc.server", "--socket",
                                     sock, "--ledger", ledger, "--condition", "control"], cwd=ROOT)
             try:
                 for _ in range(100):
                     if os.path.exists(sock):
                         break
                     time.sleep(0.1)
-                from blackwall.ipc.client import RemoteBroker, RefusalError
+                from beigewall.ipc.client import RemoteBroker, RefusalError
                 b = RemoteBroker(sock)
                 b.begin_task("t8-send-reply")
                 g = b.request_grant("t8-send-reply", "messages/thread/thr-alice", "read",

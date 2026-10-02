@@ -3,12 +3,12 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from blackwall.agent.drivers import LLMDriver
-from blackwall.agent.harness import Harness
-from blackwall.authority import PolicyAuthority, PolicyRule
-from blackwall.broker import CapabilityBroker
-from blackwall.corpus import build_demo_corpus
-from blackwall.receipts import Ledger, canonical_hash
+from beigewall.agent.drivers import LLMDriver
+from beigewall.agent.harness import Harness
+from beigewall.authority import PolicyAuthority, PolicyRule
+from beigewall.broker import CapabilityBroker
+from beigewall.corpus import build_demo_corpus
+from beigewall.receipts import Ledger, canonical_hash
 
 
 class EffectStub(BaseHTTPRequestHandler):

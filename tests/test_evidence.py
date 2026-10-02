@@ -19,10 +19,10 @@ import shutil
 import tempfile
 import unittest
 
-from blackwall.ipc import protocol as P
-from blackwall.ipc.server import TrustedServer, unresolved_intents
-from blackwall.receipts import Ledger, LedgerError
-from blackwall.resources import ResourcePolicy
+from beigewall.ipc import protocol as P
+from beigewall.ipc.server import TrustedServer, unresolved_intents
+from beigewall.receipts import Ledger, LedgerError
+from beigewall.resources import ResourcePolicy
 
 T8, T11 = "t8-send-reply", "t11-fabricated-provenance"
 THR = "messages/thread/thr-alice"
@@ -356,7 +356,7 @@ class ObserverEvidence(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.d, True)
 
     def _obs(self, rows):
-        from blackwall.lifecycle_metrics import disagreements, reconstruct
+        from beigewall.lifecycle_metrics import disagreements, reconstruct
         return reconstruct(rows), disagreements(rows)
 
     def test_committed_and_aborted_effects_reconstruct_cleanly(self):
@@ -429,7 +429,7 @@ class ObserverEvidence(unittest.TestCase):
         pol = [r for r in rows if r["kind"] == "resource_policy"][-1]
         self.assertEqual(pol["rebuilt_consumed"]["consumed"], {f"{T8}|send_message|{THR}": 2})
         # the observer's own count agrees: an intent past the cap would be flagged
-        from blackwall.lifecycle_metrics import _Grants
+        from beigewall.lifecycle_metrics import _Grants
         g = _Grants()
         for r in rows:
             g.apply(r)

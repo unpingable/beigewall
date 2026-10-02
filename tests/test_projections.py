@@ -1,8 +1,8 @@
 import json
 import unittest
 
-from blackwall.corpus import build_demo_corpus
-from blackwall.projections import ProjectionError, run_projection
+from beigewall.corpus import build_demo_corpus
+from beigewall.projections import ProjectionError, run_projection
 
 
 class TestConversationProjection(unittest.TestCase):

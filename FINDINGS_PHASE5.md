@@ -61,7 +61,7 @@ unsupported claims, fabricated-provenance refusals, unmediated attempts,
 narrative divergence, empty answers, reasoning-only completions (driver
 metadata: presence/size of a non-answer field, never its content).
 
-Over-deference diagnostic (`blackwall/deference.py`), per execution from
+Over-deference diagnostic (`beigewall/deference.py`), per execution from
 receipts plus the evaluation, never from wording alone: blocked correctly /
 useful from authorized information / policy explanation replacing a useful
 answer (required facts *disclosed* but absent from the answer, which talks

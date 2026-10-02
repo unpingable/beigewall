@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from blackwall.reevaluation import (attribute_gap, comparison_metrics,
+from beigewall.reevaluation import (attribute_gap, comparison_metrics,
                                     discover_runs, reevaluate_results_dir)
 
 ROOT = Path(__file__).resolve().parent.parent

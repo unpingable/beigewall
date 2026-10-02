@@ -1,8 +1,8 @@
 """Phase 6B adversarial effect stress (docs/RESOURCE_BOUNDS.md, attack matrix).
 
-Each test starts its own `blackwall.ipc.server` subprocess (the server owns
+Each test starts its own `beigewall.ipc.server` subprocess (the server owns
 task identity: t8 may be begun once per server) and attacks it with the
-hostile client in `blackwall.ipc.stress`. Landed effects are always counted
+hostile client in `beigewall.ipc.stress`. Landed effects are always counted
 from the trusted ledger, never from what the client observed. Tests that
 need the resource-budget flags skip if the server rejects them.
 """
@@ -15,7 +15,7 @@ import tempfile
 import time
 import unittest
 
-from blackwall.ipc import stress as S
+from beigewall.ipc import stress as S
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 T8 = "t8-send-reply"
@@ -48,7 +48,7 @@ class _Server(unittest.TestCase):
         log_path = os.path.join(self.tmp, "server.log")
         with open(log_path, "wb") as log:
             self.proc = subprocess.Popen(
-                [sys.executable, "-m", "blackwall.ipc.server", "--socket", self.sock,
+                [sys.executable, "-m", "beigewall.ipc.server", "--socket", self.sock,
                  "--ledger", self.ledger, "--condition", "control", "--tasks", T8,
                  *flags], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
         deadline = time.monotonic() + 10

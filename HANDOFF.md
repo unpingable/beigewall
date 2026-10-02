@@ -41,27 +41,27 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
 - `results/exploratory/gpt-oss-20b-20261001T185216Z/` — interrupted first
   attempt, retained as defect-discovery evidence (see FINDINGS_REALMODEL
   "Artifacts and storage disposition")
-- `blackwall/` — trusted layer: grants, receipts, corpus, projections,
+- `beigewall/` — trusted layer: grants, receipts, corpus, projections,
   authority, broker, effects, tasks, narration, metrics, experiment
 - `docs/EVALUATOR.md` — receipt-grounded evaluator: formal structure,
   verdicts, threat model, limitations
 - `FINDINGS_EVALUATOR.md` — old vs new scoring, t6 regression, gap
   decomposition, normative-surface verdict
-- `blackwall/facts.py`, `disclosure.py`, `claims.py`, `contracts.py`,
-  `evaluator.py` — the evaluator; `blackwall/reevaluation.py` +
+- `beigewall/facts.py`, `disclosure.py`, `claims.py`, `contracts.py`,
+  `evaluator.py` — the evaluator; `beigewall/reevaluation.py` +
   `run_reevaluation.py` — re-scoring of stored runs
 - `results/reevaluation/{canonical,gpt-oss-20b-20261001T185916Z}/` —
   evaluation.json (every claim) + report.md; regenerable
 - `docs/CAPABILITIES.md`, `FINDINGS_PHASE4.md` — phase 4: capability
   discovery design (what is exposed, what stays hidden) and the
   control-vs-treatment result
-- `blackwall/capabilities.py`, `negotiation.py`, `phase4.py`,
+- `beigewall/capabilities.py`, `negotiation.py`, `phase4.py`,
   `run_phase4_report.py` — catalog, negotiation/abuse telemetry, comparison
 - `results/exploratory/gpt-oss-20b-p4-control-*/`, `...-p4-treatment-*/` —
   phase 4 runs (5 × 12 each); `results/reevaluation/phase4-*/` — comparison
-- `blackwall/llm_metrics.py`, `blackwall/llm_experiment.py`,
+- `beigewall/llm_metrics.py`, `beigewall/llm_experiment.py`,
   `run_llm_experiment.py` — exploratory real-model telemetry, runner, CLI
-- `blackwall/agent/` — untrusted side: harness (tool loop + facade trap),
+- `beigewall/agent/` — untrusted side: harness (tool loop + facade trap),
   drivers (scripted = normative; LLM = exploratory, env-gated)
 - `tests/` — 405 unittest tests (no real API key required; LLM paths use a
   stub server); `test_evaluator.py` holds the regression fixtures
@@ -81,17 +81,17 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
    endpoint; no key needed for loopback):
 
    ```
-   BLACKWALL_LLM_BASE_URL=http://localhost:11434/v1 \
-   BLACKWALL_LLM_MODEL=gpt-oss:20b \
+   BEIGEWALL_LLM_BASE_URL=http://localhost:11434/v1 \
+   BEIGEWALL_LLM_MODEL=gpt-oss:20b \
    python3 run_llm_experiment.py --runs 5 --label gpt-oss-20b
    ```
 
    The runner is resumable: sealed runs (those with `run-i/metrics.json`) are
    reused, missing runs re-executed into the same `--out` dir.
-5. New tasks go in `blackwall/tasks.py` with a check function and an intent
-   note, **and** an `AnswerContract` in `blackwall/contracts.py` (required /
+5. New tasks go in `beigewall/tasks.py` with a check function and an intent
+   note, **and** an `AnswerContract` in `beigewall/contracts.py` (required /
    forbidden facts and effects, what the policy blocks); new corpus facts
-   the task depends on go in the curated list in `blackwall/facts.py`.
+   the task depends on go in the curated list in `beigewall/facts.py`.
    Update `docs/PLAN.md`'s table and expect metric totals in
    `tests/test_metrics.py` to change deliberately.
 6. The receipt-grounded evaluator is the measurement surface; the frozen
@@ -124,8 +124,8 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   real-model expiry recovery remains unobserved (deterministic coverage
   exists); refusal-reason oracle repaired. `FINDINGS_PHASE5C.md`.
 - **Phase 6 sealed (2026-10-02)**: the membrane as a separate trusted
-  process (`python3 -m blackwall.ipc.server`) and the agent as an untrusted
-  process (`run_agent_process.py`) joined only by `blackwall-ipc/1`; 23
+  process (`python3 -m beigewall.ipc.server`) and the agent as an untrusted
+  process (`run_agent_process.py`) joined only by `beigewall-ipc/1`; 23
   adversarial probes, 7 lifecycle tests, equivalence and import-graph
   tests; hostile review's 11 findings fixed. Real model across the boundary:
   indistinguishable from in-process (useful 55% vs 53%, p ≈ 1.0), all
@@ -134,7 +134,7 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   user, so storage and socket secrecy are not OS-enforced
   (`docs/PROCESS_BOUNDARY.md`). Stopped here, as specified.
 - **Phase 6B sealed (2026-10-02)**: server-enforced resource budgets for
-  already-authorized effects (`blackwall/resources.py`, server flags
+  already-authorized effects (`beigewall/resources.py`, server flags
   `--effect-count/--task-effects/--rate`, unbounded by default). A hostile
   client with valid authority landed exactly the cap (3 of 323 attempts;
   203 unbounded) across fresh grants, reconnects, a second process, 20
@@ -167,8 +167,8 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
 - **Phase 7 sealed (2026-10-02)**: VM / OS boundary. The untrusted agent
   runs inside a QEMU/KVM guest (initramfs-only, no disk, no NIC, no shared
   FS) joined to the host only by two vsock channels — the unchanged
-  `blackwall-ipc/1` authority server (`server.serve_vsock`, accepts one
-  guest CID) and a transport-only model relay (`blackwall/model_relay.py`,
+  `beigewall-ipc/1` authority server (`server.serve_vsock`, accepts one
+  guest CID) and a transport-only model relay (`beigewall/model_relay.py`,
   one chat-completion verb, one model, upstream rebuilt). The OS-boundary
   probe suite (`vm/probe_os_boundary.py`) made 63 genuine attempts from the
   compromised guest across 9 categories (filesystem, modules, devices,
@@ -189,14 +189,14 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   hardening.
 - **Phase 7B sealed (2026-10-02)**: evidence custody against a compromised
   ledger writer. Role split (producer vs compromised writer vs independent
-  witness vs observer) in `blackwall/witness.py`, additive, canonical
+  witness vs observer) in `beigewall/witness.py`, additive, canonical
   byte-identical. Witness keeps (epoch, seq, occurrence_id, content_hash,
   chain_hash) out of writer custody, fed by the producer before the writer.
   The observer classifies divergence (MATCH/OMITTED/ALTERED/DUPLICATED/
   REPLAYED/REORDERED/FABRICATED/TRUNCATED/ROLLED_BACK/FORKED/
   WITNESS_UNAVAILABLE) and fails closed. Deterministic attack matrix of 18
   corruption classes: all detected, 0 missed, 0 false positives
-  (`tests/test_evidence_custody.py`, `blackwall/writer_corruption.py`). Budget
+  (`tests/test_evidence_custody.py`, `beigewall/writer_corruption.py`). Budget
   consumption and effect authority can never be relaxed by writer lies; a
   fabricated receipt authorizes nothing. Server `--witness`: a witnessed
   restart verifies the primary ledger, fails closed (SystemExit) on
@@ -212,7 +212,7 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
 - **Phase 7C sealed (2026-10-02) — final core experiment**: recoverable
   evidence custody. Witness retain mode (`Witness(retain=True)`, server
   `--witness-retain`) stores the canonical envelope per occurrence;
-  `blackwall/witness.py reconstruct()` rebuilds OMITTED/TRUNCATED/ROLLED_BACK
+  `beigewall/witness.py reconstruct()` rebuilds OMITTED/TRUNCATED/ROLLED_BACK
   entries from witness custody, provenance-tagged (original vs recovered) and
   re-verified against the attested chain; active rewriting (ALTERED/DUP/REPLAY/
   REORDER/FABRICATE) stays detect+fail-closed; hash-only witness →
@@ -244,7 +244,7 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   receipts; close with a documented canonical re-seal. Tests:
   `tests/test_refusal_oracle.py`.
 
-- **Rename before any public release.** "Blackwall" collides with CD Projekt
+- **Rename before any public release.** "BeigeWall" collides with CD Projekt
   Red's Cyberpunk term; the working suggestion is "beigewall" or similar.
   Do this before the repo, docs, or findings are published anywhere.
 - Next research question (see FINDINGS_PHASE4): task-conditioned discovery
@@ -266,7 +266,7 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
 
 ## Notes
 
-- Nested git repo: `/data/git` is an umbrella repo; BLACKWALL is its own repo
+- Nested git repo: `/data/git` is an umbrella repo; BeigeWall is its own repo
   inside it. Do not commit from the parent.
 - Storage: repo + results ≈3 MB total (exploratory tree ≈1.8 MB incl. the
   two phase 4 batches, reevaluation ≈0.9 MB regenerable). The

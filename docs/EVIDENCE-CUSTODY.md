@@ -29,7 +29,7 @@ survived. The findings separate:
 4. **primary persistence** — the **primary ledger writer**, *assumed
    compromised*. It receives the receipt to store and nothing else; it has no
    authority to mint, authorize, or change trusted state.
-5. **independent witnessing** — the `Witness` (`blackwall/witness.py`) receives
+5. **independent witnessing** — the `Witness` (`beigewall/witness.py`) receives
    each canonical receipt **directly from the producer, before the writer**,
    and keeps a minimal out-of-custody record.
 6. **observer reconstruction** — `witness.classify` compares the primary ledger

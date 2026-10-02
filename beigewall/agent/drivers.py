@@ -226,14 +226,14 @@ class LLMDriver:
 
     @classmethod
     def from_env(cls) -> "LLMDriver | None":
-        base = os.environ.get("BLACKWALL_LLM_BASE_URL")
+        base = os.environ.get("BEIGEWALL_LLM_BASE_URL")
         if not base:
             return None
-        key = os.environ.get("BLACKWALL_LLM_API_KEY")
+        key = os.environ.get("BEIGEWALL_LLM_API_KEY")
         if not key and not _is_loopback(base):
             return None  # remote endpoints require a key; loopback may not
         return cls(base, key or "",
-                   os.environ.get("BLACKWALL_LLM_MODEL", "local"))
+                   os.environ.get("BEIGEWALL_LLM_MODEL", "local"))
 
     def telemetry(self) -> dict:
         return {**self._telemetry, "latencies": list(self._telemetry["latencies"]),

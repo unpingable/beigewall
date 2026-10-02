@@ -3,7 +3,7 @@
 Measures per-call latency (median and p95, milliseconds) of request_grant,
 read (conversation@1 on thr-alice) and effect (send_message on thr-alice
 with valid provenance) for the in-process broker and, when a socket path is
-given, for the RemoteBroker over the `blackwall-ipc/1` socket. Also reports
+given, for the RemoteBroker over the `beigewall-ipc/1` socket. Also reports
 the read response size in bytes and the connect cost (open + hello + close).
 
 Effects consume their grant, so every timed effect gets a fresh grant minted
@@ -12,7 +12,7 @@ sequence is deterministic. The IPC modules are imported lazily so that the
 in-process half works without them.
 
 Usage:
-  python3 -m blackwall.ipc_bench [--n 200] [--out results/exploratory/x.json]
+  python3 -m beigewall.ipc_bench [--n 200] [--out results/exploratory/x.json]
 """
 
 import argparse
@@ -217,7 +217,7 @@ def main() -> int:
     os.mkdir(sock_dir, 0o700)
     sock = os.path.join(sock_dir, "s")
     server = subprocess.Popen(
-        [sys.executable, "-m", "blackwall.ipc.server", "--socket", sock,
+        [sys.executable, "-m", "beigewall.ipc.server", "--socket", sock,
          "--ledger", os.path.join(tmp, "receipts.jsonl"),
          "--condition", "control", "--run-id", "bench"],
         cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -1,6 +1,6 @@
 # FINDINGS — phase 6: process boundary
 
-**Status: the smallest real process boundary around the unchanged BLACKWALL
+**Status: the smallest real process boundary around the unchanged BeigeWall
 semantics; adversarial probes, lifecycle tests and real-model runs scored
 from the trusted ledger with the unchanged evaluator and observer.**
 No FUSE, containers, VMs, seccomp, namespaces, desktop data or network
@@ -27,7 +27,7 @@ protocol: `docs/PROCESS_BOUNDARY.md`.
 
 ## Architecture
 
-Trusted process (`python3 -m blackwall.ipc.server`): corpus, policy
+Trusted process (`python3 -m beigewall.ipc.server`): corpus, policy
 authority, broker, projections, effects, capability catalog, ledger, task
 definitions. Untrusted process (`run_agent_process.py`): harness, driver,
 a remote facade with exactly the agent's three methods (plus `discover` in
@@ -39,7 +39,7 @@ prompt hashes are issued by the server (`begin_task`); the agent cannot
 choose them. The agent process imports no trusted module (asserted by a
 test on its import graph; its scripted self-check reads scripts as data).
 
-## Protocol `blackwall-ipc/1`
+## Protocol `beigewall-ipc/1`
 
 4-byte length prefix + one JSON object, ≤ 256 KiB, exact top-level keys,
 duplicate keys rejected, per-op argument whitelist with types and bounds,
@@ -60,7 +60,7 @@ prevent the agent process from opening the ledger or the socket if it
 learns their paths, and both are readable from the server's own
 `/proc/<pid>/cmdline` by any same-user process. What this phase
 establishes is the *protocol* boundary: the trusted process accepts only
-`blackwall-ipc/1` frames and gives the agent no path, handle, module or
+`beigewall-ipc/1` frames and gives the agent no path, handle, module or
 object. What it does not establish — and does not simulate — is OS
 enforcement of that boundary: user separation (or a mount/namespace
 boundary) is the missing mechanism and is a separate experiment.
@@ -175,7 +175,7 @@ experiment's timescale.
    valid provenance and are consumed on success.
 2. **Process isolation** — established at the protocol level: the trusted
    state (corpus, authority, grants, ledger, policy, prompts) lives in a
-   process the agent cannot address except through `blackwall-ipc/1`;
+   process the agent cannot address except through `beigewall-ipc/1`;
    the server evaluates, imports, opens and executes nothing the client
    names; the agent process imports no trusted module; task identity,
    prompts and hashes are server-owned; restart continues identities

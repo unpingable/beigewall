@@ -3,9 +3,9 @@ import os
 import tempfile
 import unittest
 
-from blackwall.agent.drivers import ScriptedDriver
-from blackwall.llm_experiment import run_llm_experiment
-from blackwall.tasks import task_suite
+from beigewall.agent.drivers import ScriptedDriver
+from beigewall.llm_experiment import run_llm_experiment
+from beigewall.tasks import task_suite
 
 
 class TestLLMExperimentRunner(unittest.TestCase):

@@ -6,13 +6,13 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from blackwall.agent.drivers import LLMDriver
-from blackwall.agent.harness import Harness
-from blackwall.authority import PolicyAuthority
-from blackwall.broker import CapabilityBroker
-from blackwall.corpus import build_demo_corpus
-from blackwall.receipts import Ledger
-from blackwall.tasks import LogicalClock, experiment_policy
+from beigewall.agent.drivers import LLMDriver
+from beigewall.agent.harness import Harness
+from beigewall.authority import PolicyAuthority
+from beigewall.broker import CapabilityBroker
+from beigewall.corpus import build_demo_corpus
+from beigewall.receipts import Ledger
+from beigewall.tasks import LogicalClock, experiment_policy
 
 SECRET = "PRIVATE-CHAIN-OF-THOUGHT-TOKEN"
 

@@ -1,4 +1,4 @@
-# BLACKWALL (spike)
+# BeigeWall (spike)
 
 A research spike testing one question:
 
@@ -10,7 +10,7 @@ is throwaway-grade. There is deliberately **no** OS sandboxing: no namespaces,
 containers, FUSE, seccomp, network policy, or real desktop integrations. The
 spike validates the authority/provenance model in-process.
 
-Where BLACKWALL sits relative to Constellation, Jev, ABSD, atproto-ACL and
+Where BeigeWall sits relative to Constellation, Jev, ABSD, atproto-ACL and
 the formal work: `docs/ECOSYSTEM-ROLE.md` (positioning only).
 
 ## Architecture
@@ -29,41 +29,41 @@ untrusted side                     trusted side (mediation layer)
 └───────────────────────┘
 ```
 
-- **Capability broker** (`blackwall/broker.py`): the agent's only tool surface.
+- **Capability broker** (`beigewall/broker.py`): the agent's only tool surface.
   Grants specify resource scope, operation, projection@version, expiration, and
   a cumulative usage budget. There is no permanent authorization state.
   Validation is fail-closed; every failure is a `refusal` receipt.
-- **Projection engine** (`blackwall/projections.py`): the primary disclosure
+- **Projection engine** (`beigewall/projections.py`): the primary disclosure
   boundary. Each projection explicitly defines what leaves the protected store
   and returns provenance: schema@version, source object ids, disclosed field
   paths, content hash, and disclosure accounting. Provenance says
   "conversation@1 disclosed message.body from msg-1, msg-2, msg-3" — never
   "read thread alice".
-- **Receipt system** (`blackwall/receipts.py`): every broker operation appends a
+- **Receipt system** (`beigewall/receipts.py`): every broker operation appends a
   durable receipt (grant_request / grant_mint / grant_deny / read / effect /
   refusal / unmediated_attempt / narrative / task_end). The receipt is
   authoritative; the agent's narration is merely another receipt, compared
   against the graph after the task.
-- **Effect mediation** (`blackwall/effects.py`): reading never implies acting.
+- **Effect mediation** (`beigewall/effects.py`): reading never implies acting.
   Effects need their own grants and must carry dependency provenance
   (`derived_from`): projection refs must match content hashes actually
   disclosed to the task; user_input refs must match the registered prompt hash.
   Fabricated provenance is refused.
-- **Receipt-grounded evaluator** (`blackwall/evaluator.py` with `facts.py`,
+- **Receipt-grounded evaluator** (`beigewall/evaluator.py` with `facts.py`,
   `disclosure.py`, `claims.py`, `contracts.py`): scores a task from the
   receipt graph alone — authorized disclosure set → answer/effect claims →
   three separate verdicts (capability, admissibility, usefulness). The
   agent's narrative and the frozen expected answer are never consulted.
   Design and threat model: `docs/EVALUATOR.md`; results:
   `FINDINGS_EVALUATOR.md`.
-- **Capability discovery** (`blackwall/capabilities.py`, phase 4): the
+- **Capability discovery** (`beigewall/capabilities.py`, phase 4): the
   broker's `discover` returns the *shape* of requestable authority for the
   task (applicable policy rules, projection and effect schemas, grant
   defaults, request schema), versioned and content-hashed, receipted as
   `discovery`. It grants nothing, shows no corpus value, and cannot confirm
   that a resource exists. The facade exposes it only in the treatment
   condition. See `docs/CAPABILITIES.md`, `FINDINGS_PHASE4.md`.
-- **Lifecycle harness** (`blackwall/lifecycle.py`, phase 5B): one agent
+- **Lifecycle harness** (`beigewall/lifecycle.py`, phase 5B): one agent
   session over several tasks with receipted lifecycle injections (time
   jump, TTL cap, revocation, transport loss, duplicate delivery, session
   restart), deterministic misuse probes, and an independent observer
@@ -71,12 +71,12 @@ untrusted side                     trusted side (mediation layer)
   checks every broker decision. Effect grants are consumed by their first
   successful effect; grants can be revoked. `docs/LIFECYCLE.md`,
   `FINDINGS_PHASE5B.md`.
-- **Process boundary** (`blackwall/ipc/`, phase 6): the membrane as a
+- **Process boundary** (`beigewall/ipc/`, phase 6): the membrane as a
   separate trusted process behind a Unix-domain socket and a fail-closed,
   versioned protocol; the agent process holds only harness, driver and a
   remote facade and imports no trusted module. `docs/PROCESS_BOUNDARY.md`,
   `FINDINGS_PHASE6.md`.
-- **Agent harness** (`blackwall/agent/`): a simple tool loop. The scripted
+- **Agent harness** (`beigewall/agent/`): a simple tool loop. The scripted
   driver is the normative experiment (deterministic; intentionally includes
   correct behavior, overbroad requests, repeated grant requests, inference
   attempts on denied data, and inaccurate narration). The LLM driver is
@@ -129,8 +129,8 @@ Exploratory real-model runs (opt-in, env-gated, never touch
 `results/canonical/`):
 
 ```
-BLACKWALL_LLM_BASE_URL=http://localhost:11434/v1 \
-BLACKWALL_LLM_MODEL=gpt-oss:20b \
+BEIGEWALL_LLM_BASE_URL=http://localhost:11434/v1 \
+BEIGEWALL_LLM_MODEL=gpt-oss:20b \
 python3 run_llm_experiment.py --runs 5 --label gpt-oss-20b
 # writes results/exploratory/<label>-<utc-ts>/
 ```

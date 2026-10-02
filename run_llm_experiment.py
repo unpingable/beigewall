@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Run the BLACKWALL task suite under a real LLM endpoint (exploratory).
+"""Run the BeigeWall task suite under a real LLM endpoint (exploratory).
 
 Environment (required):
-  BLACKWALL_LLM_BASE_URL   OpenAI-compatible base URL, e.g. http://localhost:11434/v1
-  BLACKWALL_LLM_API_KEY    required for non-loopback endpoints; unused for loopback
-  BLACKWALL_LLM_MODEL      model identifier (or pass --model)
+  BEIGEWALL_LLM_BASE_URL   OpenAI-compatible base URL, e.g. http://localhost:11434/v1
+  BEIGEWALL_LLM_API_KEY    required for non-loopback endpoints; unused for loopback
+  BEIGEWALL_LLM_MODEL      model identifier (or pass --model)
 
 Example:
-  BLACKWALL_LLM_BASE_URL=http://localhost:11434/v1 \
-  BLACKWALL_LLM_MODEL=qwen3:8b \
+  BEIGEWALL_LLM_BASE_URL=http://localhost:11434/v1 \
+  BEIGEWALL_LLM_MODEL=qwen3:8b \
   python3 run_llm_experiment.py --runs 5
 
 Canonical results are never written by this command. Output goes to a clearly
@@ -20,14 +20,14 @@ import os
 import sys
 from datetime import datetime, timezone
 
-from blackwall.agent.drivers import LLMDriver
-from blackwall.llm_experiment import run_llm_experiment
+from beigewall.agent.drivers import LLMDriver
+from beigewall.llm_experiment import run_llm_experiment
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs", type=int, default=5)
-    parser.add_argument("--model", default=os.environ.get("BLACKWALL_LLM_MODEL"))
+    parser.add_argument("--model", default=os.environ.get("BEIGEWALL_LLM_MODEL"))
     parser.add_argument("--label", default=None)
     parser.add_argument("--out", default=None)
     parser.add_argument("--max-steps", type=int, default=40)
@@ -42,15 +42,15 @@ def main() -> int:
 
     probe = LLMDriver.from_env()
     if probe is None:
-        print("error: set BLACKWALL_LLM_BASE_URL (and BLACKWALL_LLM_API_KEY "
+        print("error: set BEIGEWALL_LLM_BASE_URL (and BEIGEWALL_LLM_API_KEY "
               "for non-loopback endpoints); refusing to run unconfigured",
               file=sys.stderr)
         return 2
     model = args.model or probe._model
     label = args.label or model.replace("/", "_").replace(":", "_")
 
-    base_url = os.environ["BLACKWALL_LLM_BASE_URL"]
-    api_key = os.environ.get("BLACKWALL_LLM_API_KEY", "")
+    base_url = os.environ["BEIGEWALL_LLM_BASE_URL"]
+    api_key = os.environ.get("BEIGEWALL_LLM_API_KEY", "")
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out = args.out or os.path.join("results", "exploratory",
@@ -62,7 +62,7 @@ def main() -> int:
         return 2
 
     def factory(_task):
-        from blackwall.llm_experiment import CONDITION_ALIASES, CONDITION_MODES
+        from beigewall.llm_experiment import CONDITION_ALIASES, CONDITION_MODES
         cond = CONDITION_ALIASES.get(args.condition, args.condition)
         return LLMDriver(base_url, api_key, model,
                          discovery=CONDITION_MODES[cond] or False)

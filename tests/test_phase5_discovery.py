@@ -7,19 +7,19 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from blackwall.agent.drivers import (DENIAL_PROMPT_ADDENDUM, LLMDriver,
+from beigewall.agent.drivers import (DENIAL_PROMPT_ADDENDUM, LLMDriver,
                                      ScriptedDriver, TASK_VIEW_PROMPT_ADDENDUM)
-from blackwall.agent.harness import Harness
-from blackwall.authority import PolicyAuthority
-from blackwall.broker import CapabilityBroker, RefusalError
-from blackwall.capabilities import HINT_SCHEMA, VIEW_SCHEMA, ground_prompt
-from blackwall.corpus import build_demo_corpus
-from blackwall.deference import classify_deference
-from blackwall.disclosure import MANIFEST_IDS, disclosure_from_receipts
-from blackwall.evaluator import evaluate_task
-from blackwall.negotiation import acquisition_timing
-from blackwall.receipts import Ledger, canonical_hash
-from blackwall.tasks import LogicalClock, experiment_policy, task_suite
+from beigewall.agent.harness import Harness
+from beigewall.authority import PolicyAuthority
+from beigewall.broker import CapabilityBroker, RefusalError
+from beigewall.capabilities import HINT_SCHEMA, VIEW_SCHEMA, ground_prompt
+from beigewall.corpus import build_demo_corpus
+from beigewall.deference import classify_deference
+from beigewall.disclosure import MANIFEST_IDS, disclosure_from_receipts
+from beigewall.evaluator import evaluate_task
+from beigewall.negotiation import acquisition_timing
+from beigewall.receipts import Ledger, canonical_hash
+from beigewall.tasks import LogicalClock, experiment_policy, task_suite
 from tests.test_capabilities import corpus_values
 
 

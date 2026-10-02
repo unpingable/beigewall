@@ -1,7 +1,7 @@
 import unittest
 
-from blackwall.llm_metrics import aggregate_runs, denial_recovery
-from blackwall.receipts import Ledger
+from beigewall.llm_metrics import aggregate_runs, denial_recovery
+from beigewall.receipts import Ledger
 
 
 def deny(led, task, resource, op="read", proj="conversation@1", reason="no"):

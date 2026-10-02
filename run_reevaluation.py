@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Re-evaluate stored BLACKWALL runs with the receipt-grounded evaluator.
+"""Re-evaluate stored BeigeWall runs with the receipt-grounded evaluator.
 
 Usage: python3 run_reevaluation.py <results_dir> [--out results/reevaluation/<basename>]
 
@@ -12,7 +12,7 @@ results are read-only inputs; evaluation.json and report.md are written to
 import argparse
 from pathlib import Path
 
-from blackwall.reevaluation import headline_table, reevaluate_results_dir
+from beigewall.reevaluation import headline_table, reevaluate_results_dir
 
 
 def main() -> None:

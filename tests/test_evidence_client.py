@@ -11,9 +11,9 @@ import tempfile
 import time
 import unittest
 
-from blackwall.ipc.agent import RemoteFacade
-from blackwall.ipc.client import IndeterminateError, RemoteBroker, TransportError
-from blackwall.ipc import protocol as P
+from beigewall.ipc.agent import RemoteFacade
+from beigewall.ipc.client import IndeterminateError, RemoteBroker, TransportError
+from beigewall.ipc import protocol as P
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 T8 = "t8-send-reply"
@@ -27,7 +27,7 @@ class _Server(unittest.TestCase):
         self.sock = os.path.join(self.tmp, "s")
         self.ledger = os.path.join(self.tmp, "receipts.jsonl")
         self.proc = subprocess.Popen(
-            [sys.executable, "-m", "blackwall.ipc.server", "--socket", self.sock,
+            [sys.executable, "-m", "beigewall.ipc.server", "--socket", self.sock,
              "--ledger", self.ledger, "--condition", "control", "--tasks", T8],
             cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
         deadline = time.monotonic() + 10
@@ -129,7 +129,7 @@ class FacadeOutcomes(unittest.TestCase):
         self.assertEqual((out["ok"], out["indeterminate"], out["effect_id"]), (False, True, "e-7"))
         self.assertIn("do not retry", out["error"])
 
-        from blackwall.ipc.client import EvidenceError
+        from beigewall.ipc.client import EvidenceError
 
         class Stub2:
             def effect(self, *a):

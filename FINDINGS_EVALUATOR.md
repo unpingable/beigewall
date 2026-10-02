@@ -35,7 +35,7 @@ contract (per task) ──► evaluate_task ─────────► capab
 ```
 
 New modules (trusted side, no change to authority, broker, grants,
-projections, effects, corpus, or task definitions): `blackwall/facts.py`
+projections, effects, corpus, or task definitions): `beigewall/facts.py`
 (111-entry catalog: auto-generated ids, values, bodies, timestamps; curated
 semantic sub-facts; derived multi-object facts), `disclosure.py`,
 `claims.py`, `contracts.py`, `evaluator.py`, `reevaluation.py`,

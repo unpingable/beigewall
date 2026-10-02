@@ -1,4 +1,4 @@
-# BLACKWALL — findings
+# BeigeWall — findings
 
 Canonical run: `results/canonical/` (deterministic; rerun with
 `python3 run_experiment.py`). Driver: scripted (normative). Date: 2026-10-01.

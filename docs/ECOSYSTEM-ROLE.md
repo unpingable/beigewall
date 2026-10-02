@@ -1,6 +1,6 @@
-# BLACKWALL's role in the surrounding research
+# BeigeWall's role in the surrounding research
 
-BLACKWALL is an **adversarial-agent reference vertical** for testing the
+BeigeWall is an **adversarial-agent reference vertical** for testing the
 separation of language-level behaviour from operational authority. It is a
 consumer and test workload for the broader governed-system architecture,
 not a replacement for, or umbrella over, the other projects. Everything
@@ -11,7 +11,7 @@ below is positioning; it introduces no implementation.
 A governed-agent architecture should be tested against an adversarial
 language layer rather than assume the language layer is trustworthy. The
 motivating failure class is not "the model lies". It is the set of
-behaviours actually observed in BLACKWALL's runs: the model claims access it
+behaviours actually observed in BeigeWall's runs: the model claims access it
 did not have; infers information it was denied; requests inappropriate or
 overbroad authority; carries content across task boundaries; retries or
 reuses stale authority; attempts effects nobody asked for; and misreports
@@ -21,7 +21,7 @@ did.
 
 ## Relationships
 
-**Constellation.** BLACKWALL is a concrete adversarial workload for
+**Constellation.** BeigeWall is a concrete adversarial workload for
 Constellation's authority / evidence / custody model. The empirical
 property it exercises is: *the language layer can be wrong, hallucinate,
 mis-narrate, request inappropriate authority, or carry stale content
@@ -29,21 +29,21 @@ without thereby acquiring operational authority.* It exercises bounded
 authority (scoped, expiring, budgeted, consumed, revocable grants),
 explicit projections as the disclosure boundary, effect mediation with
 dependency provenance, authoritative receipts, lifecycle pressure, and
-capability negotiation. BLACKWALL is not the Constellation implementation;
+capability negotiation. BeigeWall is not the Constellation implementation;
 it is one vertical that Constellation's model must survive.
 
 **Jev.** Jev is a candidate language/decision layer *above* the authority
 membrane: it may interpret intent, classify dialogue, or make bounded
 conversational decisions, but it must not become the authority plane.
-BLACKWALL supplies the execution boundary in which such a layer can be
+BeigeWall supplies the execution boundary in which such a layer can be
 wrong without its errors becoming operational authority. The principle:
-*rooting the conversation does not root the business process.* BLACKWALL
+*rooting the conversation does not root the business process.* BeigeWall
 demonstrates this at the tested toy strength only; it is not a solved
 property.
 
 **ABSD.** ABSD is a potential lower substrate for eventually enforcing
-some of the boundaries that BLACKWALL enforces, today, by in-process
-convention and, next, by a trusted-process architecture. BLACKWALL does not
+some of the boundaries that BeigeWall enforces, today, by in-process
+convention and, next, by a trusted-process architecture. BeigeWall does not
 run on ABSD. The progression is: logical authority membrane → process
 boundary → eventually, if warranted, substrate/OS enforcement. ABSD remains
 an independent research program, not an "AI OS".
@@ -51,20 +51,20 @@ an independent research program, not an "AI OS".
 **atproto-ACL.** A domain-specific policy/admission layer that could serve
 as a governed policy component for an agent operating on ATProto
 resources. The relationship is compositional —
-`agent → BLACKWALL → policy/admission → governed operation` — and
-BLACKWALL does not own domain policy.
+`agent → BeigeWall → policy/admission → governed operation` — and
+BeigeWall does not own domain policy.
 
 **Phlogiston and other application surfaces.** Application-layer work can
 consume governed projections and decisions without becoming an authority
-system. BLACKWALL could eventually provide the adversarial-agent boundary
+system. BeigeWall could eventually provide the adversarial-agent boundary
 for such applications; no integration exists today and none is claimed.
 
-**Formal / Lean work.** BLACKWALL supplies empirical invariants and
+**Formal / Lean work.** BeigeWall supplies empirical invariants and
 concrete failure cases as *candidates* for formalisation: non-escalation of
 authority, projection non-disclosure, effect provenance, receipt
 completeness and observer reconstruction, grant consumption, revocation,
 cross-task isolation, and admissibility relative to disclosed evidence.
-None of these is proved by BLACKWALL. The relationship is empirical
+None of these is proved by BeigeWall. The relationship is empirical
 contract → candidate formal model → formal verification.
 
 ## Conceptual architecture
@@ -78,7 +78,7 @@ application / agent
 language / decision layer          (e.g. Jev; untrusted)
         |
         v
-BLACKWALL                          (the membrane under test)
+BeigeWall                          (the membrane under test)
   projections
   bounded authority
   capability negotiation
@@ -133,6 +133,6 @@ generalised security claims.
 7. Only later, if warranted: stronger OS isolation, real desktop resources,
    or production-oriented integration.
 
-BLACKWALL is becoming a reusable adversarial reference vertical for the
+BeigeWall is becoming a reusable adversarial reference vertical for the
 governed-agent research. It is not a standalone framework and does not
 absorb the other projects.

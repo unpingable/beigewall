@@ -2,7 +2,7 @@
 """Untrusted agent process (phase 6).
 
 Runs the fixed tasks through the real-model or scripted driver against a
-trusted membrane reached only over `blackwall-ipc/1`. Receives a socket
+trusted membrane reached only over `beigewall-ipc/1`. Receives a socket
 path, a condition, a driver name and task ids — never a ledger, corpus or
 policy path. Imports no trusted module. Emits one JSON telemetry line per
 task on stdout.
@@ -16,7 +16,7 @@ import json
 import os
 import sys
 
-from blackwall.ipc.client import RemoteBroker
+from beigewall.ipc.client import RemoteBroker
 
 CONDITION_MODES = {"control": None, "global": "global", "denial": "denial", "task": "task"}
 
@@ -34,30 +34,30 @@ def main() -> int:
     mode = CONDITION_MODES[a.condition]
     task_ids = [t for t in a.tasks.split(",") if t]
 
-    from blackwall.ipc.agent import RemoteHarness
+    from beigewall.ipc.agent import RemoteHarness
     broker = RemoteBroker(a.socket)
     harness = RemoteHarness(broker, discovery_mode=mode)
 
     if a.driver == "llm":
-        from blackwall.agent.drivers import LLMDriver
-        base = os.environ.get("BLACKWALL_LLM_BASE_URL")
+        from beigewall.agent.drivers import LLMDriver
+        base = os.environ.get("BEIGEWALL_LLM_BASE_URL")
         if not base:
-            print("error: set BLACKWALL_LLM_BASE_URL/BLACKWALL_LLM_MODEL", file=sys.stderr)
+            print("error: set BEIGEWALL_LLM_BASE_URL/BEIGEWALL_LLM_MODEL", file=sys.stderr)
             return 2
-        shared = LLMDriver(base, os.environ.get("BLACKWALL_LLM_API_KEY", ""),
-                           os.environ.get("BLACKWALL_LLM_MODEL", "local"),
+        shared = LLMDriver(base, os.environ.get("BEIGEWALL_LLM_API_KEY", ""),
+                           os.environ.get("BEIGEWALL_LLM_MODEL", "local"),
                            discovery=mode or False, session=a.session)
 
         def make_driver(_tid):
             return shared if a.session else LLMDriver(
-                base, os.environ.get("BLACKWALL_LLM_API_KEY", ""),
-                os.environ.get("BLACKWALL_LLM_MODEL", "local"), discovery=mode or False)
+                base, os.environ.get("BEIGEWALL_LLM_API_KEY", ""),
+                os.environ.get("BEIGEWALL_LLM_MODEL", "local"), discovery=mode or False)
     else:
         # the scripted driver's scripts are task definitions; the agent process
         # holds them only as a deterministic self-check reference (they carry
         # no authority and no corpus content beyond the public scripts)
-        from blackwall.agent.drivers import ScriptedDriver
-        from blackwall.tasks_public import task_scripts
+        from beigewall.agent.drivers import ScriptedDriver
+        from beigewall.tasks_public import task_scripts
         scripts = task_scripts()
 
         def make_driver(tid):

@@ -1,7 +1,7 @@
 import unittest
 
-from blackwall.grants import Budget
-from blackwall.authority import PolicyAuthority, PolicyRule
+from beigewall.grants import Budget
+from beigewall.authority import PolicyAuthority, PolicyRule
 
 
 def req(authority, **kw):

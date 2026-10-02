@@ -42,6 +42,10 @@ def run_experiment(out_dir: str) -> dict:
 
 def _render_report(suite: dict, per_task: dict, answers: dict) -> str:
     lines = [
+        # FROZEN historical title: the canonical report was sealed under the
+        # project's former name (BLACKWALL). Kept verbatim so run_experiment.py
+        # regenerates the canonical artifact byte-identically after the rename
+        # to BeigeWall (see RENAME.md). Do not change this string.
         "# BLACKWALL experiment report",
         "",
         "## Headline metrics",

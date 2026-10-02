@@ -7,8 +7,8 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from blackwall.agent.drivers import LLMDriver
-from blackwall.lifecycle import (Step, Trajectory, probe_trajectories,
+from beigewall.agent.drivers import LLMDriver
+from beigewall.lifecycle import (Step, Trajectory, probe_trajectories,
                                  run_trajectory, scripted_driver_for)
 
 
