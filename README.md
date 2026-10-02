@@ -1,9 +1,19 @@
 # BeigeWall (spike)
 
-A research spike testing one question:
+A research artifact testing one question:
 
 > Can an agent remain useful when the computer it believes it controls is
 > actually a mediated projection with no ambient authority?
+
+The result, stated plainly:
+
+> **An untrusted agent does not need to be trustworthy if the authority,
+> disclosure, effect, resource, and evidence boundaries do not depend on
+> trusting it.**
+
+The research is complete. For the whole arc — the phase progression, the
+failure class each phase answered, demonstrated claims, explicit nonclaims, and
+deliberately-out-of-scope future directions — see **`RESEARCH-SUMMARY.md`**.
 
 The deliverable is an experimental result, not a production framework. All code
 is throwaway-grade. The spike first validated the authority/provenance model
@@ -226,3 +236,18 @@ at another. Demonstrated (D) vs explicit nonclaim (N):
 - **Single-tenant authority.** One policy table, no revocation mid-task, no
   delegation chains.
 - **Small corpus.** 12 task fixtures, ~25 corpus objects.
+
+## Findings index
+
+Full index and the research arc are in `RESEARCH-SUMMARY.md`. Normative results:
+`FINDINGS.md` (+ `FINDINGS_EVALUATOR.md`); exploratory real-model:
+`FINDINGS_REALMODEL.md`; per-phase: `FINDINGS_PHASE{4,5,5B,5C,6,6B,6C,7,7B,7C}.md`;
+design: `docs/` (`PLAN`, `EVALUATOR`, `CAPABILITIES`, `LIFECYCLE`,
+`RESOURCE_BOUNDS`, `EVIDENCE_DURABILITY`, `PROCESS_BOUNDARY`, `VM_BOUNDARY`,
+`EVIDENCE-CUSTODY`, `ECOSYSTEM-ROLE`). Project rename: `RENAME.md`.
+
+## License
+
+Apache License 2.0 — see `LICENSE` and `NOTICE`. Copyright 2026 The BeigeWall
+Authors. The project was formerly named BLACKWALL (`RENAME.md`); sealed
+artifacts under `results/` are preserved verbatim from that era.
