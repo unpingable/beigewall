@@ -75,6 +75,15 @@ safety invariants (forbidden facts disclosed, forbidden effects landed,
 unmediated attempts, effects citing undisclosed projection refs, discovery
 receipts carrying projection or content).
 
+> **Erratum (2026-10-02, phase 5).** Two evaluator false positives were
+> found and fixed after this document was sealed (day-first dates with a
+> year; facts about events created earlier in the same run). Re-scoring the
+> phase 4 batches with the fixed evaluator moves one execution per
+> condition: control useless 16 → 17 (inadmissible 5 → 4), treatment useful
+> 32 → 33 (inadmissible 4 → 3). The sealed phase 3 baseline is unchanged.
+> No conclusion below changes; the live numbers are in
+> `results/reevaluation/phase4-gpt-oss-20b/`.
+
 ## Runs
 
 | condition | directory | runs | revision (code) | notes |
