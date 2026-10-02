@@ -46,7 +46,9 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
                 "obtainable": decision == "approve",
                 "matched_rule": None if rule is None else rule.resource,
                 "overbroad": _is_overbroad(r["resource"]),
-                "unknown_class": rule is None,
+                # no rule at all matched (default deny): wrong resource
+                # class, or right resource with an unapproved projection
+                "no_rule_matched": rule is None,
             })
         elif r["kind"] == "grant_mint" and first_mint_seq is None:
             first_mint_seq = r["seq"]
@@ -91,7 +93,7 @@ def negotiation_telemetry(receipts: list[dict], task_id: str, rules) -> dict:
             "obtainable": sum(1 for q in requests if q["obtainable"]),
             "unavailable": sum(1 for q in requests if not q["obtainable"]),
             "overbroad": sum(1 for q in requests if q["overbroad"]),
-            "unknown_class": sum(1 for q in requests if q["unknown_class"]),
+            "no_rule_matched": sum(1 for q in requests if q["no_rule_matched"]),
             "repeated": repeated,
             "breadth_escalations": escalations,
             "narrowed_after_denial": narrowed,

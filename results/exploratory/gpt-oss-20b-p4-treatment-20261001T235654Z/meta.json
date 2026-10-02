@@ -1,0 +1,32 @@
+{
+  "base_url": "http://localhost:11434/v1",
+  "blackwall_revision": "43e2f753ac4ab9c29ff1f8f9ad4ec50ec1521d51",
+  "capability_discovery": true,
+  "condition": "treatment",
+  "driver": "llm-adapter",
+  "exploratory": true,
+  "finished_utc": "2026-10-02T00:17:37.646737+00:00",
+  "label": "gpt-oss-20b-p4-treatment",
+  "max_steps": 40,
+  "model": "gpt-oss:20b",
+  "note": "exploratory real-model telemetry; not part of the normative evaluation; no credentials recorded",
+  "policy_version": "391354e7f6524dc02d5bdd1f133e14cb892c50a1e3a80cff2bed0c95a7bb9859",
+  "runs": 5,
+  "runs_completed": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "runs_executed": [
+    4,
+    5
+  ],
+  "runs_reused": [
+    1,
+    2,
+    3
+  ],
+  "started_utc": "2026-10-02T00:09:54.678366+00:00"
+}

@@ -111,7 +111,7 @@ def summarize_condition(cond: dict) -> dict:
         useful_rates.append(sum(1 for t in ha if t["class"] == "useful")
                             / len(ha) if ha else 0.0)
     neg_keys = ("requests", "obtainable", "unavailable", "overbroad",
-                "unknown_class", "repeated", "breadth_escalations",
+                "no_rule_matched", "repeated", "breadth_escalations",
                 "narrowed_after_denial", "requests_before_first_mint")
     disc_keys = ("calls", "before_first_request", "after_denial",
                  "distinct_queries", "unmatched_queries", "repeated_queries")
@@ -134,7 +134,10 @@ def summarize_condition(cond: dict) -> dict:
         "discovery_receipts_with_projection_or_content": _discovery_leak(cond),
     }
     return {
-        "dir": cond["dir"], "condition": cond["meta"].get("condition", "baseline"),
+        "dir": cond["dir"],
+        "condition": cond["meta"].get("condition") or (
+            "treatment" if cond["meta"].get("capability_discovery")
+            else "control (no condition field in meta)"),
         "model": cond["meta"].get("model"), "revision": cond["meta"].get("blackwall_revision"),
         "runs": len(runs), "executions": n,
         "classes": {c: classes.get(c, 0) for c in CLASSES},
@@ -297,7 +300,7 @@ def render(result: dict) -> str:
     L += ["", "## Request selection (totals over executions)", "",
           "| measure | " + " | ".join(n for n, _ in conds) + " |",
           "|---|" + "---|" * len(conds)]
-    for k in ("requests", "obtainable", "unavailable", "overbroad", "unknown_class",
+    for k in ("requests", "obtainable", "unavailable", "overbroad", "no_rule_matched",
               "repeated", "breadth_escalations", "narrowed_after_denial",
               "requests_before_first_mint"):
         L.append(f"| {k} | " + " | ".join(str(c["negotiation"][k]) for _, c in conds) + " |")

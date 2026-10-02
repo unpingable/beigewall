@@ -1,0 +1,28 @@
+{
+  "base_url": "http://localhost:11434/v1",
+  "blackwall_revision": "43e2f753ac4ab9c29ff1f8f9ad4ec50ec1521d51",
+  "driver": "llm-adapter",
+  "exploratory": true,
+  "finished_utc": "2026-10-01T23:56:34.301120+00:00",
+  "label": "gpt-oss-20b-p4-control",
+  "max_steps": 40,
+  "model": "gpt-oss:20b",
+  "note": "exploratory real-model telemetry; not part of the normative evaluation; no credentials recorded",
+  "runs": 5,
+  "runs_completed": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "runs_executed": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "runs_reused": [],
+  "started_utc": "2026-10-01T23:33:49.178742+00:00"
+}

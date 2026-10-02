@@ -1,8 +1,12 @@
 # HANDOFF
 
-Date: 2026-10-01. Status: **spike complete + real-model exploratory experiment
-complete + receipt-grounded evaluator (phase 3) complete**. All milestones in
-`docs/PLAN.md` (phases 1–3) are checked. The canonical experiment result is
+Date: 2026-10-02. Status: **spike complete + real-model exploratory experiment
+complete + receipt-grounded evaluator (phase 3) complete + capability
+negotiation experiment (phase 4) complete**. All milestones in `docs/PLAN.md`
+(phases 1–4) are checked. Phase 4 result: the discovery mechanism is sound
+and halved negotiation overhead, but did **not** convert the
+honest-but-useless class (0 conversions, 8 regressions); see
+`FINDINGS_PHASE4.md`. The canonical experiment result is
 recorded and unchanged; the real-model exploratory result is recorded in
 `FINDINGS_REALMODEL.md`; the receipt-grounded re-scoring of both is in
 `FINDINGS_EVALUATOR.md` with artifacts under `results/reevaluation/`.
@@ -11,7 +15,7 @@ recorded and unchanged; the real-model exploratory result is recorded in
 
 ```
 cd /data/git/blackwall
-python3 -m unittest discover -s tests    # expect: Ran 164 tests ... OK
+python3 -m unittest discover -s tests    # expect: Ran 183 tests ... OK
 python3 run_experiment.py --out /tmp/bw-check
 diff /tmp/bw-check/metrics.json results/canonical/metrics.json     # identical
 diff /tmp/bw-check/receipts.jsonl results/canonical/receipts.jsonl # identical
@@ -43,6 +47,13 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
   `run_reevaluation.py` — re-scoring of stored runs
 - `results/reevaluation/{canonical,gpt-oss-20b-20261001T185916Z}/` —
   evaluation.json (every claim) + report.md; regenerable
+- `docs/CAPABILITIES.md`, `FINDINGS_PHASE4.md` — phase 4: capability
+  discovery design (what is exposed, what stays hidden) and the
+  control-vs-treatment result
+- `blackwall/capabilities.py`, `negotiation.py`, `phase4.py`,
+  `run_phase4_report.py` — catalog, negotiation/abuse telemetry, comparison
+- `results/exploratory/gpt-oss-20b-p4-control-*/`, `...-p4-treatment-*/` —
+  phase 4 runs (5 × 12 each); `results/reevaluation/phase4-*/` — comparison
 - `blackwall/llm_metrics.py`, `blackwall/llm_experiment.py`,
   `run_llm_experiment.py` — exploratory real-model telemetry, runner, CLI
 - `blackwall/agent/` — untrusted side: harness (tool loop + facade trap),
@@ -88,10 +99,16 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
 - **Rename before any public release.** "Blackwall" collides with CD Projekt
   Red's Cyberpunk term; the working suggestion is "beigewall" or similar.
   Do this before the repo, docs, or findings are published anywhere.
-- Next research question (see FINDINGS_EVALUATOR): capability negotiation —
-  18/60 real-model executions were honest, admissible and useless because an
-  obtainable grant was never requested. OS/process isolation stays deferred
-  behind that.
+- Next research question (see FINDINGS_PHASE4): task-conditioned discovery
+  (catalog returned with the first denial, or scoped by operation) to test
+  whether the unconverted t2/t4 class is a planning gap rather than an
+  information gap; and driver `reasoning`-field capture as telemetry
+  (empty final answers are reasoning-only completions). OS/process
+  isolation stays deferred until one of these converts the class with the
+  invariants intact.
+- New failure mode from phase 4: over-deference — the agent obtains the
+  data, then answers with the policy instead of the task (t7, 3/5 treatment
+  runs). Honest, admissible, useless.
 - Evaluator coverage: all-prose fabrication (no catalog token, number,
   quote, email, date, provenance) is admissible by absence of evidence;
   tracked via `no_claims_extracted`.
@@ -103,8 +120,8 @@ python3 run_reevaluation.py results/canonical    # 9/12 receipt-grounded, 0 unkn
 
 - Nested git repo: `/data/git` is an umbrella repo; BLACKWALL is its own repo
   inside it. Do not commit from the parent.
-- Storage: repo + results ≈1.4 MB total (exploratory tree ≈576 KB,
-  reevaluation ≈0.5 MB regenerable). The
+- Storage: repo + results ≈3 MB total (exploratory tree ≈1.8 MB incl. the
+  two phase 4 batches, reevaluation ≈0.9 MB regenerable). The
   interrupted-attempt dir is retained pending disposition review; see
   FINDINGS_REALMODEL "Artifacts and storage disposition".
 - Two broker fail-closed incompatibilities were found via the real model and

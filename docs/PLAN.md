@@ -199,6 +199,34 @@ unchanged. Canonical artifacts re-verified byte-identical. Design:
 - [x] LLM runner records the receipt-grounded verdict for future runs.
 - [x] Final verification: 164 tests green; canonical byte-identical.
 
+## Phase 4 milestones / status (capability negotiation, 2026-10-01/02)
+
+Locked for this phase: authority model, corpus, task definitions,
+projection/grant/effect/receipt semantics, the receipt-grounded evaluator,
+and canonical artifacts unchanged. Design: `docs/CAPABILITIES.md`; results:
+`FINDINGS_PHASE4.md`.
+
+- [x] Capability catalog (`capability-catalog@1`): task-scoped policy
+      rules, projection/effect schemas, defaults, request schema; versioned
+      (policy hash) and content-hashed; grants nothing; shows no corpus
+      value; cannot confirm resource existence.
+- [x] `discovery` receipt kind, distinguishable from reads; ignored by the
+      evaluator's disclosure set; counted separately from broker calls.
+- [x] Facade exposes `discover` only in the treatment condition; control
+      traps it as an unmediated attempt. Driver/runner `--condition`.
+- [x] Negotiation + discovery-abuse telemetry from receipts
+      (`blackwall/negotiation.py`); control-vs-treatment-vs-baseline
+      comparison (`blackwall/phase4.py`, `run_phase4_report.py`).
+- [x] Deterministic tests: no authority granted, no protected values,
+      hashing/versioning, receipts, grants unchanged, scripted treatment
+      driver reproduces canonical read/effect receipts, canonical
+      byte-identical (183 tests).
+- [x] Real-model runs: 5 control × 12 and 5 treatment × 12 (gpt-oss:20b),
+      stored separately under `results/exploratory/` (`...-p4-control-
+      20261001T233349Z`, `...-p4-treatment-20261001T235654Z`); comparison
+      under `results/reevaluation/phase4-gpt-oss-20b/`.
+- [x] `FINDINGS_PHASE4.md`; README/HANDOFF updated.
+
 ## Handoff protocol for a resuming agent
 
 1. Read `PLAN.md` (this file), `HANDOFF.md`, and `git log --oneline`.

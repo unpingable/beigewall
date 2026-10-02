@@ -53,6 +53,13 @@ untrusted side                     trusted side (mediation layer)
   agent's narrative and the frozen expected answer are never consulted.
   Design and threat model: `docs/EVALUATOR.md`; results:
   `FINDINGS_EVALUATOR.md`.
+- **Capability discovery** (`blackwall/capabilities.py`, phase 4): the
+  broker's `discover` returns the *shape* of requestable authority for the
+  task (applicable policy rules, projection and effect schemas, grant
+  defaults, request schema), versioned and content-hashed, receipted as
+  `discovery`. It grants nothing, shows no corpus value, and cannot confirm
+  that a resource exists. The facade exposes it only in the treatment
+  condition. See `docs/CAPABILITIES.md`, `FINDINGS_PHASE4.md`.
 - **Agent harness** (`blackwall/agent/`): a simple tool loop. The scripted
   driver is the normative experiment (deterministic; intentionally includes
   correct behavior, overbroad requests, repeated grant requests, inference
@@ -89,12 +96,14 @@ claimed. See "Known limitations".
 ## Usage
 
 ```
-python3 -m unittest discover -s tests     # 164 tests
+python3 -m unittest discover -s tests     # 183 tests
 python3 run_experiment.py                 # writes results/canonical/
 python3 run_experiment.py --out /tmp/x    # byte-identical metrics/receipts
 python3 run_reevaluation.py results/canonical                 # receipt-grounded
 python3 run_reevaluation.py results/exploratory/<label>-<ts>  # re-scoring
 # writes results/reevaluation/<basename>/{evaluation.json,report.md}
+python3 run_llm_experiment.py --runs 5 --label <l> --condition treatment  # phase 4
+python3 run_phase4_report.py <control_dir> <treatment_dir> --baseline <phase3_dir>
 ```
 
 Canonical artifacts: `results/canonical/receipts.jsonl` (authoritative),
@@ -123,6 +132,14 @@ Exploratory artifacts and interpretation: `FINDINGS_REALMODEL.md`.
   `no_claims_extracted`). See `docs/EVALUATOR.md`.
 - **The frozen string checks are a diagnostic, not the measurement.** They
   passed a fabricated t6 answer and required an undisclosed fact in t1.
+- **The LLM driver captures `content` only.** Reasoning models that finish
+  in a separate `reasoning` field without content produce an empty final
+  answer (scored not useful) in every condition; ≈10–17% of executions in
+  the gpt-oss:20b runs.
+- **Capability discovery is a mechanism, not a usefulness fix.** In the
+  phase 4 experiment it cut denied requests by more than half with every
+  safety invariant intact, but converted none of the honest-but-useless
+  executions and induced over-deference in one task (`FINDINGS_PHASE4.md`).
 
 - **No OS isolation.** The authority boundary is convention, not mechanism.
   Realizing it needs process isolation or a capability-secure runtime.
