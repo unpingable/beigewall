@@ -29,6 +29,8 @@ class Grant:
     budget: Budget
     reads_used: int = 0
     objects_disclosed: int = 0
+    effects_used: int = 0      # an effect grant permits one successful effect
+    revoked: bool = False      # set by the authority via the broker; terminal
 
 
 def scope_matches(pattern: str, resource: str) -> bool:
@@ -41,6 +43,8 @@ def scope_matches(pattern: str, resource: str) -> bool:
 def validate_use(grant: Grant, *, operation: str, resource: str,
                  projection: str | None, now: float) -> None:
     """Fail-closed validation of one attempted use. Raises GrantError."""
+    if grant.revoked:
+        raise GrantError(f"grant {grant.grant_id} revoked")
     if now >= grant.expires_at:
         raise GrantError(f"grant {grant.grant_id} expired")
     if grant.operation != operation:
@@ -60,3 +64,9 @@ def validate_use(grant: Grant, *, operation: str, resource: str,
             raise GrantError(f"grant {grant.grant_id} read budget exhausted")
         if grant.objects_disclosed >= grant.budget.objects:
             raise GrantError(f"grant {grant.grant_id} object budget exhausted")
+    else:
+        # lifecycle (phase 5B): an effect grant is consumed by its first
+        # successful effect, so a retry after a lost result cannot land the
+        # effect twice; refused attempts do not consume
+        if grant.effects_used >= 1:
+            raise GrantError(f"grant {grant.grant_id} effect grant consumed")

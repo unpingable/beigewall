@@ -188,11 +188,23 @@ class CapabilityBroker:
         except (KeyError, EffectError) as exc:
             raise self._refuse(task_id, effect_name, grant_id, resource,
                                f"unknown resource or invalid effect target: {exc}")
+        grant.effects_used += 1
         receipt = self._ledger.record("effect", task_id, grant_id=grant_id,
                                       effect={"name": effect_name, "params": params},
                                       derived_from=derived_from,
                                       result_summary=summary)
         return {"ok": True, "receipt_id": receipt.receipt_id, "summary": summary}
+
+    def revoke(self, task_id: str, grant_id: str, reason: str) -> dict:
+        """Authority-side revocation of a live grant (phase 5B). Terminal:
+        every later use is refused "revoked". Receipted as `grant_revoke`.
+        Revoking an unknown or other-task grant is itself a refusal."""
+        grant = self._grant_or_refuse(task_id, grant_id, operation="revoke",
+                                      resource="")
+        grant.revoked = True
+        receipt = self._ledger.record("grant_revoke", task_id, grant_id=grant_id,
+                                      reason=reason)
+        return {"ok": True, "receipt_id": receipt.receipt_id, "grant_id": grant_id}
 
     # --- internals -------------------------------------------------------
 
